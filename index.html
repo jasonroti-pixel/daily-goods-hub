@@ -478,6 +478,40 @@ html[data-theme="dark"] .note-actions button{background:rgba(255,255,255,.14);co
 .feed-weekend{padding:44px 20px;text-align:center}
 .feed-weekend h3{font-family:'Fraunces',serif;font-size:19px;margin:0 0 8px;font-weight:600}
 .feed-weekend p{color:var(--muted);margin:0}
+/* ---- v22: Tools & Resources ---- */
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-top:4px}
+.tool-card{background:var(--surface);border:1px solid var(--card-border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:9px;box-shadow:0 1px 2px rgba(27,35,64,.05)}
+.tool-card:hover{border-color:var(--marker)}
+.tool-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.tool-top h3{font-family:'Fraunces',serif;font-size:17px;margin:0;font-weight:600;line-height:1.3}
+.tool-actions{display:flex;gap:6px;flex:none}
+.tool-card .badge{align-self:flex-start}
+.tool-card p{margin:0;font-size:13px;color:var(--ink);line-height:1.55}
+.tool-foot{margin-top:auto;padding-top:6px}
+.tool-form{display:grid;gap:10px;max-width:560px}
+.tool-form label{display:grid;gap:5px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.tool-form input,.tool-form textarea,.tool-form select{font-family:'Geist',sans-serif;font-size:13.5px;font-weight:400;color:var(--ink);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;width:100%;box-sizing:border-box}
+.tool-form textarea{resize:vertical;min-height:52px}
+.tool-form-actions{display:flex;gap:8px;margin-top:2px}
+#toolAddBtn{margin-bottom:18px}
+/* ---- v22: Settings ---- */
+.set-overlay{position:fixed;inset:0;background:rgba(10,8,30,.62);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px;overflow-y:auto}
+.set-overlay[hidden]{display:none}
+.set-dialog{background:var(--surface);border:1px solid var(--card-border);border-radius:14px;max-width:520px;width:100%;box-shadow:0 18px 50px rgba(10,8,30,.35);animation:fadeSlide 200ms var(--ease)}
+.set-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border)}
+.set-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600}
+.set-body{padding:18px;display:grid;gap:12px}
+.set-body h3{margin:0;font-size:14px;font-weight:700}
+.set-body .hint{margin:0}
+.set-keyrow{display:flex;gap:8px}
+.set-keyrow input{flex:1;min-width:0;font-family:'Geist',sans-serif;font-size:13.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.set-status{margin:0;font-size:12.5px;color:var(--muted)}
+.set-btns{display:flex;gap:8px;flex-wrap:wrap}
+.set-danger{color:#B3261E}
+.set-danger:hover{background:rgba(179,38,30,.08)}
+.set-result{margin:0;font-size:13px;min-height:18px;line-height:1.4}
+.set-result.ok{color:var(--ok)}
+.set-result.bad{color:#B3261E}
 .promote{flex:none}
 .badge{font-family:'Space Mono',monospace;font-size:10px;font-weight:400;letter-spacing:.08em;padding:3px 8px;border-radius:20px;background:var(--accent-soft);color:var(--accent-strong);text-transform:uppercase;white-space:nowrap}
 .toast{
@@ -726,6 +760,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 <header class="app-header">
   <div class="brand">Daily <em>Goods</em> Hub<small>Show production prototype</small></div>
   <div class="header-actions">
+    <button class="icon-btn" id="settingsBtn" aria-label="Open settings" title="Settings"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     <button class="btn" id="themeToggle" aria-label="Toggle dark mode">Dark mode</button>
   </div>
 </header>
@@ -736,6 +771,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
   <button class="tab" role="tab" data-tab="corkboard">Corkboard</button>
   <button class="tab" role="tab" data-tab="keep">The Keep</button>
   <button class="tab" role="tab" data-tab="interviews">Interviews</button>
+  <button class="tab" role="tab" data-tab="tools">Tools &amp; Resources</button>
 </nav>
 <main>
 <!-- NEWSPAPER -->
@@ -866,6 +902,30 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
     <div class="iv-row"><span class="t"><strong>Cam Maitland</strong> - Shocktober streaming picks</span><span class="badge">4:20</span><span class="badge">Zoom</span></div>
     <div class="iv-row"><span class="t"><strong>Dolph Lundgren</strong> - new action slate</span><span class="badge">3:20</span><span class="badge">Pre-tape</span></div>
   </div>
+</section>
+
+<!-- TOOLS & RESOURCES -->
+<section class="tab-panel" id="panel-tools" role="tabpanel">
+  <div class="panel-card">
+    <h2>Tools &amp; Resources</h2>
+    <p class="sub">Everything built for the show, plus the tools and software behind it. Add more any time.</p>
+    <div class="tools-grid" id="toolsGrid"></div>
+  </div>
+  <div class="panel-card" id="toolComposerCard" hidden>
+    <h2 id="toolComposerTitle">Add a tool</h2>
+    <p class="sub">A name, a link, and one or two lines on what it does.</p>
+    <div class="tool-form">
+      <label>Name<input type="text" id="toolName" maxlength="80" placeholder="e.g. Riverside" autocomplete="off"></label>
+      <label>Link<input type="url" id="toolUrl" placeholder="https://" autocomplete="off" spellcheck="false"></label>
+      <label>What it is<textarea id="toolDesc" rows="2" maxlength="300" placeholder="One or two lines on what it does"></textarea></label>
+      <label>Category<select id="toolCat"><option>App</option><option>Tool</option><option>Software</option><option>Resource</option></select></label>
+      <div class="tool-form-actions">
+        <button class="btn btn-primary btn-sm" id="toolSave">Add tool</button>
+        <button class="btn btn-sm" id="toolCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <button class="btn btn-sm" id="toolAddBtn">+ Add a tool</button>
 </section>
 
 <!-- BUILDER -->
@@ -1361,7 +1421,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 /* ================= CONFIG =================
    Paste the Gemini API key below. It ships pre-installed;
    no key entry UI is needed in the prototype. */
-const GEMINI_API_KEY="PREVIEW_BUILD_KEY_NOT_INCLUDED"; // pre-installed; no user entry needed
+const GEMINI_API_KEY=""; /* key is managed in Settings, stored only in this browser (dg_gemini_key_v1) */ // pre-installed; no user entry needed
 /* =============== END CONFIG =============== */
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = (sel, el) => (el || document).querySelector(sel);
@@ -2340,8 +2400,8 @@ function applyNicoResult(card, headline, bullets) {
   });
 }
 async function nicoFetch(card, nico) {
-  const key = (typeof GEMINI_API_KEY === 'string' ? GEMINI_API_KEY : '').trim();
-  if (!key) { nicoCalm(card, nico, 'API key not installed yet.'); return; }
+  const key = nicoKey();
+  if (!key) { nicoNoKey(card, nico); return; }
   const url = nicoPrimaryUrl(card);
   if (!url) { nicoError(card, nico, 'no link on this card yet. Add a URL first.', false); return; }
   nico.classList.add('loading');
@@ -3900,6 +3960,248 @@ document.querySelectorAll('#board .note').forEach(note => {
     actions.insertBefore(b, actions.firstChild);
   }
 });
+
+/* ---------- settings: API key management ---------- */
+const NICO_KEY_STORE = 'dg_gemini_key_v1';
+function nicoKey() {
+  try { return (localStorage.getItem(NICO_KEY_STORE) || '').trim(); } catch (e) { return ''; }
+}
+function nicoKeySave(v) {
+  try { localStorage.setItem(NICO_KEY_STORE, v); return true; } catch (e) { return false; }
+}
+function nicoNoKey(card, nico) {
+  nicoClearState(card);
+  const d = document.createElement('div');
+  d.className = 'nico-calm';
+  const s = document.createElement('span');
+  s.textContent = 'Add your Gemini API key in Settings to use Nico Fetch. ';
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'btn btn-sm'; b.textContent = 'Open Settings';
+  b.addEventListener('click', ev => { ev.stopPropagation(); openSettings(); });
+  d.appendChild(s); d.appendChild(b);
+  nico.parentNode.insertBefore(d, nico.nextSibling);
+}
+function setKeyStatus() {
+  const el = document.getElementById('setStatus');
+  if (el) el.textContent = nicoKey() ? 'Key saved in this browser.' : 'No key saved yet.';
+}
+function setKeyResult(msg, ok) {
+  const el = document.getElementById('setResult');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.className = 'set-result' + (ok === true ? ' ok' : ok === false ? ' bad' : '');
+}
+function openSettings() {
+  setInit();
+  const inp = document.getElementById('setKey');
+  inp.value = '';
+  inp.type = 'password';
+  document.getElementById('setShow').textContent = 'Show';
+  setKeyStatus();
+  setKeyResult('');
+  const ov = document.getElementById('setOverlay');
+  ov.hidden = false;
+  document.body.style.overflow = 'hidden';
+  inp.focus();
+}
+function closeSettings() {
+  const ov = document.getElementById('setOverlay');
+  if (ov) ov.hidden = true;
+  document.body.style.overflow = '';
+}
+function setInit() {
+  if (document.getElementById('setOverlay')) return;
+  const ov = document.createElement('div');
+  ov.id = 'setOverlay';
+  ov.className = 'set-overlay';
+  ov.hidden = true;
+  ov.innerHTML =
+    '<div class="set-dialog" role="dialog" aria-modal="true" aria-label="Settings">' +
+    '<div class="set-bar"><span class="set-title">Settings</span>' +
+    '<button class="ppv-x" id="setCloseX" aria-label="Close settings">&times;</button></div>' +
+    '<div class="set-body">' +
+    '<h3>AI / Nico Fetch</h3>' +
+    '<p class="hint">Your Gemini API key lives only in this browser. It is never written into any file, and never included in exports or archives.</p>' +
+    '<div class="set-keyrow"><input type="password" id="setKey" placeholder="Paste your Gemini API key" autocomplete="off" spellcheck="false" aria-label="Gemini API key">' +
+    '<button class="btn btn-sm" id="setShow" type="button">Show</button></div>' +
+    '<p class="set-status" id="setStatus"></p>' +
+    '<div class="set-btns">' +
+    '<button class="btn btn-primary btn-sm" id="setSave" type="button">Save key</button>' +
+    '<button class="btn btn-sm" id="setTest" type="button">Test key</button>' +
+    '<button class="btn btn-sm" id="setCopy" type="button">Copy key</button>' +
+    '<button class="btn btn-sm set-danger" id="setClear" type="button">Clear key</button>' +
+    '</div>' +
+    '<p class="set-result" id="setResult" role="status"></p>' +
+    '</div></div>';
+  document.body.appendChild(ov);
+  document.getElementById('setCloseX').addEventListener('click', closeSettings);
+  ov.addEventListener('click', e => { if (e.target === ov) closeSettings(); });
+  document.addEventListener('keydown', e => {
+    const o = document.getElementById('setOverlay');
+    if (o && !o.hidden && e.key === 'Escape') closeSettings();
+  });
+  document.getElementById('setShow').addEventListener('click', () => {
+    const inp = document.getElementById('setKey');
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    document.getElementById('setShow').textContent = show ? 'Hide' : 'Show';
+  });
+  document.getElementById('setSave').addEventListener('click', () => {
+    const v = document.getElementById('setKey').value.trim();
+    if (v) {
+      if (nicoKeySave(v)) { document.getElementById('setKey').value = ''; setKeyStatus(); toast('Key saved'); }
+      else toast('Could not save the key');
+    } else if (nicoKey()) {
+      toast('Key unchanged');
+    } else {
+      toast('Paste a key first');
+      document.getElementById('setKey').focus();
+    }
+  });
+  document.getElementById('setTest').addEventListener('click', async () => {
+    const key = document.getElementById('setKey').value.trim() || nicoKey();
+    if (!key) { setKeyResult('Paste or save a key first.', false); return; }
+    setKeyResult('Checking key...', null);
+    try {
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=100&key=' + encodeURIComponent(key));
+      if (!res.ok) { setKeyResult('Key check failed (HTTP ' + res.status + ').', false); return; }
+      const data = await res.json();
+      const n = (data.models || []).length;
+      setKeyResult('Key works. Found ' + n + ' models.', true);
+    } catch (e) {
+      setKeyResult('Key check failed: network error.', false);
+    }
+  });
+  document.getElementById('setCopy').addEventListener('click', async () => {
+    const key = nicoKey();
+    if (!key) { toast('No key saved'); return; }
+    toast(await copyTextToClipboard(key) ? 'Key copied' : 'Copy failed');
+  });
+  document.getElementById('setClear').addEventListener('click', () => {
+    if (!nicoKey()) { toast('No key saved'); return; }
+    if (confirm('Remove the saved Gemini API key from this browser?')) {
+      try { localStorage.removeItem(NICO_KEY_STORE); } catch (e) {}
+      setKeyStatus();
+      setKeyResult('');
+      toast('Key cleared');
+    }
+  });
+}
+document.getElementById('settingsBtn').addEventListener('click', openSettings);
+
+/* ---------- Tools & Resources ---------- */
+const TOOLS_STORE_KEY = 'dg_tools_v1';
+const TOOL_DEFAULTS = [
+  { id: 'tool-jaystation', name: 'The JayStation', url: 'https://jasonroti-pixel.github.io/daily-goods-rundowns/app.html',
+    desc: "The original story-prep app. The production scout that ingests the day's stories and lays them out for the show.",
+    category: 'App', builtin: true },
+  { id: 'tool-scout-next', name: 'Story Scout Next', url: 'https://jasonroti-pixel.github.io/story-scout-next/',
+    desc: 'The playground for the next generation of the scout. New ingest pipeline, new experiments, new looks. New ideas get tested here before they ever touch the show.',
+    category: 'App', builtin: true },
+  { id: 'tool-nico-fetcher', name: 'Nico Fetcher', url: 'https://jasonroti-pixel.github.io/daily-goods-rundowns/summarizer.html',
+    desc: "The standalone AI summarizer. Paste in any article link and get back a headline plus sharp talking-point bullets. The same engine the hub's per-card fetch is ported from.",
+    category: 'App', builtin: true }
+];
+function toolsLoad() {
+  try {
+    const raw = localStorage.getItem(TOOLS_STORE_KEY);
+    if (!raw) {
+      const seed = { items: TOOL_DEFAULTS.map(d => Object.assign({}, d)) };
+      localStorage.setItem(TOOLS_STORE_KEY, JSON.stringify(seed));
+      return seed;
+    }
+    const p = JSON.parse(raw);
+    return { items: Array.isArray(p.items) ? p.items : [] };
+  } catch (e) { return { items: [] }; }
+}
+let toolsState = toolsLoad();
+function toolsSave() {
+  try { localStorage.setItem(TOOLS_STORE_KEY, JSON.stringify(toolsState)); } catch (e) {}
+}
+function toolTag(t) { return t.builtin ? 'Built by Jay' : (t.category || 'Tool'); }
+function toolCardHtml(t) {
+  return '<article class="tool-card" data-tid="' + escapeHtml(t.id) + '">' +
+    '<div class="tool-top"><h3>' + escapeHtml(t.name) + '</h3>' +
+    '<div class="tool-actions">' +
+    '<button class="icon-btn tool-edit" title="Edit" aria-label="Edit ' + escapeHtml(t.name) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>' +
+    '<button class="icon-btn tool-del" title="Delete" aria-label="Delete ' + escapeHtml(t.name) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>' +
+    '</div></div>' +
+    '<span class="badge">' + escapeHtml(toolTag(t)) + '</span>' +
+    '<p>' + escapeHtml(t.desc || '') + '</p>' +
+    '<div class="tool-foot"><a class="btn btn-primary btn-sm" href="' + escapeHtml(t.url) + '" target="_blank" rel="noopener">Open</a></div>' +
+    '</article>';
+}
+function renderTools() {
+  const grid = document.getElementById('toolsGrid');
+  grid.innerHTML = toolsState.items.length
+    ? toolsState.items.map(toolCardHtml).join('')
+    : '<p class="hint">No tools yet. Add the first one below.</p>';
+}
+let toolEditingId = null;
+function toolShowComposer(editing) {
+  toolEditingId = editing ? editing.id : null;
+  document.getElementById('toolComposerTitle').textContent = editing ? 'Edit tool' : 'Add a tool';
+  document.getElementById('toolSave').textContent = editing ? 'Save changes' : 'Add tool';
+  document.getElementById('toolName').value = editing ? editing.name : '';
+  document.getElementById('toolUrl').value = editing ? editing.url : '';
+  document.getElementById('toolDesc').value = editing ? (editing.desc || '') : '';
+  document.getElementById('toolCat').value = editing ? (editing.category || 'Tool') : 'Tool';
+  document.getElementById('toolComposerCard').hidden = false;
+  document.getElementById('toolAddBtn').hidden = true;
+  document.getElementById('toolName').focus();
+}
+function toolHideComposer() {
+  document.getElementById('toolComposerCard').hidden = true;
+  document.getElementById('toolAddBtn').hidden = false;
+  toolEditingId = null;
+}
+function toolNormUrl(u) {
+  u = (u || '').trim();
+  if (u && !/^[a-z][a-z0-9+.-]*:\/\//i.test(u)) u = 'https://' + u;
+  return u;
+}
+document.getElementById('toolAddBtn').addEventListener('click', () => toolShowComposer(null));
+document.getElementById('toolCancel').addEventListener('click', toolHideComposer);
+document.getElementById('toolSave').addEventListener('click', () => {
+  const name = document.getElementById('toolName').value.trim();
+  const url = toolNormUrl(document.getElementById('toolUrl').value);
+  const desc = document.getElementById('toolDesc').value.trim();
+  const category = document.getElementById('toolCat').value;
+  if (!name) { toast('Give the tool a name'); document.getElementById('toolName').focus(); return; }
+  if (!url) { toast('Add a link for the tool'); document.getElementById('toolUrl').focus(); return; }
+  if (toolEditingId) {
+    const t = toolsState.items.find(x => x.id === toolEditingId);
+    if (t) { t.name = name; t.url = url; t.desc = desc; t.category = category; }
+    toast('Tool saved');
+  } else {
+    toolsState.items.push({ id: 't' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36), name, url, desc, category, builtin: false });
+    toast('Tool added');
+  }
+  toolsSave();
+  renderTools();
+  toolHideComposer();
+});
+document.getElementById('panel-tools').addEventListener('click', e => {
+  const card = e.target.closest('.tool-card');
+  const id = card && card.dataset.tid;
+  if (!id) return;
+  if (e.target.closest('.tool-edit')) {
+    const t = toolsState.items.find(x => x.id === id);
+    if (t) { toolShowComposer(t); document.getElementById('toolComposerCard').scrollIntoView({ block: 'nearest' }); }
+    return;
+  }
+  if (e.target.closest('.tool-del')) {
+    const t = toolsState.items.find(x => x.id === id);
+    if (t && confirm('Delete "' + t.name + '" from Tools & Resources?')) {
+      toolsState.items = toolsState.items.filter(x => x.id !== id);
+      if (toolEditingId === id) toolHideComposer();
+      toolsSave();
+      renderTools();
+      toast('Tool deleted');
+    }
+  }
+});
+renderTools();
 
 renderNewspaper();
 </script>
