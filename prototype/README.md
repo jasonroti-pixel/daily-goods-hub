@@ -14,9 +14,11 @@
 - `prototype-v22-tools.html`: functional reference. Tools & Resources tab
   (JayStation, Story Scout Next, Nico Fetcher cards + add/edit/delete),
   Settings page with browser-only API key management (no key in repo).
-- `prototype-v23-artcraft.html`: latest functional reference. Adds ArtCraft as a
+- `prototype-v23-artcraft.html`: functional reference. Adds ArtCraft as a
   fourth default tool card with its paid-software replacement list; defaults
   merge with tombstones so deleted cards stay deleted.
+- `prototype-v24-osint.html`: latest functional reference. Adds OSINT4ALL
+  (start.me directory of free OSINT tools) as a fifth default tool card.
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
