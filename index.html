@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:,">
-<title>Daily Goods Hub - Design Prototype v16 (Royal Signal + Newspaper)</title>
+<title>Daily Goods Hub - Design Prototype v19 (Royal Signal + Feed History)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Geist:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -218,9 +218,30 @@ h1,h2,.lane-title,.brand,.guest-name{font-family:'Fraunces',Georgia,serif}
 .locked-banner .lb-title{font-family:'Fraunces',serif;font-size:17px;font-weight:600}
 .locked-banner .lb-sub{font-size:13px;color:var(--muted)}
 .locked-banner .btn{margin-left:auto}
-.lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-@media(max-width:1100px){.lanes{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:760px){.lanes{grid-template-columns:1fr}}
+/* ---------- builder layout modes: Standard (default) | Grid ---------- */
+.seg-control{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px}
+.seg-control button{border:none;background:transparent;padding:6px 14px;border-radius:7px;font-family:'Geist',sans-serif;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;transition:background 150ms var(--ease),color 150ms var(--ease)}
+.seg-control button.active{background:var(--accent);color:#fff;box-shadow:0 2px 6px rgba(55,108,255,.35)}
+.seg-control button:focus-visible{outline:2px solid var(--marker);outline-offset:1px}
+/* Grid = the original compact layout */
+#panel-builder[data-layout="grid"] .lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:1100px){#panel-builder[data-layout="grid"] .lanes{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){#panel-builder[data-layout="grid"] .lanes{grid-template-columns:1fr}}
+/* Standard = vertical doc-like layout, full width cards */
+#panel-builder[data-layout="standard"] .lanes{display:flex;flex-direction:column;gap:30px}
+#panel-builder[data-layout="standard"] .lane{padding:22px 24px;min-height:0}
+#panel-builder[data-layout="standard"] .lane-head{margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid rgba(141,187,255,.25)}
+#panel-builder[data-layout="standard"] .lane-time{font-size:13px}
+#panel-builder[data-layout="standard"] .lane-title{font-family:'Fraunces',serif;font-size:23px;font-weight:700}
+#panel-builder[data-layout="standard"] .lane .cards{gap:18px}
+#panel-builder[data-layout="standard"] .card{padding:20px 22px}
+#panel-builder[data-layout="standard"] .card-headline{font-family:'Fraunces',serif;font-size:20px;font-weight:700;line-height:1.35;margin-bottom:8px}
+#panel-builder[data-layout="standard"] .card-bullets{font-size:14.5px}
+#panel-builder[data-layout="standard"] .card-bullets li{margin-bottom:6px}
+#panel-builder[data-layout="standard"] .card-audio{margin-top:10px}
+#panel-builder[data-layout="standard"] .guest-block{padding:20px 22px}
+#panel-builder[data-layout="standard"] .composer{padding:18px}
+.copy-btn{margin-left:auto;flex:none}
 .lane{
   background:linear-gradient(180deg,#2E2E7A 0%,#1E1E5C 100%);
   border:1px solid #4A4AA8;
@@ -773,6 +794,10 @@ html[data-theme="dark"] .ke-sw{border-color:rgba(255,255,255,.18)}
   <div class="builder-toolbar">
     <h2 class="day-title">Today's <em>rundown</em></h2>
     <div class="lock-controls">
+      <div class="seg-control" role="group" aria-label="Builder layout">
+        <button type="button" data-blayout="standard" class="active">Standard</button>
+        <button type="button" data-blayout="grid">Grid</button>
+      </div>
       <button class="btn btn-sm" id="lockAll">Lock all</button>
       <button class="btn btn-sm" id="unlockAll">Unlock all</button>
       <span class="toggle-row" style="margin:0"><button class="switch" id="printNotesAll" role="switch" aria-checked="false" aria-label="Include all producer notes in print"></button><span class="switch-label">Include all producer notes</span></span>
@@ -1276,6 +1301,27 @@ $$('.tab').forEach(btn => {
   });
 });
 
+/* ---------- builder layout: Standard | Grid ---------- */
+const BUILDER_LAYOUT_KEY = 'dg_builder_layout_v1';
+function setBuilderLayout(mode) {
+  const m = mode === 'grid' ? 'grid' : 'standard';
+  document.getElementById('panel-builder').setAttribute('data-layout', m);
+  $$('[data-blayout]').forEach(b => b.classList.toggle('active', b.dataset.blayout === m));
+  try { localStorage.setItem(BUILDER_LAYOUT_KEY, m); } catch (e) {}
+}
+(function initBuilderLayout() {
+  let mode = 'standard';
+  try {
+    const s = localStorage.getItem(BUILDER_LAYOUT_KEY);
+    if (s === 'grid' || s === 'standard') mode = s;
+  } catch (e) {}
+  setBuilderLayout(mode);
+})();
+$$('[data-blayout]').forEach(b => b.addEventListener('click', () => {
+  setBuilderLayout(b.dataset.blayout);
+  toast(b.dataset.blayout === 'grid' ? 'Grid layout' : 'Standard layout');
+}));
+
 /* ---------- theme ---------- */
 const themeBtn = document.getElementById('themeToggle');
 themeBtn.addEventListener('click', () => {
@@ -1349,8 +1395,112 @@ $$('.lane .cards').forEach(list => {
   console.warn('SortableJS failed to load; drag and drop disabled.');
 }
 
+/* ---------- copy card for Google Sheets ---------- */
+function cardCopyText(card) {
+  const lines = [];
+  const headEl = card.querySelector('.card-headline');
+  let headline = 'Untitled story';
+  if (headEl) {
+    const clone = headEl.cloneNode(true);
+    const tag = clone.querySelector('.backup-tag');
+    if (tag) tag.remove();
+    const t = clone.textContent.trim();
+    if (t) headline = t;
+  }
+  const backupSw = card.querySelector('.switch[aria-label="Mark as backup"]');
+  const isBackup = card.classList.contains('backup') || (backupSw && backupSw.getAttribute('aria-checked') === 'true');
+  lines.push((isBackup ? '[BACKUP] ' : '') + headline);
+  card.querySelectorAll('.bullet-edit li span').forEach(sp => {
+    const t = sp.textContent.trim();
+    if (t) lines.push('\u2022 ' + t);
+  });
+  const srcEl = card.querySelector('.card-meta .src');
+  const src = srcEl ? srcEl.textContent.trim() : '';
+  if (src) lines.push('Source: ' + src);
+  const a = card.querySelector('.url-row a');
+  const href = a ? (a.getAttribute('href') || '').trim() : '';
+  if (href && href !== '#') lines.push(href);
+  let cue = '';
+  const det = card.querySelector('.card-details');
+  if (det) {
+    const inp = det.querySelector('input[type="text"]');
+    if (inp && inp.value.trim()) cue = inp.value.trim();
+  }
+  if (!cue) {
+    const ca = card.querySelector('.card-audio');
+    if (ca && ca.textContent.trim()) cue = ca.textContent.trim();
+  }
+  if (cue) lines.push('AUDIO CUE: ' + cue);
+  const printSw = card.querySelector('.print-switch');
+  const printOn = card.classList.contains('print-notes') || (printSw && printSw.getAttribute('aria-checked') === 'true');
+  if (printOn) {
+    const ta = card.querySelector('.prod-notes') || card.querySelector('textarea[placeholder="Private notes, not printed"]');
+    const note = ta ? ta.value.trim() : '';
+    if (note) lines.push('PRODUCER NOTE: ' + note);
+  }
+  return lines.join('\n');
+}
+
+function guestCopyText(g) {
+  const val = sel => {
+    const el = g.querySelector(sel);
+    return el ? el.value.trim() : '';
+  };
+  const parts = [];
+  const name = val('.guest-name-input');
+  const slot = val('.guest-slot');
+  if (name || slot) parts.push([name, slot].filter(Boolean).join(' - '));
+  const intro = val('.guest-intro-input');
+  if (intro) {
+    const paras = intro.split(/\n+/).map(s => s.trim()).filter(Boolean);
+    if (paras.length) parts.push(paras.join('\n\n'));
+  }
+  const seg = val('.guest-seginfo');
+  if (seg) parts.push('SEGMENT INFO: ' + seg);
+  const tape = val('.guest-tapeout');
+  if (tape) parts.push('TAPE OUT: ' + tape);
+  const tease = val('.guest-tease');
+  if (tease) parts.push('TEASE: ' + tease);
+  return parts.join('\n');
+}
+
+async function copyTextToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '0';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return !!ok;
+    } catch (e2) {
+      return false;
+    }
+  }
+}
+
 /* ---------- card expand / collapse (delegated) ---------- */
 document.addEventListener('click', e => {
+  const cp0 = e.target.closest('.copy-btn');
+  if (cp0) {
+    const guest = cp0.closest('[data-guest]');
+    const gcard = cp0.closest('.card');
+    const text = guest ? guestCopyText(guest) : (gcard ? cardCopyText(gcard) : '');
+    if (!text) { toast('Nothing to copy'); return; }
+    copyTextToClipboard(text).then(ok => {
+      toast(ok ? 'Copied for Sheets' : 'Copy failed. Select the text and copy manually.');
+    });
+    return;
+  }
   const del = e.target.closest('.bullet-del');
   if (del) {
     const card = del.closest('.card');
@@ -1768,7 +1918,7 @@ function cardTemplate(headline, url) {
   return `<span class="grip" aria-hidden="true">⠿</span>
     <span class="mini-arrows"><button type="button" class="mv-up" aria-label="Move card up" title="Move up">▲</button><button type="button" class="mv-dn" aria-label="Move card down" title="Move down">▼</button></span>
     <p class="card-headline">${safeH}</p>
-    <div class="card-meta"><span class="src">Manual</span><span class="tag">Story</span></div>
+    <div class="card-meta"><span class="src">Manual</span><span class="tag">Story</span><button type="button" class="btn btn-sm copy-btn" title="Copy for Google Sheets">Copy</button></div>
     <ul class="card-bullets"><li class="empty-note" style="list-style:none;color:var(--muted);font-style:italic">No summary yet. Try Fetch with Nico below.</li></ul>
     <div class="card-details">
       <div class="field-label">Links</div>
@@ -2265,6 +2415,16 @@ document.addEventListener('input', e => {
   }
 });
 $$('.card').forEach(card => {
+  if (!card.querySelector('.copy-btn')) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-sm copy-btn';
+    btn.title = 'Copy for Google Sheets';
+    btn.textContent = 'Copy';
+    const meta = card.querySelector('.card-meta');
+    if (meta) meta.appendChild(btn);
+    else card.insertBefore(btn, card.firstChild);
+  }
   const det = card.querySelector('.card-details');
   if (det && !det.querySelector('.print-switch')) {
     const ta = det.querySelector('textarea[placeholder="Private notes, not printed"]');
@@ -2289,6 +2449,19 @@ document.getElementById('printNotesAll').addEventListener('click', function () {
   this.setAttribute('aria-checked', on ? 'true' : 'false');
   $$('.card').forEach(card => setCardPrintNote(card, on));
   toast(on ? 'All producer notes will print' : 'Producer notes excluded from print');
+});
+
+/* copy buttons on guest blocks */
+$$('[data-guest]').forEach(g => {
+  if (g.querySelector('.copy-btn')) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn btn-sm copy-btn';
+  btn.title = 'Copy for Google Sheets';
+  btn.textContent = 'Copy';
+  const tools = g.querySelector('.guest-tools');
+  if (tools) tools.appendChild(btn);
+  else g.insertBefore(btn, g.firstChild);
 });
 
 
