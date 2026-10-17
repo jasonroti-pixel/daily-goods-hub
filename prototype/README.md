@@ -11,9 +11,12 @@
 - `prototype-v21-rundown-format.html`: functional reference. Builder
   Standard mode mirrors the sheet anatomy (TOPIC rows, TEASE rows, HOUR 2,
   fixed header/footer furniture), in-app print preview.
-- `prototype-v22-tools.html`: latest functional reference. Tools & Resources tab
+- `prototype-v22-tools.html`: functional reference. Tools & Resources tab
   (JayStation, Story Scout Next, Nico Fetcher cards + add/edit/delete),
   Settings page with browser-only API key management (no key in repo).
+- `prototype-v23-artcraft.html`: latest functional reference. Adds ArtCraft as a
+  fourth default tool card with its paid-software replacement list; defaults
+  merge with tombstones so deleted cards stay deleted.
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
