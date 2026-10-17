@@ -620,10 +620,6 @@ html[data-theme="dark"] .ke-sw{border-color:rgba(255,255,255,.18)}
 #keNewLabel{max-width:170px;font-family:'Geist',sans-serif;font-size:12.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:6px 12px}
 #keNewLabel:focus{outline:2px solid var(--marker);border-color:var(--accent)}
 
-<<<<<<< HEAD
-@media print{
-  .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast{display:none !important}
-=======
 
 /* ---------- rundown document anatomy: Standard mode mirrors the show-notes sheet ---------- */
 .rd-furniture,.rd-infolabel,.rd-tease,.rd-hour2,.topic-label,.rd-glabel{display:none}
@@ -696,7 +692,6 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 
 @media print{
   .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast,.copy-btn{display:none !important}
->>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
   .tab-panel{display:none}
   .tab-panel.active{display:block}
   html[data-theme="dark"]{--ink:#000;--muted:#444;--surface:#fff;--surface-2:#fff;--border:#999;--accent-strong:#000;--card-border:#999;--backup-bg:#fff}
@@ -705,8 +700,6 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
   .lane-title,.card-headline,.card-bullets,.note p,.feed-row,.iv-row,.brand,.day-title,.guest-name,.keep-note h4,.locked-banner .lb-title{color:#000 !important}
   .lane-time,.src,.badge,.tag,.via-badge,.tape-out,.backup-tag,.mv-label,.lane-locked-tag{color:#000 !important;background:none !important}
   a{color:#000 !important}
-<<<<<<< HEAD
-=======
 
   .rd-furniture{display:block !important;background:#fff !important;border:1px solid #999 !important;box-shadow:none !important;margin-bottom:14px}
   .rd-infolabel,.rd-tease{display:flex !important}
@@ -717,7 +710,6 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
   .rd-brand,.topic-label{color:#000 !important}
   .rd-input{border:1px solid #999 !important;color:#000 !important;background:#fff !important}
   .rd-guest-summary{color:#000 !important}
->>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
 }
 </style>
 </head>
@@ -1410,8 +1402,6 @@ $$('[data-blayout]').forEach(b => b.addEventListener('click', () => {
   toast(b.dataset.blayout === 'grid' ? 'Grid layout' : 'Standard layout');
 }));
 
-<<<<<<< HEAD
-=======
 
 /* ---------- rundown document anatomy: Standard mode mirrors the show-notes sheet ---------- */
 const RD_FURN_KEY = 'dg_rundown_furniture_v1';
@@ -1790,7 +1780,6 @@ function buildPreviewHtml(){
   return s;
 }
 
->>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
 /* ---------- theme ---------- */
 const themeBtn = document.getElementById('themeToggle');
 themeBtn.addEventListener('click', () => {
@@ -1856,10 +1845,7 @@ $$('.lane .cards').forEach(list => {
         item.classList.add('confirm-pulse');
         item.addEventListener('animationend', () => item.classList.remove('confirm-pulse'), { once: true });
       }
-<<<<<<< HEAD
-=======
       renumberTopics();
->>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
       setTimeout(() => { justDragged = false; }, 120);
     }
   });
@@ -2010,10 +1996,7 @@ document.addEventListener('click', e => {
         headline.appendChild(tag);
       }
     }
-<<<<<<< HEAD
-=======
     renumberTopics();
->>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
     return;
   }
   const psw = e.target.closest('.print-switch');
@@ -2075,10 +2058,7 @@ document.addEventListener('keydown', e => {
       if (e.key === 'ArrowUp') card.parentNode.insertBefore(card, sib);
       else card.parentNode.insertBefore(sib, card);
       card.focus();
-<<<<<<< HEAD
-=======
       renumberTopics();
->>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
       const lane = card.closest('.lane');
       if (lane) {
         lane.classList.add('lane-flash');
@@ -2453,10 +2433,7 @@ function openComposer(lane) {
     const l = el.closest('.lane');
     l.classList.add('lane-flash');
     setTimeout(() => l.classList.remove('lane-flash'), 450);
-<<<<<<< HEAD
-=======
     renumberTopics();
->>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
     toast('Story added');
   };
   form.querySelector('.composer-add').addEventListener('click', commit);
@@ -2532,10 +2509,7 @@ function moveCard(card, dir) {
     lane.classList.add('lane-flash');
     setTimeout(() => lane.classList.remove('lane-flash'), 450);
   }
-<<<<<<< HEAD
-=======
   renumberTopics();
->>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
 }
 $$('.card').forEach(card => {
   if (!card.querySelector('.mini-arrows')) {
@@ -3309,10 +3283,7 @@ function npSendToBuilder(it) {
     if (eb) eb.innerHTML = it.bullets.map(b => '<li><span contenteditable="true" spellcheck="true">' + escapeHtml(b) + '</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>').join('');
   }
   box.appendChild(card);
-<<<<<<< HEAD
-=======
   renumberTopics();
->>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
   card.classList.add('expanded', 'just-added');
   setTimeout(() => card.classList.remove('just-added'), 1400);
   card.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'nearest' });
@@ -3356,10 +3327,7 @@ function npSendToBuilderQuiet(it) {
   }
   box.appendChild(card);
   it.sent = true;
-<<<<<<< HEAD
-=======
   renumberTopics();
->>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
   return true;
 }
 
