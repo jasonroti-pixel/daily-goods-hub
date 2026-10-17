@@ -19,9 +19,12 @@
   merge with tombstones so deleted cards stay deleted.
 - `prototype-v24-osint.html`: functional reference. Adds OSINT4ALL
   (start.me directory of free OSINT tools) as a fifth default tool card.
-- `prototype-v25-review1.html`: latest functional reference. Zoom link/password
+- `prototype-v25-review1.html`: functional reference. Zoom link/password
   locked read-only in the builder (editable in Settings); Today on the Show is
   a manual textarea with reset-to-auto.
+- `prototype-v26-framextv.html`: latest functional reference. Adds frameXTV
+  (free movie/TV/anime streaming, clip and audio hunting) as a sixth default
+  tool card.
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
