@@ -511,6 +511,13 @@ html[data-theme="dark"] .note-actions button{background:rgba(255,255,255,.14);co
 .set-danger:hover{background:rgba(179,38,30,.08)}
 .set-result{margin:0;font-size:13px;min-height:18px;line-height:1.4}
 .set-result.ok{color:var(--ok)}
+.set-field{display:grid;gap:5px}
+.set-field label{font-size:12.5px;font-weight:700}
+.set-field input{width:100%;font-family:'Geist',sans-serif;font-size:13.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.rd-tots-edit{line-height:1.6}
+.rd-zoomlink{color:var(--accent-strong);word-break:break-all;font-size:14px}
+.rd-zoompass{font-size:14px}
+.rd-lock{color:var(--muted);vertical-align:-2px;margin-right:5px}
 .set-result.bad{color:#B3261E}
 .promote{flex:none}
 .badge{font-family:'Space Mono',monospace;font-size:10px;font-weight:400;letter-spacing:.08em;padding:3px 8px;border-radius:20px;background:var(--accent-soft);color:var(--accent-strong);text-transform:uppercase;white-space:nowrap}
@@ -725,7 +732,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 @media(max-width:700px){.ppv-row{flex-direction:column;gap:4px}.ppv-lab{flex:none}}
 
 @media print{
-  .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast,.copy-btn{display:none !important}
+  .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast,.copy-btn,#rdTotsReset{display:none !important}
   .tab-panel{display:none}
   .tab-panel.active{display:block}
   html[data-theme="dark"]{--ink:#000;--muted:#444;--surface:#fff;--surface-2:#fff;--border:#999;--accent-strong:#000;--card-border:#999;--backup-bg:#fff}
@@ -1463,11 +1470,27 @@ $$('[data-blayout]').forEach(b => b.addEventListener('click', () => {
 }));
 
 
+/* ---------- settings: studio (Zoom link + password, locked in builder) ---------- */
+const ZOOM_STORE_KEY = 'dg_settings_v1';
+const ZOOM_DEFAULTS = { zoomLink: 'https://siriusxm.zoom.us/j/98162919731?pwd=j9KSSuXQSfUx9DbI6kWjcPFfXuGDwB.1', zoomPass: '501471' };
+function zoomSettings() {
+  try {
+    const r = JSON.parse(localStorage.getItem(ZOOM_STORE_KEY) || '{}') || {};
+    return {
+      zoomLink: r.zoomLink != null ? r.zoomLink : ZOOM_DEFAULTS.zoomLink,
+      zoomPass: r.zoomPass != null ? r.zoomPass : ZOOM_DEFAULTS.zoomPass
+    };
+  } catch (e) { return { zoomLink: ZOOM_DEFAULTS.zoomLink, zoomPass: ZOOM_DEFAULTS.zoomPass }; }
+}
+function zoomSaveSettings(s) { try { localStorage.setItem(ZOOM_STORE_KEY, JSON.stringify(s)); } catch (e) {} }
+
 /* ---------- rundown document anatomy: Standard mode mirrors the show-notes sheet ---------- */
 const RD_FURN_KEY = 'dg_rundown_furniture_v1';
 let rdFurn = (function(){ try { const r = localStorage.getItem(RD_FURN_KEY); return r ? JSON.parse(r) : {}; } catch(e){ return {}; } })();
 rdFurn.teases = rdFurn.teases || {};
 rdFurn.chats = Array.isArray(rdFurn.chats) ? rdFurn.chats : ['', '', ''];
+rdFurn.totsByDate = (rdFurn.totsByDate && typeof rdFurn.totsByDate === 'object') ? rdFurn.totsByDate : {};
+delete rdFurn.zoom;
 rdFurn.guests = rdFurn.guests || {};
 function rdSaveFurn(){ try { localStorage.setItem(RD_FURN_KEY, JSON.stringify(rdFurn)); } catch(e){} }
 
@@ -1478,9 +1501,10 @@ function rdSaveFurn(){ try { localStorage.setItem(RD_FURN_KEY, JSON.stringify(rd
   '<div class="rd-furniture" id="rdHeader" aria-label="Show header">' +
     '<div class="rd-brand">THE DAILY GOODS</div>' +
     '<div class="rd-row"><span class="rd-label">Show date</span><div class="rd-content"><input type="text" id="rdDate" class="rd-input" spellcheck="false"></div></div>' +
-    '<div class="rd-row"><span class="rd-label">Zoom Link</span><div class="rd-content"><input type="text" id="rdZoom" class="rd-input" placeholder="Paste the Zoom link" spellcheck="false"></div></div>' +
+    '<div class="rd-row"><span class="rd-label">Zoom Link</span><div class="rd-content"><span class="rd-lock" title="Locked: edit in Settings"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span> <a id="rdZoomLink" class="rd-zoomlink" href="#" target="_blank" rel="noopener"></a></div></div>' +
+    '<div class="rd-row"><span class="rd-label">Password</span><div class="rd-content"><span class="rd-lock" title="Locked: edit in Settings"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span> <span id="rdZoomPass" class="rd-zoompass"></span></div></div>' +
     '<div class="rd-row"><span class="rd-label">Studio #</span><div class="rd-content"><input type="text" id="rdStudio" class="rd-input" placeholder="Listener line / guest line" spellcheck="false"></div></div>' +
-    '<div class="rd-row"><span class="rd-label">Today on the show</span><div class="rd-content"><div id="rdTots" class="rd-tots" aria-live="polite"></div></div></div>' +
+    '<div class="rd-row"><span class="rd-label">Today on the show</span><div class="rd-content"><textarea id="rdTots" class="rd-input rd-tots rd-tots-edit" rows="6" spellcheck="true" aria-label="Today on the show"></textarea><button type="button" class="btn btn-sm" id="rdTotsReset" style="margin-top:6px">Reset to auto lineup</button></div></div>' +
     '<div class="rd-row"><span class="rd-label">Show intro</span><div class="rd-content">' +
       '<div class="field-label" style="margin-top:0">Guests</div><div id="rdIntroGuests"></div>' +
       '<div class="field-label">Chats 1-3</div>' +
@@ -1586,6 +1610,32 @@ function rdGuestInfo(laneId) {
   return { name: v('.guest-name-input'), slot: v('.guest-slot'), topic: tease || seg.slice(0, 42) };
 }
 
+function rdAutoTotsLines(rows) {
+  if (!rows) {
+    const g1 = rdGuestInfo('s2'), g2 = rdGuestInfo('s5');
+    const gline = (n, g) => 'GUEST ' + n + (g.name ? ' (' + g.name + (g.topic ? ' - ' + g.topic : '') + ')' : '');
+    rows = [
+      ['3:05', 'THE LIST'], ['3:20', gline(1, g1)], ['3:40', 'LIFESTYLE CHAT'],
+      ['4:00', 'TRENDING TODAY'], ['4:20', gline(2, g2)], ['4:40', 'KICKER/GOODBYES']
+    ];
+  }
+  return rows.map(r => (r[0] + ' ' + r[1]).trim());
+}
+function rdDateKey(){ const el = document.getElementById('rdDate'); return el ? el.value.trim() : ''; }
+function rdInitTots() {
+  const ta = document.getElementById('rdTots'); if (!ta) return;
+  const key = rdDateKey();
+  const manual = rdFurn.totsByDate[key];
+  if (manual != null) { ta.value = manual; ta.dataset.manual = '1'; }
+  else { ta.value = rdAutoTotsLines().join('\n'); ta.dataset.manual = ''; }
+}
+function rdRenderZoom() {
+  const zs = zoomSettings();
+  const a = document.getElementById('rdZoomLink');
+  if (a) { a.href = zs.zoomLink || '#'; a.textContent = zs.zoomLink || 'Not set'; }
+  const pw = document.getElementById('rdZoomPass');
+  if (pw) pw.textContent = zs.zoomPass || 'Not set';
+}
 function rdRefreshShow() {
   const g1 = rdGuestInfo('s2'), g2 = rdGuestInfo('s5');
   const gline = (n, g) => 'GUEST ' + n + (g.name ? ' (' + g.name + (g.topic ? ' - ' + g.topic : '') + ')' : '');
@@ -1594,7 +1644,7 @@ function rdRefreshShow() {
     ['4:00', 'TRENDING TODAY'], ['4:20', gline(2, g2)], ['4:40', 'KICKER/GOODBYES']
   ];
   const tots = document.getElementById('rdTots');
-  if (tots) tots.innerHTML = rows.map(r => '<div><span class="t">' + r[0] + '</span>' + escapeHtml(r[1]) + '</div>').join('');
+  if (tots && tots.dataset.manual !== '1') tots.value = rdAutoTotsLines(rows).join('\n');
   const ig = document.getElementById('rdIntroGuests');
   if (ig) {
     const gl = [g1, g2].filter(g => g.name);
@@ -1616,7 +1666,6 @@ function rdBindFurniture() {
   let todayStr = '';
   try { todayStr = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(new Date()).toUpperCase(); } catch (e) { todayStr = new Date().toDateString().toUpperCase(); }
   set('rdDate', rdFurn.date != null ? rdFurn.date : todayStr);
-  set('rdZoom', rdFurn.zoom || '');
   set('rdStudio', rdFurn.studio || '');
   set('rdOutro', rdFurn.outro || '');
   set('rdPush', rdFurn.push != null ? rdFurn.push : 'TheDailyGoods@siriusxm.ca');
@@ -1633,7 +1682,7 @@ function rdBindFurniture() {
   });
   const save = () => {
     const gv = id => { const el = document.getElementById(id); return el ? el.value : ''; };
-    rdFurn.date = gv('rdDate'); rdFurn.zoom = gv('rdZoom'); rdFurn.studio = gv('rdStudio');
+    rdFurn.date = gv('rdDate'); rdFurn.studio = gv('rdStudio');
     rdFurn.outro = gv('rdOutro'); rdFurn.push = gv('rdPush');
     rdFurn.chats = $$('.rd-chat').map(inp => inp.value);
     rdFurn.teases = {};
@@ -1647,6 +1696,26 @@ function rdBindFurniture() {
     });
     rdSaveFurn();
   };
+  rdRenderZoom();
+  rdInitTots();
+  const totsTa = document.getElementById('rdTots');
+  if (totsTa) totsTa.addEventListener('input', () => {
+    totsTa.dataset.manual = '1';
+    rdFurn.totsByDate[rdDateKey()] = totsTa.value;
+    rdSaveFurn();
+  });
+  const totsReset = document.getElementById('rdTotsReset');
+  if (totsReset) totsReset.addEventListener('click', () => {
+    const ta = document.getElementById('rdTots'); if (!ta) return;
+    if (!confirm('Replace your lineup with the auto-built lineup from the current lanes?')) return;
+    ta.value = rdAutoTotsLines().join('\n');
+    ta.dataset.manual = '';
+    delete rdFurn.totsByDate[rdDateKey()];
+    rdSaveFurn();
+    toast('Lineup reset to auto');
+  });
+  const dateEl = document.getElementById('rdDate');
+  if (dateEl) dateEl.addEventListener('change', rdInitTots);
   const header = document.getElementById('rdHeader');
   const footer = document.getElementById('rdFooter');
   if (header) header.addEventListener('input', save);
@@ -1773,14 +1842,16 @@ function buildPreviewHtml(){
   const gv = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
   let s = '';
   s += '<div class="ppv-brand">THE DAILY GOODS</div>';
-  const date = gv('rdDate'), zoom = gv('rdZoom'), studio = gv('rdStudio');
+  const date = gv('rdDate'), studio = gv('rdStudio');
+  const zs = zoomSettings();
   if (date) s += ppvRow('', '<b>' + ppvEsc(date) + '</b>');
-  if (zoom) s += ppvRow('Zoom Link', ppvEsc(zoom));
+  if (zs.zoomLink) s += ppvRow('Zoom Link', ppvEsc(zs.zoomLink));
+  if (zs.zoomPass) s += ppvRow('Password', ppvEsc(zs.zoomPass));
   if (studio) s += ppvRow('Studio #', ppvEsc(studio));
   // today on the show (reuse the live-built list)
   const totsEl = document.getElementById('rdTots');
   let totsHtml = '';
-  if (totsEl) totsEl.querySelectorAll(':scope > div').forEach(d => { totsHtml += '<div>' + d.innerHTML + '</div>'; });
+  if (totsEl) totsHtml = totsEl.value.split('\n').map(l => l.trim()).filter(Boolean).map(l => '<div>' + ppvEsc(l) + '</div>').join('');
   s += ppvRow('Today on the show', totsHtml || '<span class="ppv-empty">No segments yet.</span>');
   // show intro
   let introHtml = '';
@@ -3961,6 +4032,7 @@ document.querySelectorAll('#board .note').forEach(note => {
   }
 });
 
+
 /* ---------- settings: API key management ---------- */
 const NICO_KEY_STORE = 'dg_gemini_key_v1';
 function nicoKey() {
@@ -4032,6 +4104,10 @@ function setInit() {
     '<button class="btn btn-sm set-danger" id="setClear" type="button">Clear key</button>' +
     '</div>' +
     '<p class="set-result" id="setResult" role="status"></p>' +
+    '<h3>Show / Studio</h3>' +
+    '<p class="hint">The Zoom link and password shown at the top of the builder. They stay locked in the builder; edit them here.</p>' +
+    '<div class="set-field"><label for="setZoomLink">Zoom link</label><input type="text" id="setZoomLink" spellcheck="false" autocomplete="off" aria-label="Zoom link"></div>' +
+    '<div class="set-field"><label for="setZoomPass">Zoom password</label><input type="text" id="setZoomPass" spellcheck="false" autocomplete="off" aria-label="Zoom password"></div>' +
     '</div></div>';
   document.body.appendChild(ov);
   document.getElementById('setCloseX').addEventListener('click', closeSettings);
@@ -4086,6 +4162,12 @@ function setInit() {
       toast('Key cleared');
     }
   });
+  const zl = document.getElementById('setZoomLink'), zp = document.getElementById('setZoomPass');
+  const zs0 = zoomSettings();
+  zl.value = zs0.zoomLink; zp.value = zs0.zoomPass;
+  const saveZoom = () => { zoomSaveSettings({ zoomLink: zl.value.trim(), zoomPass: zp.value.trim() }); rdRenderZoom(); };
+  zl.addEventListener('input', saveZoom);
+  zp.addEventListener('input', saveZoom);
 }
 document.getElementById('settingsBtn').addEventListener('click', openSettings);
 
