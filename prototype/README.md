@@ -17,8 +17,11 @@
 - `prototype-v23-artcraft.html`: functional reference. Adds ArtCraft as a
   fourth default tool card with its paid-software replacement list; defaults
   merge with tombstones so deleted cards stay deleted.
-- `prototype-v24-osint.html`: latest functional reference. Adds OSINT4ALL
+- `prototype-v24-osint.html`: functional reference. Adds OSINT4ALL
   (start.me directory of free OSINT tools) as a fifth default tool card.
+- `prototype-v25-review1.html`: latest functional reference. Zoom link/password
+  locked read-only in the builder (editable in Settings); Today on the Show is
+  a manual textarea with reset-to-auto.
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
