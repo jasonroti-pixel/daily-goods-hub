@@ -22,9 +22,12 @@
 - `prototype-v25-review1.html`: functional reference. Zoom link/password
   locked read-only in the builder (editable in Settings); Today on the Show is
   a manual textarea with reset-to-auto.
-- `prototype-v26-framextv.html`: latest functional reference. Adds frameXTV
+- `prototype-v26-framextv.html`: functional reference. Adds frameXTV
   (free movie/TV/anime streaming, clip and audio hunting) as a sixth default
   tool card.
+- `prototype-v27-review2.html`: latest functional reference. Per-lane
+  Interview/Talk type switch (both payloads preserved), delete on every card,
+  undo/redo with header buttons and keyboard shortcuts.
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
