@@ -620,8 +620,83 @@ html[data-theme="dark"] .ke-sw{border-color:rgba(255,255,255,.18)}
 #keNewLabel{max-width:170px;font-family:'Geist',sans-serif;font-size:12.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:6px 12px}
 #keNewLabel:focus{outline:2px solid var(--marker);border-color:var(--accent)}
 
+<<<<<<< HEAD
 @media print{
   .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast{display:none !important}
+=======
+
+/* ---------- rundown document anatomy: Standard mode mirrors the show-notes sheet ---------- */
+.rd-furniture,.rd-infolabel,.rd-tease,.rd-hour2,.topic-label,.rd-glabel{display:none}
+#panel-builder[data-layout="standard"] .rd-furniture{display:block}
+#panel-builder[data-layout="standard"] .rd-infolabel{display:flex}
+#panel-builder[data-layout="standard"] .rd-tease{display:flex}
+#panel-builder[data-layout="standard"] .rd-hour2{display:block}
+#panel-builder[data-layout="standard"] .topic-label{display:block}
+#panel-builder[data-layout="standard"] .rd-glabel{display:block}
+#panel-builder[data-layout="grid"] .rd-furniture,
+#panel-builder[data-layout="grid"] .rd-infolabel,
+#panel-builder[data-layout="grid"] .rd-tease,
+#panel-builder[data-layout="grid"] .rd-hour2,
+#panel-builder[data-layout="grid"] .topic-label,
+#panel-builder[data-layout="grid"] .rd-glabel{display:none !important}
+.rd-furniture{background:#fff;border:1px solid var(--card-border);border-radius:10px;padding:20px 22px;margin-bottom:22px;box-shadow:0 6px 18px rgba(30,27,58,.14)}
+html[data-theme="dark"] .rd-furniture{background:linear-gradient(180deg,#23235C 0%,#161640 100%);border-color:rgba(255,255,255,.10)}
+.rd-brand{font-family:'Fraunces',serif;font-weight:700;font-size:22px;letter-spacing:.01em;margin-bottom:6px}
+.rd-row{display:flex;gap:14px;padding:9px 0;border-bottom:1px solid rgba(30,27,58,.08);align-items:flex-start}
+.rd-row:last-child{border-bottom:0;padding-bottom:0}
+html[data-theme="dark"] .rd-row{border-bottom-color:rgba(255,255,255,.08)}
+.rd-label{flex:0 0 190px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:5px}
+.rd-content{flex:1;min-width:0}
+.rd-input{width:100%;font-family:'Geist',sans-serif;font-size:14px;color:var(--ink);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.rd-input:focus{outline:2px solid var(--marker);border-color:var(--accent)}
+textarea.rd-input{resize:vertical;min-height:54px;line-height:1.5}
+.rd-tots div{padding:3px 0;font-size:14px}
+.rd-tots .t{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);margin-right:8px}
+#rdIntroGuests div{padding:3px 0;font-size:14px}
+#rdIntroGuests .t{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);margin-right:8px}
+.topic-label{font-family:'Space Mono',monospace;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:2px 0 6px}
+.card.backup .topic-label{color:#9A6B1A}
+html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
+.rd-infolabel{align-items:center;margin:2px 0 12px;padding:9px 12px;background:rgba(94,106,210,.10);border-radius:8px}
+.rd-infolabel .rd-label{flex:none;padding-top:0;font-weight:700;color:var(--ink)}
+.rd-hour2{text-align:center;font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.35em;color:var(--muted);padding:4px 0 2px}
+.rd-guest-summary{font-weight:600;font-size:14.5px}
+#panel-builder[data-layout="standard"] .guest-block .rd-row .field-label{display:none}
+@media(max-width:700px){.rd-row{flex-direction:column;gap:6px}.rd-label{flex:none;padding-top:0}}
+
+
+/* ---------- print preview modal (always black on white, like the printed sheet) ---------- */
+.ppv-overlay{position:fixed;inset:0;background:rgba(10,8,30,.62);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px;overflow-y:auto}
+.ppv-overlay[hidden]{display:none}
+.ppv-dialog{background:#fff;color:#000;border-radius:12px;max-width:840px;width:100%;box-shadow:0 24px 70px rgba(0,0,0,.45);overflow:hidden}
+.ppv-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid #ddd;background:#f4f4f7}
+.ppv-title{font-family:'Fraunces',serif;font-weight:700;font-size:17px;color:#111}
+.ppv-actions{display:flex;gap:8px;align-items:center}
+.ppv-x{border:1px solid #ccc;background:#fff;color:#111;border-radius:8px;width:32px;height:32px;font-size:16px;line-height:1;cursor:pointer}
+.ppv-x:hover{background:#eee}
+.ppv-sheet{background:#fff;color:#000;padding:34px 38px;max-height:calc(92vh - 62px);overflow-y:auto}
+.ppv-sheet,.ppv-sheet div,.ppv-sheet span,.ppv-sheet p,.ppv-sheet li,.ppv-sheet ul{color:#000}
+.ppv-brand{font-family:'Fraunces',serif;font-weight:700;font-size:24px;margin-bottom:2px;color:#000}
+.ppv-row{display:flex;gap:14px;padding:7px 0;border-bottom:1px solid #e4e4e4;align-items:flex-start}
+.ppv-lab{flex:0 0 190px;font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#555;padding-top:3px}
+.ppv-con{flex:1;font-size:14px;line-height:1.5;min-width:0}
+.ppv-con .t{font-family:'Space Mono',monospace;font-size:12px;color:#555;margin-right:8px}
+.ppv-seg{margin:20px 0 4px;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;letter-spacing:.04em;color:#000}
+.ppv-topic{margin:10px 0}
+.ppv-topic .tt{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.06em;margin-bottom:2px}
+.ppv-topic .th{font-family:'Fraunces',serif;font-weight:700;font-size:16.5px;margin-bottom:4px}
+.ppv-topic ul{margin:4px 0 4px 20px;font-size:13.5px}
+.ppv-topic li{margin-bottom:3px}
+.ppv-cue{font-size:12.5px;margin-top:5px}
+.ppv-note{font-style:italic;margin-top:6px;border-left:3px solid #000;padding:6px 0 6px 10px;font-size:13px}
+.ppv-note b{font-style:normal}
+.ppv-hour2{text-align:center;font-family:'Space Mono',monospace;letter-spacing:.35em;font-size:12px;color:#555;margin:18px 0 6px}
+.ppv-empty{color:#555;font-style:italic}
+@media(max-width:700px){.ppv-row{flex-direction:column;gap:4px}.ppv-lab{flex:none}}
+
+@media print{
+  .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast,.copy-btn{display:none !important}
+>>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
   .tab-panel{display:none}
   .tab-panel.active{display:block}
   html[data-theme="dark"]{--ink:#000;--muted:#444;--surface:#fff;--surface-2:#fff;--border:#999;--accent-strong:#000;--card-border:#999;--backup-bg:#fff}
@@ -630,6 +705,19 @@ html[data-theme="dark"] .ke-sw{border-color:rgba(255,255,255,.18)}
   .lane-title,.card-headline,.card-bullets,.note p,.feed-row,.iv-row,.brand,.day-title,.guest-name,.keep-note h4,.locked-banner .lb-title{color:#000 !important}
   .lane-time,.src,.badge,.tag,.via-badge,.tape-out,.backup-tag,.mv-label,.lane-locked-tag{color:#000 !important;background:none !important}
   a{color:#000 !important}
+<<<<<<< HEAD
+=======
+
+  .rd-furniture{display:block !important;background:#fff !important;border:1px solid #999 !important;box-shadow:none !important;margin-bottom:14px}
+  .rd-infolabel,.rd-tease{display:flex !important}
+  .rd-hour2,.topic-label,.rd-glabel{display:block !important}
+  .guest-block .field-label{display:none !important}
+  .guest-tools{display:none !important}
+  .rd-label,.rd-glabel{color:#444 !important}
+  .rd-brand,.topic-label{color:#000 !important}
+  .rd-input{border:1px solid #999 !important;color:#000 !important;background:#fff !important}
+  .rd-guest-summary{color:#000 !important}
+>>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
 }
 </style>
 </head>
@@ -1322,6 +1410,387 @@ $$('[data-blayout]').forEach(b => b.addEventListener('click', () => {
   toast(b.dataset.blayout === 'grid' ? 'Grid layout' : 'Standard layout');
 }));
 
+<<<<<<< HEAD
+=======
+
+/* ---------- rundown document anatomy: Standard mode mirrors the show-notes sheet ---------- */
+const RD_FURN_KEY = 'dg_rundown_furniture_v1';
+let rdFurn = (function(){ try { const r = localStorage.getItem(RD_FURN_KEY); return r ? JSON.parse(r) : {}; } catch(e){ return {}; } })();
+rdFurn.teases = rdFurn.teases || {};
+rdFurn.chats = Array.isArray(rdFurn.chats) ? rdFurn.chats : ['', '', ''];
+rdFurn.guests = rdFurn.guests || {};
+function rdSaveFurn(){ try { localStorage.setItem(RD_FURN_KEY, JSON.stringify(rdFurn)); } catch(e){} }
+
+(function rdBuildFurniture(){
+  const lanes = document.getElementById('lanes');
+  if (!lanes || document.getElementById('rdHeader')) return;
+  const headerHtml =
+  '<div class="rd-furniture" id="rdHeader" aria-label="Show header">' +
+    '<div class="rd-brand">THE DAILY GOODS</div>' +
+    '<div class="rd-row"><span class="rd-label">Show date</span><div class="rd-content"><input type="text" id="rdDate" class="rd-input" spellcheck="false"></div></div>' +
+    '<div class="rd-row"><span class="rd-label">Zoom Link</span><div class="rd-content"><input type="text" id="rdZoom" class="rd-input" placeholder="Paste the Zoom link" spellcheck="false"></div></div>' +
+    '<div class="rd-row"><span class="rd-label">Studio #</span><div class="rd-content"><input type="text" id="rdStudio" class="rd-input" placeholder="Listener line / guest line" spellcheck="false"></div></div>' +
+    '<div class="rd-row"><span class="rd-label">Today on the show</span><div class="rd-content"><div id="rdTots" class="rd-tots" aria-live="polite"></div></div></div>' +
+    '<div class="rd-row"><span class="rd-label">Show intro</span><div class="rd-content">' +
+      '<div class="field-label" style="margin-top:0">Guests</div><div id="rdIntroGuests"></div>' +
+      '<div class="field-label">Chats 1-3</div>' +
+      '<input type="text" class="rd-input rd-chat" data-chat="0" placeholder="Chat 1" spellcheck="true">' +
+      '<input type="text" class="rd-input rd-chat" data-chat="1" placeholder="Chat 2" spellcheck="true" style="margin-top:6px">' +
+      '<input type="text" class="rd-input rd-chat" data-chat="2" placeholder="Chat 3" spellcheck="true" style="margin-top:6px">' +
+    '</div></div>' +
+  '</div>';
+  lanes.insertAdjacentHTML('beforebegin', headerHtml);
+  const footerHtml =
+  '<div class="rd-furniture" id="rdFooter" aria-label="Show footer">' +
+    '<div class="rd-row"><span class="rd-label">Tease to tomorrow / this week</span><div class="rd-content"><textarea id="rdOutro" class="rd-input" rows="2" placeholder="Outro and goodbye tease" spellcheck="true"></textarea></div></div>' +
+    '<div class="rd-row"><span class="rd-label">Push</span><div class="rd-content"><input type="text" id="rdPush" class="rd-input" spellcheck="false"></div></div>' +
+  '</div>';
+  lanes.insertAdjacentHTML('afterend', footerHtml);
+
+  // per-lane: SEGMENT N: INFO label + TEASE row (story lanes only)
+  $$('#lanes .lane').forEach(lane => {
+    const id = lane.dataset.lane;
+    const n = id.replace('s', '');
+    const box = lane.querySelector('.cards');
+    if (!box) return;
+    if (lane.querySelector('.guest-block')) return; // guest lanes handled below
+    const info = document.createElement('div');
+    info.className = 'rd-infolabel';
+    info.innerHTML = '<span class="rd-label">Segment ' + n + ': Info</span>';
+    box.parentNode.insertBefore(info, box);
+    const tease = document.createElement('div');
+    tease.className = 'rd-row rd-tease';
+    let ph = 'Tease into the break';
+    if (id === 's3') ph = 'Tease into the break (hard out at 3:57)';
+    if (id === 's6') ph = 'End-of-show tease (hard out at 4:57)';
+    tease.innerHTML = '<span class="rd-label">Tease</span><div class="rd-content"><input type="text" class="rd-input rd-tease-input" data-seg="' + id + '" placeholder="' + escapeHtml(ph) + '" spellcheck="true"></div>';
+    box.parentNode.insertBefore(tease, box.nextSibling);
+  });
+
+  // HOUR 2 divider between segment 3 and 4
+  const s3 = document.querySelector('.lane[data-lane="s3"]');
+  if (s3 && !s3.nextElementSibling.classList.contains('rd-hour2')) {
+    const hd = document.createElement('div');
+    hd.className = 'rd-hour2';
+    hd.textContent = 'HOUR 2';
+    s3.parentNode.insertBefore(hd, s3.nextSibling);
+  }
+
+  // guest blocks: GUEST summary row + sheet-style row labels
+  $$('.guest-block').forEach(block => {
+    try {
+    const grow = document.createElement('div');
+    grow.className = 'rd-row';
+    grow.innerHTML = '<span class="rd-label rd-glabel">Guest:</span><div class="rd-content"><div class="rd-guest-summary"></div></div>';
+    block.insertBefore(grow, block.firstChild);
+    rdWrapGuestField(block, '.guest-name-input', 'Guest name:');
+    rdWrapGuestField(block, '.guest-slot', 'Slot:');
+    rdWrapGuestField(block, '.guest-format', 'Format:');
+    rdWrapGuestField(block, '.guest-intro-input', 'Intro:');
+    const lane = block.closest('.lane');
+    const segN = lane ? lane.dataset.lane.replace('s', '') : '';
+    rdWrapGuestField(block, '.guest-seginfo', 'Segment ' + segN + ': Info');
+    rdWrapGuestField(block, '.guest-tapeout', 'Tape out (host speaks last):');
+    rdWrapGuestField(block, '.guest-tease', 'Tease:');
+    } catch (err) { console.warn('guest row wrap failed', err); }
+  });
+
+  rdBindFurniture();
+  renumberTopics();
+  rdRefreshShow();
+})();
+
+function rdWrapGuestField(block, sel, labelText) {
+  const ctrl = block.querySelector(sel);
+  if (!ctrl || ctrl.closest('.rd-row')) return;
+  const row = document.createElement('div');
+  row.className = 'rd-row';
+  const gl = document.createElement('span');
+  gl.className = 'rd-label rd-glabel';
+  gl.textContent = labelText;
+  row.appendChild(gl);
+  const content = document.createElement('div');
+  content.className = 'rd-content';
+  const parent = ctrl.parentNode;
+  if (parent.classList.contains('guest-block')) {
+    // field-label is the previous sibling; move it and the control in
+    let p = ctrl.previousElementSibling;
+    let fl = null;
+    while (p) { if (p.classList && p.classList.contains('field-label')) { fl = p; break; } p = p.previousElementSibling; }
+    block.insertBefore(row, fl || ctrl);
+    if (fl) content.appendChild(fl);
+    content.appendChild(ctrl);
+  } else {
+    // control sits inside a wrapper div (e.g. .guest-row2 > div); move the wrapper
+    parent.parentNode.insertBefore(row, parent);
+    content.appendChild(parent);
+  }
+  row.appendChild(content);
+}
+
+function rdGuestInfo(laneId) {
+  const lane = document.querySelector('.lane[data-lane="' + laneId + '"]');
+  const block = lane ? lane.querySelector('.guest-block') : null;
+  const v = s => { const el = block ? block.querySelector(s) : null; return el ? el.value.trim() : ''; };
+  const tease = v('.guest-tease'), seg = v('.guest-seginfo');
+  return { name: v('.guest-name-input'), slot: v('.guest-slot'), topic: tease || seg.slice(0, 42) };
+}
+
+function rdRefreshShow() {
+  const g1 = rdGuestInfo('s2'), g2 = rdGuestInfo('s5');
+  const gline = (n, g) => 'GUEST ' + n + (g.name ? ' (' + g.name + (g.topic ? ' - ' + g.topic : '') + ')' : '');
+  const rows = [
+    ['3:05', 'THE LIST'], ['3:20', gline(1, g1)], ['3:40', 'LIFESTYLE CHAT'],
+    ['4:00', 'TRENDING TODAY'], ['4:20', gline(2, g2)], ['4:40', 'KICKER/GOODBYES']
+  ];
+  const tots = document.getElementById('rdTots');
+  if (tots) tots.innerHTML = rows.map(r => '<div><span class="t">' + r[0] + '</span>' + escapeHtml(r[1]) + '</div>').join('');
+  const ig = document.getElementById('rdIntroGuests');
+  if (ig) {
+    const gl = [g1, g2].filter(g => g.name);
+    ig.innerHTML = gl.length
+      ? gl.map(g => '<div><span class="t">' + escapeHtml(g.slot) + '</span>' + escapeHtml(g.name + (g.topic ? ' - ' + g.topic : '')) + '</div>').join('')
+      : '<div class="hint" style="margin:0">No guests booked yet.</div>';
+  }
+  const sumFor = { s2: g1, s5: g2 };
+  Object.keys(sumFor).forEach(id => {
+    const lane = document.querySelector('.lane[data-lane="' + id + '"]');
+    const sum = lane ? lane.querySelector('.rd-guest-summary') : null;
+    const g = sumFor[id];
+    if (sum) sum.textContent = (g.slot ? g.slot + ' - ' : '') + (g.name || 'TBD') + (g.topic ? ' - ' + g.topic : '');
+  });
+}
+
+function rdBindFurniture() {
+  const set = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
+  let todayStr = '';
+  try { todayStr = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(new Date()).toUpperCase(); } catch (e) { todayStr = new Date().toDateString().toUpperCase(); }
+  set('rdDate', rdFurn.date != null ? rdFurn.date : todayStr);
+  set('rdZoom', rdFurn.zoom || '');
+  set('rdStudio', rdFurn.studio || '');
+  set('rdOutro', rdFurn.outro || '');
+  set('rdPush', rdFurn.push != null ? rdFurn.push : 'TheDailyGoods@siriusxm.ca');
+  $$('.rd-chat').forEach(inp => { const v = rdFurn.chats[+inp.dataset.chat]; if (v) inp.value = v; });
+  $$('.rd-tease-input').forEach(inp => { const v = rdFurn.teases[inp.dataset.seg]; if (v != null) inp.value = v; });
+  ['s2', 's5'].forEach(id => {
+    const g = rdFurn.guests[id]; if (!g) return;
+    const lane = document.querySelector('.lane[data-lane="' + id + '"]');
+    const block = lane && lane.querySelector('.guest-block'); if (!block) return;
+    const setG = (sel, v) => { const el = block.querySelector(sel); if (el && v != null) el.value = v; };
+    setG('.guest-name-input', g.name); setG('.guest-slot', g.slot); setG('.guest-format', g.format);
+    setG('.guest-intro-input', g.intro); setG('.guest-seginfo', g.seginfo);
+    setG('.guest-tapeout', g.tapeout); setG('.guest-tease', g.tease);
+  });
+  const save = () => {
+    const gv = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+    rdFurn.date = gv('rdDate'); rdFurn.zoom = gv('rdZoom'); rdFurn.studio = gv('rdStudio');
+    rdFurn.outro = gv('rdOutro'); rdFurn.push = gv('rdPush');
+    rdFurn.chats = $$('.rd-chat').map(inp => inp.value);
+    rdFurn.teases = {};
+    $$('.rd-tease-input').forEach(inp => { rdFurn.teases[inp.dataset.seg] = inp.value; });
+    rdFurn.guests = {};
+    ['s2', 's5'].forEach(id => {
+      const lane = document.querySelector('.lane[data-lane="' + id + '"]');
+      const block = lane && lane.querySelector('.guest-block'); if (!block) return;
+      const bv = s => { const el = block.querySelector(s); return el ? el.value : ''; };
+      rdFurn.guests[id] = { name: bv('.guest-name-input'), slot: bv('.guest-slot'), format: bv('.guest-format'), intro: bv('.guest-intro-input'), seginfo: bv('.guest-seginfo'), tapeout: bv('.guest-tapeout'), tease: bv('.guest-tease') };
+    });
+    rdSaveFurn();
+  };
+  const header = document.getElementById('rdHeader');
+  const footer = document.getElementById('rdFooter');
+  if (header) header.addEventListener('input', save);
+  if (footer) footer.addEventListener('input', save);
+  document.getElementById('panel-builder').addEventListener('input', e => {
+    if (e.target.closest('.rd-tease') || e.target.closest('.guest-block')) { save(); rdRefreshShow(); }
+  });
+  document.getElementById('panel-builder').addEventListener('change', e => {
+    if (e.target.closest('.guest-block')) { save(); rdRefreshShow(); }
+  });
+}
+
+/* topic numbering: collapsed cards read as TOPIC 1/2/3, backups as BACK UP TOPIC */
+function renumberTopics() {
+  $$('#lanes .lane').forEach(lane => {
+    if (lane.querySelector('.guest-block')) return;
+    let n = 0;
+    lane.querySelectorAll('.cards > .card').forEach(card => {
+      let lab = null;
+      const kids = card.children;
+      for (let i = 0; i < kids.length; i++) { if (kids[i].classList.contains('topic-label')) { lab = kids[i]; break; } }
+      if (!lab) {
+        lab = document.createElement('div');
+        lab.className = 'topic-label';
+        const hd = card.querySelector('.card-headline');
+        card.insertBefore(lab, hd || card.firstChild);
+      }
+      if (card.classList.contains('backup')) lab.textContent = 'BACK UP TOPIC:';
+      else { n += 1; lab.textContent = 'TOPIC ' + n + ':'; }
+    });
+  });
+}
+
+
+/* ---------- print preview modal ---------- */
+(function ppvInit(){
+  if (document.getElementById('ppvOverlay')) return;
+  const ov = document.createElement('div');
+  ov.id = 'ppvOverlay';
+  ov.className = 'ppv-overlay';
+  ov.hidden = true;
+  ov.innerHTML =
+    '<div class="ppv-dialog" role="dialog" aria-modal="true" aria-label="Drive sheet preview">' +
+      '<div class="ppv-bar"><span class="ppv-title">Drive sheet preview</span>' +
+      '<span class="ppv-actions"><button class="btn btn-primary btn-sm" id="ppvPrint">Print</button>' +
+      '<button class="ppv-x" id="ppvCloseX" aria-label="Close preview">&times;</button></span></div>' +
+      '<div class="ppv-sheet" id="ppvSheet"></div>' +
+    '</div>';
+  document.body.appendChild(ov);
+  // buttons: one next to Print in the locked banner, one in the toolbar
+  const printBtn = document.getElementById('printBtn');
+  if (printBtn && !document.getElementById('ppvOpenBanner')) {
+    const b = document.createElement('button');
+    b.className = 'btn btn-sm'; b.id = 'ppvOpenBanner'; b.type = 'button';
+    b.textContent = 'Preview drive sheet';
+    b.style.marginLeft = '8px';
+    printBtn.parentNode.insertBefore(b, printBtn.nextSibling);
+    b.addEventListener('click', openPrintPreview);
+  }
+  const lockCtl = document.querySelector('#panel-builder .lock-controls');
+  if (lockCtl && !document.getElementById('ppvOpenTool')) {
+    const b = document.createElement('button');
+    b.className = 'btn btn-sm'; b.id = 'ppvOpenTool'; b.type = 'button';
+    b.textContent = 'Preview drive sheet';
+    lockCtl.appendChild(b);
+    b.addEventListener('click', openPrintPreview);
+  }
+  document.getElementById('ppvPrint').addEventListener('click', () => window.print());
+  document.getElementById('ppvCloseX').addEventListener('click', closePrintPreview);
+  ov.addEventListener('click', e => { if (e.target === ov) closePrintPreview(); });
+  document.addEventListener('keydown', e => {
+    const o = document.getElementById('ppvOverlay');
+    if (o && !o.hidden && e.key === 'Escape') closePrintPreview();
+  });
+})();
+
+function openPrintPreview(){
+  const sheet = document.getElementById('ppvSheet');
+  if (sheet) sheet.innerHTML = buildPreviewHtml();
+  const ov = document.getElementById('ppvOverlay');
+  if (ov) { ov.hidden = false; document.body.style.overflow = 'hidden'; }
+  const x = document.getElementById('ppvCloseX');
+  if (x) x.focus();
+}
+function closePrintPreview(){
+  const ov = document.getElementById('ppvOverlay');
+  if (ov) ov.hidden = true;
+  document.body.style.overflow = '';
+}
+function ppvEsc(s){ return escapeHtml(s == null ? '' : String(s)); }
+function ppvRow(lab, html){ return '<div class="ppv-row"><span class="ppv-lab">' + ppvEsc(lab) + '</span><div class="ppv-con">' + html + '</div></div>'; }
+function ppvCardBullets(card){
+  const out = [];
+  card.querySelectorAll('.bullet-edit li span').forEach(sp => { const t = sp.textContent.trim(); if (t) out.push(t); });
+  if (!out.length) card.querySelectorAll('.card-bullets li').forEach(li => {
+    if (li.classList.contains('empty-note')) return;
+    const t = li.textContent.trim(); if (t) out.push(t);
+  });
+  return out;
+}
+function ppvCardCue(card){
+  let cue = '';
+  const det = card.querySelector('.card-details');
+  if (det) { const inp = det.querySelector('input[type="text"]'); if (inp && inp.value.trim()) cue = inp.value.trim(); }
+  if (!cue) { const ca = card.querySelector('.card-audio'); if (ca && ca.textContent.trim()) cue = ca.textContent.trim(); }
+  return cue;
+}
+function ppvCardNote(card){
+  const psw = card.querySelector('.print-switch');
+  const on = card.classList.contains('print-notes') || (psw && psw.getAttribute('aria-checked') === 'true');
+  if (!on) return '';
+  const ta = card.querySelector('.prod-notes');
+  return ta ? ta.value.trim() : '';
+}
+function ppvCardHeadline(card){
+  const he = card.querySelector('.card-headline');
+  if (!he) return 'Untitled story';
+  const c = he.cloneNode(true);
+  const tag = c.querySelector('.backup-tag'); if (tag) tag.remove();
+  const tl = c.querySelector('.topic-label'); if (tl) tl.remove();
+  return c.textContent.trim() || 'Untitled story';
+}
+function buildPreviewHtml(){
+  const gv = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  let s = '';
+  s += '<div class="ppv-brand">THE DAILY GOODS</div>';
+  const date = gv('rdDate'), zoom = gv('rdZoom'), studio = gv('rdStudio');
+  if (date) s += ppvRow('', '<b>' + ppvEsc(date) + '</b>');
+  if (zoom) s += ppvRow('Zoom Link', ppvEsc(zoom));
+  if (studio) s += ppvRow('Studio #', ppvEsc(studio));
+  // today on the show (reuse the live-built list)
+  const totsEl = document.getElementById('rdTots');
+  let totsHtml = '';
+  if (totsEl) totsEl.querySelectorAll(':scope > div').forEach(d => { totsHtml += '<div>' + d.innerHTML + '</div>'; });
+  s += ppvRow('Today on the show', totsHtml || '<span class="ppv-empty">No segments yet.</span>');
+  // show intro
+  let introHtml = '';
+  const ig = document.getElementById('rdIntroGuests');
+  if (ig) ig.querySelectorAll(':scope > div').forEach(d => { if (!d.classList.contains('hint')) introHtml += '<div>' + d.innerHTML + '</div>'; });
+  const chats = [];
+  document.querySelectorAll('.rd-chat').forEach(inp => { if (inp.value.trim()) chats.push(inp.value.trim()); });
+  if (introHtml) introHtml = '<div style="margin-bottom:6px"><b>Guests</b></div>' + introHtml;
+  if (chats.length) introHtml += '<div style="margin:6px 0 2px"><b>Chats</b></div>' + chats.map((c, i) => '<div>' + (i + 1) + '. ' + ppvEsc(c) + '</div>').join('');
+  s += ppvRow('Show intro', introHtml || '<span class="ppv-empty">TBD</span>');
+
+  const lanes = Array.from(document.querySelectorAll('#lanes .lane'));
+  const times = { s1: '3:05', s2: '3:20', s3: '3:40', s4: '4:00', s5: '4:20', s6: '4:40' };
+  const titles = { s1: 'THE LIST', s2: 'GUEST', s3: 'LIFESTYLE CHAT', s4: 'TRENDING TODAY', s5: 'GUEST', s6: 'KICKER/GOODBYES' };
+  lanes.forEach(lane => {
+    const id = lane.dataset.lane;
+    const n = id.replace('s', '');
+    s += '<div class="ppv-seg">' + (times[id] || '') + ' - ' + (titles[id] || id) + '</div>';
+    const guest = lane.querySelector('.guest-block');
+    if (guest) {
+      const gval = sel => { const el = guest.querySelector(sel); return el ? el.value.trim() : ''; };
+      const name = gval('.guest-name-input'), slot = gval('.guest-slot'), intro = gval('.guest-intro-input'),
+            seg = gval('.guest-seginfo'), tape = gval('.guest-tapeout'), tease = gval('.guest-tease');
+      if (name || slot) s += ppvRow('Guest', ppvEsc([slot, name].filter(Boolean).join(' - ')));
+      if (intro) s += ppvRow('Intro', ppvEsc(intro).replace(/\n/g, '<br>'));
+      if (seg) s += ppvRow('Segment ' + n + ': Info', ppvEsc(seg).replace(/\n/g, '<br>'));
+      if (tape) s += ppvRow('Tape out (host speaks last)', ppvEsc(tape));
+      if (tease) s += ppvRow('Tease', ppvEsc(tease));
+    } else {
+      let tnum = 0;
+      const cards = lane.querySelectorAll('.cards > .card');
+      if (!cards.length) s += ppvRow('Segment ' + n + ': Info', '<span class="ppv-empty">No topics yet.</span>');
+      cards.forEach(card => {
+        const isB = card.classList.contains('backup');
+        const lab = isB ? 'BACK UP TOPIC:' : ('TOPIC ' + (++tnum) + ':');
+        let ch = '<div class="ppv-topic"><div class="tt">' + lab + '</div><div class="th">' + ppvEsc(ppvCardHeadline(card)) + '</div>';
+        const bl = ppvCardBullets(card);
+        if (bl.length) ch += '<ul>' + bl.map(b => '<li>' + ppvEsc(b) + '</li>').join('') + '</ul>';
+        const cue = ppvCardCue(card);
+        if (cue) ch += '<div class="ppv-cue">AUDIO CUE: ' + ppvEsc(cue) + '</div>';
+        const note = ppvCardNote(card);
+        if (note) ch += '<div class="ppv-note"><b>PRODUCER NOTE:</b> ' + ppvEsc(note).replace(/\n/g, '<br>') + '</div>';
+        ch += '</div>';
+        if (!isB && tnum === 1) s += ppvRow('Segment ' + n + ': Info', ch);
+        else s += ch;
+      });
+      const ti = lane.querySelector('.rd-tease-input');
+      const tv = ti ? ti.value.trim() : '';
+      s += ppvRow('Tease', tv ? ppvEsc(tv) : '');
+    }
+    if (id === 's3') s += '<div class="ppv-hour2">HOUR 2</div>';
+  });
+
+  const outro = gv('rdOutro'), push = gv('rdPush');
+  if (outro) s += ppvRow('Tease to tomorrow / this week', ppvEsc(outro).replace(/\n/g, '<br>'));
+  if (push) s += ppvRow('Push', ppvEsc(push));
+  return s;
+}
+
+>>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
 /* ---------- theme ---------- */
 const themeBtn = document.getElementById('themeToggle');
 themeBtn.addEventListener('click', () => {
@@ -1387,6 +1856,10 @@ $$('.lane .cards').forEach(list => {
         item.classList.add('confirm-pulse');
         item.addEventListener('animationend', () => item.classList.remove('confirm-pulse'), { once: true });
       }
+<<<<<<< HEAD
+=======
+      renumberTopics();
+>>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
       setTimeout(() => { justDragged = false; }, 120);
     }
   });
@@ -1537,6 +2010,10 @@ document.addEventListener('click', e => {
         headline.appendChild(tag);
       }
     }
+<<<<<<< HEAD
+=======
+    renumberTopics();
+>>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
     return;
   }
   const psw = e.target.closest('.print-switch');
@@ -1598,6 +2075,10 @@ document.addEventListener('keydown', e => {
       if (e.key === 'ArrowUp') card.parentNode.insertBefore(card, sib);
       else card.parentNode.insertBefore(sib, card);
       card.focus();
+<<<<<<< HEAD
+=======
+      renumberTopics();
+>>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
       const lane = card.closest('.lane');
       if (lane) {
         lane.classList.add('lane-flash');
@@ -1972,6 +2453,10 @@ function openComposer(lane) {
     const l = el.closest('.lane');
     l.classList.add('lane-flash');
     setTimeout(() => l.classList.remove('lane-flash'), 450);
+<<<<<<< HEAD
+=======
+    renumberTopics();
+>>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
     toast('Story added');
   };
   form.querySelector('.composer-add').addEventListener('click', commit);
@@ -2047,6 +2532,10 @@ function moveCard(card, dir) {
     lane.classList.add('lane-flash');
     setTimeout(() => lane.classList.remove('lane-flash'), 450);
   }
+<<<<<<< HEAD
+=======
+  renumberTopics();
+>>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
 }
 $$('.card').forEach(card => {
   if (!card.querySelector('.mini-arrows')) {
@@ -2820,6 +3309,10 @@ function npSendToBuilder(it) {
     if (eb) eb.innerHTML = it.bullets.map(b => '<li><span contenteditable="true" spellcheck="true">' + escapeHtml(b) + '</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>').join('');
   }
   box.appendChild(card);
+<<<<<<< HEAD
+=======
+  renumberTopics();
+>>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
   card.classList.add('expanded', 'just-added');
   setTimeout(() => card.classList.remove('just-added'), 1400);
   card.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'nearest' });
@@ -2863,6 +3356,10 @@ function npSendToBuilderQuiet(it) {
   }
   box.appendChild(card);
   it.sent = true;
+<<<<<<< HEAD
+=======
+  renumberTopics();
+>>>>>>> 41a85d2 (Prototype preview v21: rundown-format builder + print preview (key redacted))
   return true;
 }
 
