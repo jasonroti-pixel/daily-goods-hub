@@ -1,0 +1,2337 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-accent="profound">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Goods Hub - Design Prototype v13 (Royal Signal)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Geist:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<style>
+:root{
+  --bg:#8DBBFF;
+  --bg-grad:linear-gradient(160deg,#8DBBFF 0%,#B9CFF5 30%,#F6F5F1 56%,#C9C3E8 82%,#5E6AD2 100%);
+  --surface:#FFFFFF;
+  --surface-2:#F6F5F1;
+  --marker:#8DBBFF;
+  --indigo:#5E6AD2;
+  --ink:#1B2340;
+  --muted:#5A6584;
+  --border:#D5DDF2;
+  --backup-bg:#F6F5F1;
+  --ok:#1E7A4C;
+  --warn:#B3541E;
+  --shadow-lift:0 16px 34px rgba(43,87,214,.35);
+  --ease:cubic-bezier(0.16,1,0.3,1);
+  --radius:10px;
+  --bar:linear-gradient(120deg,#5E6AD2 0%,#376CFF 100%);
+  --bar-2:#4E5ED2;
+  --bar-ink:#FFFFFF;
+  --bar-muted:#D6E2FF;
+  --card-border:#DDE4F5;
+}
+html[data-accent="profound"]{
+  --accent:#376CFF;
+  --accent-strong:#2B57D6;
+  --accent-soft:rgba(55,108,255,.16);
+  --accent-ghost:rgba(55,108,255,.08);
+  --accent-ring:rgba(55,108,255,.42);
+  --accent-ink:#FFFFFF;
+  --accent-glow:#8DBBFF;
+  --btn-grad:linear-gradient(180deg,#5B86FF 0%,#376CFF 52%,#2B57D6 100%);
+}
+html[data-accent="indigo"]{
+  --accent:#5E6AD2;
+  --accent-strong:#48509E;
+  --accent-soft:rgba(94,106,210,.16);
+  --accent-ghost:rgba(94,106,210,.07);
+  --accent-ring:rgba(94,106,210,.40);
+  --accent-ink:#FFFFFF;
+  --accent-glow:#8DBBFF;
+  --btn-grad:linear-gradient(180deg,#7B86E0 0%,#5E6AD2 52%,#49549E 100%);
+}
+html[data-accent="marker"]{
+  --accent:#8DBBFF;
+  --accent-strong:#5E8FE0;
+  --accent-soft:rgba(141,187,255,.28);
+  --accent-ghost:rgba(141,187,255,.12);
+  --accent-ring:rgba(141,187,255,.45);
+  --accent-ink:#1B2340;
+  --accent-glow:#B9D2FF;
+  --btn-grad:linear-gradient(180deg,#A9C6FF 0%,#8DBBFF 52%,#6FA0E8 100%);
+}
+html[data-theme="dark"]{
+  --bg:#12122B;
+  --bg-grad:radial-gradient(600px 320px at 12% -4%,rgba(141,187,255,.16),transparent 60%),radial-gradient(700px 360px at 88% 104%,rgba(94,106,210,.18),transparent 60%),linear-gradient(160deg,#1B1B4D 0%,#12122B 48%,#0C0C22 100%);
+  --surface:#1C1C46;
+  --surface-2:#161638;
+  --marker:#8DBBFF;
+  --indigo:#8B93F8;
+  --ink:#F2EFE9;
+  --muted:#A9B4D4;
+  --border:rgba(255,255,255,.10);
+  --backup-bg:#23235A;
+  --shadow-lift:0 16px 34px rgba(0,0,0,.6);
+  --bar:linear-gradient(120deg,#49549E 0%,#2B57D6 100%);
+  --bar-2:#1B1B4D;
+  --bar-ink:#FFFFFF;
+  --bar-muted:#C9D8FF;
+  --card-border:rgba(255,255,255,.10);
+}
+html[data-theme="dark"][data-accent="profound"]{
+  --accent:#6B8FF5;
+  --accent-strong:#9DB8FA;
+  --accent-soft:rgba(107,143,245,.18);
+  --accent-ghost:rgba(107,143,245,.08);
+  --accent-ring:rgba(107,143,245,.45);
+  --accent-ink:#101736;
+  --accent-glow:#8DBBFF;
+  --btn-grad:linear-gradient(180deg,#7FA3F7 0%,#6B8FF5 50%,#4E72E0 100%);
+}
+html[data-theme="dark"][data-accent="indigo"]{
+  --accent:#8B93F8;
+  --accent-strong:#AEB4FA;
+  --accent-soft:rgba(139,147,248,.18);
+  --accent-ghost:rgba(139,147,248,.08);
+  --accent-ring:rgba(139,147,248,.45);
+  --accent-ink:#101736;
+  --accent-glow:#B9C6FF;
+  --btn-grad:linear-gradient(180deg,#9AA1FA 0%,#8B93F8 50%,#6E75E4 100%);
+}
+html[data-theme="dark"][data-accent="marker"]{
+  --accent:#8DBBFF;
+  --accent-strong:#A9C6FF;
+  --accent-soft:rgba(141,187,255,.20);
+  --accent-ghost:rgba(141,187,255,.09);
+  --accent-ring:rgba(141,187,255,.45);
+  --accent-ink:#101736;
+  --accent-glow:#C4D9FF;
+  --btn-grad:linear-gradient(180deg,#A9C6FF 0%,#8DBBFF 50%,#6FA0E8 100%);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:'Geist',system-ui,-apple-system,sans-serif;
+  background-color:var(--bg);
+  background-image:var(--bg-grad);
+  background-attachment:fixed;
+  color:var(--ink);
+  font-size:15px;
+  line-height:1.5;
+  transition:background 250ms var(--ease),color 250ms var(--ease);
+}
+h1,h2,.lane-title,.brand,.guest-name{font-family:'Fraunces',Georgia,serif}
+.proto-banner{
+  background:linear-gradient(120deg,#2A2A6E 0%,#376CFF 100%);
+  color:var(--bar-ink);
+  border-bottom:2px solid var(--accent);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
+  display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;
+  font-size:13px;font-weight:600;letter-spacing:.03em;
+  padding:8px 16px;
+  transition:background 250ms var(--ease);
+}
+.accent-picker{display:flex;gap:8px;align-items:center}
+.accent-picker .lbl{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.swatch{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.65);cursor:pointer;padding:0;transition:transform 150ms var(--ease)}
+.swatch:hover{transform:scale(1.15)}
+.swatch[data-accent="profound"]{background:linear-gradient(135deg,#5B86FF,#2B57D6)}
+.swatch[data-accent="indigo"]{background:linear-gradient(135deg,#7B86E0,#49549E)}
+.swatch[data-accent="marker"]{background:linear-gradient(135deg,#A9C6FF,#6FA0E8)}
+.swatch.active{box-shadow:0 0 0 2px #fff}
+.app-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 28px;
+  border-bottom:2px solid var(--accent);
+  background:var(--bar);
+}
+.brand{font-size:21px;font-weight:600;letter-spacing:.005em;color:var(--bar-ink)}
+.brand em{font-style:italic;font-weight:500;color:var(--accent-glow)}
+.brand small{display:block;font-family:'Space Mono',monospace;font-size:10.5px;font-weight:400;color:var(--bar-muted);letter-spacing:.16em;text-transform:uppercase;margin-top:2px}
+.header-actions{display:flex;gap:10px;align-items:center}
+.btn{
+  font-family:'Geist',sans-serif;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--ink);
+  border-radius:8px;
+  padding:8px 14px;
+  font-size:13px;font-weight:600;
+  cursor:pointer;
+  transition:background 150ms var(--ease),transform 150ms var(--ease),border-color 150ms var(--ease),opacity 150ms var(--ease);
+}
+.btn:hover{background:var(--surface-2)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--btn-grad);border-color:transparent;color:var(--accent-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 1px 2px rgba(31,27,22,.20)}
+.btn-primary:hover{filter:brightness(1.06)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.icon-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;flex:none;
+  border:1px solid var(--border);background:var(--surface);border-radius:8px;
+  color:var(--muted);cursor:pointer;
+  transition:color 150ms var(--ease),border-color 150ms var(--ease),background 150ms var(--ease);
+}
+.icon-btn:hover{color:var(--ink);border-color:var(--indigo)}
+.icon-btn.on{color:var(--indigo);border-color:var(--indigo);background:rgba(94,106,210,.12)}
+.icon-btn svg{width:15px;height:15px;display:block}
+.tabs{
+  display:flex;gap:4px;
+  padding:12px 28px 0;
+  background:var(--bar-2);
+  border-bottom:1px solid rgba(255,255,255,.10);
+  position:sticky;top:0;z-index:40;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  font-family:'Geist',sans-serif;
+  flex:none;
+  font-size:14px;font-weight:600;
+  padding:10px 18px;
+  border:none;background:none;color:var(--bar-muted);
+  border-bottom:3px solid transparent;
+  cursor:pointer;
+  transition:color 150ms var(--ease),border-color 150ms var(--ease);
+}
+.tab:hover{color:var(--bar-ink)}
+.tab.active{color:var(--accent-glow);border-bottom-color:var(--accent)}
+.tab-panel{display:none;padding:28px;max-width:1460px;margin:0 auto}
+.tab-panel.active{display:block;animation:fadeSlide 250ms var(--ease)}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.builder-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.day-title{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin:0}
+.day-title em{font-style:italic;font-weight:500}
+.lock-controls{display:flex;gap:8px;align-items:center}
+.locked-banner{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  border:1px solid var(--accent);
+  background:var(--accent-soft);
+  border-radius:10px;
+  padding:14px 18px;
+  margin-bottom:16px;
+}
+.locked-banner[hidden]{display:none}
+.locked-banner .lb-title{font-family:'Fraunces',serif;font-size:17px;font-weight:600}
+.locked-banner .lb-sub{font-size:13px;color:var(--muted)}
+.locked-banner .btn{margin-left:auto}
+.lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:1100px){.lanes{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.lanes{grid-template-columns:1fr}}
+.lane{
+  background:linear-gradient(180deg,#2E2E7A 0%,#1E1E5C 100%);
+  border:1px solid #4A4AA8;
+  border-radius:10px;
+  padding:14px;
+  min-height:220px;
+  box-shadow:0 12px 28px rgba(30,27,58,.35);
+  transition:box-shadow 200ms var(--ease),border-color 200ms var(--ease),background 200ms var(--ease);
+}
+.lane.lane-flash{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.lane-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.lane-id{min-width:0}
+.lane-time{
+  display:block;
+  font-family:'Space Mono',monospace;font-size:11.5px;font-weight:700;
+  letter-spacing:.1em;color:var(--accent-glow);margin-bottom:2px;
+  font-feature-settings:"tnum";
+}
+.lane-title{font-size:17px;font-weight:600;margin:0;letter-spacing:.005em;line-height:1.25;color:var(--bar-ink)}
+.lane-locked-tag{
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.12em;
+  color:var(--accent-glow);margin-left:8px;vertical-align:2px;
+}
+.lane-locked-tag[hidden]{display:none}
+.lane-actions{display:flex;gap:8px;align-items:center;flex:none}
+.lane .cards{display:flex;flex-direction:column;gap:12px;min-height:120px}
+.lane.locked .card{opacity:.78;cursor:default}
+.lane.locked .card .grip{display:none}
+.lane.locked .cards{min-height:60px}
+.card{
+  background:linear-gradient(180deg,#FFFFFF 0%,#F8F7FD 100%);
+  border:1px solid var(--card-border);
+  border-radius:var(--radius);
+  padding:12px 14px;
+  cursor:grab;
+  position:relative;
+  transition:transform 150ms ease-out,box-shadow 150ms ease-out,border-color 150ms var(--ease),opacity 200ms var(--ease);
+}
+.card:hover{border-color:var(--accent)}
+.card:focus{outline:none}
+.card:focus-visible{outline:3px solid var(--marker);outline-offset:2px}
+.card .grip{
+  position:absolute;top:8px;right:10px;
+  color:var(--muted);font-size:14px;letter-spacing:2px;
+  opacity:0;transition:opacity 150ms var(--ease);
+  cursor:grab;user-select:none;
+}
+.card:hover .grip,.card:focus-visible .grip{opacity:.7}
+.card-headline{font-weight:600;font-size:14px;margin:0 26px 6px 0;line-height:1.4}
+.card-meta{display:flex;gap:8px;align-items:center;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.src{font-weight:600;color:var(--accent-strong);text-transform:uppercase;letter-spacing:.06em;font-size:10.5px}
+.tag{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:var(--accent-soft);color:var(--accent-strong)}
+.tag.alt{background:#F6E9C8;color:#7A5A10}
+html[data-theme="dark"] .tag.alt{background:rgba(232,184,75,.14);color:#F0C35A}
+.card-bullets{margin:8px 0 0;padding-left:18px;font-size:13px;color:var(--ink)}
+.card-bullets li{margin-bottom:3px}
+.card-audio{
+  margin-top:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.03em;
+  color:var(--muted);background:var(--surface-2);
+  border:1px solid var(--border);border-radius:6px;padding:5px 9px;display:inline-block;
+}
+.card.backup{border-style:dashed;background:var(--backup-bg);opacity:.92}
+.backup-tag{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--warn);border:1px dashed var(--warn);border-radius:4px;padding:1px 6px;margin-left:6px}
+.card.is-dragging{
+  transform:scale(1.03);
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-ring),0 18px 44px rgba(217,164,65,.38);
+  transition:transform 150ms ease-out,box-shadow 150ms ease-out;
+  z-index:60;
+  cursor:grabbing;
+}
+.drag-ghost{
+  border:2px dashed var(--accent) !important;
+  background:var(--accent-ghost) !important;
+  box-shadow:none !important;
+  position:relative;
+}
+.drag-ghost::before{
+  content:'';
+  position:absolute;top:-7px;left:10px;right:10px;height:3px;
+  background:var(--accent);border-radius:2px;
+}
+.drag-ghost *{visibility:hidden}
+@keyframes confirmPulse{
+  0%{transform:scale(1);box-shadow:0 0 0 0 var(--accent-ring)}
+  50%{transform:scale(1.02);box-shadow:0 0 0 7px rgba(0,0,0,0)}
+  100%{transform:scale(1);box-shadow:0 0 0 0 rgba(0,0,0,0)}
+}
+.card.confirm-pulse{animation:confirmPulse 300ms cubic-bezier(0.16,1,0.3,1) 1}
+.card-details{display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
+.card.expanded .card-details{display:block;animation:fadeSlide 200ms var(--ease)}
+.field-label{font-family:'Space Mono',monospace;font-size:10.5px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:12px 0 6px}
+.field-label:first-child{margin-top:0}
+.url-row{display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:6px}
+.url-row a{color:var(--accent-strong);text-decoration:none;word-break:break-all}
+.url-row a:hover{text-decoration:underline}
+.bullet-edit{list-style:none;margin:0;padding:0}
+.bullet-edit li{display:flex;gap:8px;align-items:flex-start;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;margin-bottom:6px;font-size:13px}
+.bullet-edit li span{flex:1}
+.bullet-del{border:none;background:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:2px}
+.bullet-del:hover{color:#B3261E}
+.bullet-edit li span[contenteditable="true"]{flex:1;min-height:1.2em;outline:none;border-radius:4px;padding:1px 4px;margin:-1px -4px;cursor:text}
+.bullet-edit li span[contenteditable="true"]:focus{background:var(--surface);box-shadow:0 0 0 2px var(--marker)}
+.bullet-edit li span:empty::before{content:"New talking point";color:var(--muted);font-style:italic}
+.add-bullet{margin:2px 0 4px}
+.card input[type=text],.card textarea,.note-add input,.composer input[type=text]{
+  width:100%;font-family:'Geist',sans-serif;font-size:13px;color:var(--ink);
+  background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;
+}
+.card input[type=text]:focus,.card textarea:focus,.composer input[type=text]:focus{outline:2px solid var(--marker);outline-offset:0;border-color:var(--accent)}
+.card textarea{min-height:64px;resize:vertical}
+.nico-btn{display:inline-flex;align-items:center;gap:8px}
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin 700ms linear infinite;display:none}
+html[data-theme="dark"] .spinner{border-color:rgba(236,232,250,.35);border-top-color:#ECE8FA}
+.nico-btn.loading .spinner{display:inline-block}
+.nico-btn.loading{opacity:.75;pointer-events:none}
+.nico-calm{font-size:12.5px;color:var(--muted);font-style:italic;margin-top:8px}
+.via-badge{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent-strong);border-radius:10px;padding:2px 8px;white-space:nowrap}
+.nico-error{font-size:12.5px;color:#B3261E;margin-top:8px;line-height:1.45}
+.nico-error a{color:var(--accent-strong);font-weight:600}
+.card .print-note{display:none}
+@media print{
+  .card.print-notes .print-note{display:block;font-style:italic;margin-top:10px;padding:8px 12px;border-left:3px solid #000;font-size:12.5px;line-height:1.5}
+  .card.print-notes .print-note::before{content:"PRODUCER NOTE: ";font-style:normal;font-weight:700}
+  .card.print-notes .print-note:empty{display:none}
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toggle-row{display:flex;gap:10px;align-items:center;margin-top:6px}
+.switch{position:relative;width:38px;height:22px;background:var(--border);border-radius:20px;border:none;cursor:pointer;transition:background 150ms var(--ease);flex:none}
+.switch::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left 150ms var(--ease);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.switch[aria-checked="true"]{background:var(--warn)}
+.switch[aria-checked="true"]::after{left:19px}
+.switch-label{font-size:13px;font-weight:600}
+.composer{
+  background:var(--surface);
+  border:1px dashed var(--accent);
+  border-radius:var(--radius);
+  padding:12px;
+  animation:fadeSlide 200ms var(--ease);
+}
+.composer .composer-row{display:flex;gap:8px;margin-top:10px}
+.guest-block{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-left:3px solid var(--accent);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  cursor:default;
+}
+.guest-name{font-size:16px;font-weight:600;margin:0 0 4px}
+.guest-intro{font-size:13px;color:var(--ink);margin:0 0 8px}
+.tape-out{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--accent-strong);text-transform:uppercase}
+.board-toolbar{display:flex;gap:10px;margin-bottom:18px;align-items:center;flex-wrap:wrap}
+.note-add{display:flex;gap:8px;flex:1;min-width:260px;max-width:560px}
+.board{
+  position:relative;
+  min-height:520px;
+  border-radius:10px;
+  border:1px solid #453D85;
+  background:
+    repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 2px,transparent 2px 8px),
+    linear-gradient(135deg,#332C70,#221D52);
+  box-shadow:inset 0 2px 10px rgba(0,0,0,.30);
+  overflow:hidden;
+}
+html[data-theme="dark"] .board{background:repeating-linear-gradient(45deg,rgba(255,255,255,.04) 0 2px,transparent 2px 8px),linear-gradient(135deg,#1C1940,#12102A)}
+.note{
+  position:absolute;
+  width:190px;
+  padding:12px 12px 10px;
+  border-radius:2px 2px 8px 2px;
+  box-shadow:0 6px 14px rgba(0,0,0,.25);
+  font-size:13px;
+  cursor:grab;
+  user-select:none;
+  transition:box-shadow 150ms var(--ease);
+}
+.note.dragging{cursor:grabbing;box-shadow:0 16px 30px rgba(0,0,0,.35);z-index:50}
+.note p{margin:0 0 10px;white-space:pre-wrap;word-break:break-word;color:#2A2620}
+.note-actions{display:flex;gap:6px}
+.note-actions button{
+  font-size:11px;font-weight:700;border:none;border-radius:5px;padding:4px 8px;cursor:pointer;
+  background:rgba(0,0,0,.12);color:#2A2620;
+}
+.note-actions button:hover{background:rgba(0,0,0,.22)}
+.note .pin{
+  position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+  width:18px;height:18px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#B9D2FF,#376CFF);
+  box-shadow:0 2px 4px rgba(0,0,0,.4);
+}
+html[data-theme="dark"] .note p{color:#ECE8FA}
+html[data-theme="dark"] .note-actions button{background:rgba(255,255,255,.14);color:#ECE8FA}
+.panel-card{background:var(--surface);border:1px solid var(--card-border);border-radius:10px;padding:20px 22px;margin-bottom:18px;box-shadow:0 6px 18px rgba(30,27,58,.14)}
+.panel-card h2{font-size:18px;margin:0 0 4px;font-weight:600}
+.panel-card .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+.feed-row,.iv-row{display:flex;gap:12px;align-items:center;padding:11px 4px;border-top:1px solid var(--border);font-size:13.5px}
+.feed-row:first-of-type,.iv-row:first-of-type{border-top:none}
+.feed-row .t,flex:1;font-weight:500}
+.promote{flex:none}
+.badge{font-family:'Space Mono',monospace;font-size:10px;font-weight:400;letter-spacing:.08em;padding:3px 8px;border-radius:20px;background:var(--accent-soft);color:var(--accent-strong);text-transform:uppercase;white-space:nowrap}
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--bg);
+  padding:10px 20px;border-radius:30px;font-size:13px;font-weight:600;
+  opacity:0;pointer-events:none;transition:opacity 200ms var(--ease),transform 200ms var(--ease);
+  z-index:200;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.hint{font-size:12.5px;color:#332E5E;margin:0 0 14px}
+html[data-theme="dark"] .hint{color:var(--muted)}
+.kbd{display:inline-block;border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;padding:0 6px;font-size:11.5px;font-family:'Space Mono',monospace;background:var(--surface-2);font-weight:400;margin:0 2px}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+/* ---- v3: dark gradients, marker highlighter treatments ---- */
+html[data-theme="dark"] .lane{background:linear-gradient(180deg,#23235C 0%,#161640 100%);border-color:rgba(255,255,255,.10)}
+html[data-theme="dark"] .card{background:linear-gradient(180deg,#242052 0%,#1A1740 100%)}
+html:not([data-theme="dark"]) .card.is-dragging{background:linear-gradient(180deg,#FFFFFF 0%,#FFF3D9 100%)}
+html[data-theme="dark"] .card.is-dragging{background:linear-gradient(180deg,#2C2560 0%,#1E1B44 100%);box-shadow:0 0 0 3px var(--accent-ring),0 18px 44px rgba(232,184,75,.30)}
+html[data-theme="dark"] .icon-btn.on{background:rgba(232,184,75,.14);color:var(--accent-glow);border-color:var(--accent)}
+.card.expanded .card-headline{background:linear-gradient(180deg,rgba(217,164,65,.38),rgba(217,164,65,.12));margin:-4px 20px 6px -6px;padding:4px 6px;border-radius:6px}
+html[data-theme="dark"] .card.expanded .card-headline{background:linear-gradient(180deg,rgba(232,184,75,.26),rgba(232,184,75,.07))}
+.card.just-added::after{content:'';position:absolute;inset:0;border-radius:var(--radius);background:linear-gradient(180deg,rgba(217,164,65,.55),rgba(217,164,65,.20));pointer-events:none;animation:markerFlashFade 1300ms ease-out 1 forwards}
+@keyframes markerFlashFade{to{opacity:0}}
+
+/* ---- v3b: guest editor ---- */
+.guest-block{background:linear-gradient(180deg,#FFFFFF 0%,#F5F3FD 100%)}
+html[data-theme="dark"] .guest-block{background:linear-gradient(180deg,#242052 0%,#1A1740 100%)}
+.guest-block input[type=text],.guest-block select,.guest-block textarea{
+  width:100%;font-family:'Geist',sans-serif;font-size:13px;color:var(--ink);
+  background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;
+}
+.guest-block input[type=text]:focus,.guest-block select:focus,.guest-block textarea:focus{outline:2px solid var(--marker);outline-offset:0;border-color:var(--accent)}
+.guest-block textarea{resize:none;overflow:hidden;line-height:1.55}
+.guest-name-input{font-family:'Fraunces',Georgia,serif !important;font-size:16px !important;font-weight:600 !important}
+.guest-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
+.guest-tools .field-label{margin:0}
+.guest-tools .guest-pull{width:auto;max-width:210px;font-size:12px;padding:6px 8px}
+.guest-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field-hint{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10.5px}
+/* ---- v3b: card move arrows (expanded cards are not draggable) ---- */
+.card .mini-arrows{position:absolute;top:8px;right:36px;display:none;gap:3px}
+.card:hover .mini-arrows,.card:focus-visible .mini-arrows{display:flex}
+.card.expanded .mini-arrows{display:none}
+.card.expanded{cursor:default}
+.card.expanded .grip{display:none}
+.mini-arrows button{border:1px solid var(--border);background:var(--surface-2);color:var(--muted);border-radius:5px;font-size:9px;line-height:1;padding:4px 6px;cursor:pointer}
+.mini-arrows button:hover{color:var(--accent-strong);border-color:var(--accent-strong)}
+.card-move{display:flex;gap:8px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.mv-label{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.mv-btn{flex:1;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent-strong);border-radius:8px;padding:10px 0;font-size:14px;font-weight:700;cursor:pointer;font-family:'Geist',sans-serif;transition:background 150ms var(--ease),color 150ms var(--ease)}
+.mv-btn:hover{background:var(--accent);color:#fff}
+.mv-btn:disabled{opacity:.35;cursor:not-allowed}
+/* ---- v3b: The Keep ---- */
+.keep-wrap{display:grid;grid-template-columns:210px 1fr;gap:20px;align-items:start}
+@media(max-width:860px){.keep-wrap{grid-template-columns:1fr}.keep-side{position:static !important}}
+.keep-side{background:linear-gradient(180deg,#FFFFFF,#F6F5F1);border:1px solid var(--border);border-radius:10px;padding:14px;position:sticky;top:70px}
+html[data-theme="dark"] .keep-side{background:linear-gradient(180deg,#1D1A44,#14122B)}
+.keep-nav{display:flex;width:100%;align-items:center;gap:10px;border:none;background:none;color:var(--muted);font-family:'Geist',sans-serif;font-size:13.5px;font-weight:600;padding:9px 12px;border-radius:8px;cursor:pointer;text-align:left}
+.keep-nav:hover{background:var(--accent-ghost);color:var(--ink)}
+.keep-nav.active{background:var(--accent-soft);color:var(--accent-strong)}
+.keep-nav .cnt{margin-left:auto;font-family:'Space Mono',monospace;font-size:10.5px}
+.keep-labels-head{display:flex;align-items:center;justify-content:space-between;margin:14px 0 6px;font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.keep-label{display:flex;align-items:center;gap:8px;width:100%;border:none;background:none;color:var(--ink);font-size:13px;padding:7px 10px;border-radius:8px;cursor:pointer;text-align:left;font-family:'Geist',sans-serif}
+.keep-label:hover{background:var(--accent-ghost)}
+.keep-label.active{background:var(--accent-soft);color:var(--accent-strong);font-weight:600}
+.keep-label .dot{width:10px;height:10px;border-radius:50%;background:var(--indigo);flex:none}
+.keep-label .cnt{margin-left:auto;font-family:'Space Mono',monospace;font-size:10.5px;color:var(--muted)}
+.keep-toolbar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:flex-start}
+.keep-composer{flex:1;min-width:260px;background:linear-gradient(180deg,#FFFFFF,#F5F3FD);border:1px solid var(--border);border-radius:10px;padding:4px 16px;box-shadow:0 1px 3px rgba(30,27,58,.10);cursor:text}
+html[data-theme="dark"] .keep-composer{background:linear-gradient(180deg,#242052,#1A1740)}
+.keep-composer.open{padding:12px 16px;cursor:default}
+.keep-composer-bar{padding:10px 0;color:var(--muted);font-size:14px}
+.keep-composer input[type=text],.keep-composer textarea{border:none;background:none;width:100%;font-family:'Geist',sans-serif;font-size:14px;color:var(--ink);padding:8px 0;resize:none}
+.keep-composer input[type=text]{font-weight:600;font-size:15px}
+.keep-composer input:focus,.keep-composer textarea:focus{outline:none}
+.keep-composer-actions{display:flex;gap:8px;justify-content:flex-end;padding-top:8px}
+#keepSearch{width:280px;font-family:'Geist',sans-serif;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:10px 16px}
+#keepSearch:focus{outline:2px solid var(--marker);border-color:var(--accent)}
+.keep-sec-label{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:18px 4px 10px}
+.keep-sec-label:first-child{margin-top:0}
+.keep-grid{columns:4 230px;column-gap:14px}
+.keep-note{break-inside:avoid;margin:0 0 14px;border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:box-shadow 150ms var(--ease);background-image:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0))}
+.keep-note:hover{box-shadow:0 4px 14px rgba(30,27,58,.16)}
+.keep-note h4{font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:0 0 6px}
+.keep-note .kb{font-size:13px;white-space:pre-wrap;word-break:break-word;margin:0}
+.keep-note .klabels{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.keep-note .klabel{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.06em;background:rgba(0,0,0,.07);border-radius:10px;padding:2px 8px}
+html[data-theme="dark"] .keep-note .klabel{background:rgba(255,255,255,.14)}
+.keep-checkrow{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin-bottom:5px}
+.kbox{flex:none;width:15px;height:15px;border:1.5px solid var(--muted);border-radius:4px;margin-top:2px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#fff}
+.kbox.on{background:var(--accent-strong);border-color:var(--accent-strong)}
+.kcheck.done{text-decoration:line-through;color:var(--muted)}
+.kc0{background-color:#FFFFFF}.kc1{background-color:#FBE9E9}.kc2{background-color:#FCEFD9}.kc3{background-color:#FFF6D8}.kc4{background-color:#DFF0E3}.kc5{background-color:#DCEAFB}.kc6{background-color:#E6E2F8}.kc7{background-color:#F4DCE8}
+html[data-theme="dark"] .kc0{background-color:#23204A}html[data-theme="dark"] .kc1{background-color:#3B2A40}html[data-theme="dark"] .kc2{background-color:#3B3226}html[data-theme="dark"] .kc3{background-color:#3A361F}html[data-theme="dark"] .kc4{background-color:#26332E}html[data-theme="dark"] .kc5{background-color:#243048}html[data-theme="dark"] .kc6{background-color:#2E2A52}html[data-theme="dark"] .kc7{background-color:#3B2738}
+.keep-empty{text-align:center;color:var(--muted);padding:44px 16px;font-size:14px}
+.keep-overlay{position:fixed;inset:0;background:rgba(20,18,16,.48);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:56px 16px;overflow:auto}
+.keep-overlay[hidden]{display:none}
+.keep-editor{width:100%;max-width:580px;border:1px solid var(--border);border-radius:10px;padding:18px 20px;box-shadow:0 24px 60px rgba(0,0,0,.35);background-image:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0))}
+.ke-title{width:100%;border:none;background:none;font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.ke-body{width:100%;border:none;background:none;font-family:'Geist',sans-serif;font-size:14px;color:var(--ink);resize:none;min-height:110px;line-height:1.55}
+.ke-title:focus,.ke-body:focus,.ke-check-item input[type=text]:focus{outline:none}
+.ke-check-item{display:flex;gap:10px;align-items:center;margin-bottom:6px}
+.ke-check-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent-strong)}
+.ke-check-item input[type=text]{flex:1;border:none;background:none;font-size:14px;color:var(--ink);font-family:'Geist',sans-serif;padding:4px 0}
+.ke-check-item.done input[type=text]{text-decoration:line-through;color:var(--muted)}
+.ke-x{border:none;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:4px}
+.ke-x:hover{color:#B3261E}
+.ke-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.ke-swatches{display:flex;gap:8px}
+.ke-sw{width:26px;height:26px;border-radius:50%;border:2px solid rgba(0,0,0,.12);cursor:pointer;padding:0}
+html[data-theme="dark"] .ke-sw{border-color:rgba(255,255,255,.18)}
+.ke-sw.active{border-color:var(--accent-strong);box-shadow:0 0 0 2px var(--accent-soft)}
+.ke-foot{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:14px;border-top:1px solid var(--border);padding-top:12px;flex-wrap:wrap}
+.ke-tools{display:flex;gap:6px;flex-wrap:wrap}
+.ke-labelpick{display:flex;gap:6px;flex-wrap:wrap}
+.ke-labelpick label{display:flex;gap:6px;align-items:center;font-size:12.5px;background:var(--accent-ghost);border-radius:14px;padding:4px 10px;cursor:pointer;font-family:'Geist',sans-serif}
+#keNewLabel{max-width:170px;font-family:'Geist',sans-serif;font-size:12.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:6px 12px}
+#keNewLabel:focus{outline:2px solid var(--marker);border-color:var(--accent)}
+
+@media print{
+  .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast{display:none !important}
+  .tab-panel{display:none}
+  .tab-panel.active{display:block}
+  html[data-theme="dark"]{--ink:#000;--muted:#444;--surface:#fff;--surface-2:#fff;--border:#999;--accent-strong:#000;--card-border:#999;--backup-bg:#fff}
+  body{background:#fff !important;color:#000 !important}
+  .lane,.card,.guest-block,.panel-card,.keep-side,.keep-note,.keep-composer,.board{background:#fff !important;border:1px solid #999 !important;box-shadow:none !important}
+  .lane-title,.card-headline,.card-bullets,.note p,.feed-row,.iv-row,.brand,.day-title,.guest-name,.keep-note h4,.locked-banner .lb-title{color:#000 !important}
+  .lane-time,.src,.badge,.tag,.via-badge,.tape-out,.backup-tag,.mv-label,.lane-locked-tag{color:#000 !important;background:none !important}
+  a{color:#000 !important}
+}
+</style>
+</head>
+<body>
+<div class="proto-banner">
+  <span>Design prototype v15: Royal Signal, header blues swapped. Look and feel only.</span>
+  <span class="accent-picker">
+    <span class="lbl">Accent</span>
+    <button class="swatch active" data-accent="profound" aria-label="Profound blue accent" title="Profound blue #376CFF"></button>
+    <button class="swatch" data-accent="indigo" aria-label="Linear indigo accent" title="Linear indigo #5E6AD2"></button>
+    <button class="swatch" data-accent="marker" aria-label="Marker blue accent" title="Marker blue #8DBBFF"></button>
+  </span>
+</div>
+<header class="app-header">
+  <div class="brand">Daily <em>Goods</em> Hub<small>Show production prototype</small></div>
+  <div class="header-actions">
+    <button class="btn" id="themeToggle" aria-label="Toggle dark mode">Dark mode</button>
+  </div>
+</header>
+<nav class="tabs" role="tablist">
+  <button class="tab" role="tab" data-tab="feeds">Feeds</button>
+  <button class="tab" role="tab" data-tab="corkboard">Corkboard</button>
+  <button class="tab" role="tab" data-tab="keep">The Keep</button>
+  <button class="tab" role="tab" data-tab="interviews">Interviews</button>
+  <button class="tab active" role="tab" data-tab="builder">Builder</button>
+</nav>
+<main>
+<!-- FEEDS -->
+<section class="tab-panel" id="panel-feeds" role="tabpanel">
+  <div class="panel-card">
+    <h2>Story Scout Next</h2>
+    <p class="sub">Latest run: today, AM slot. Raw output, read only. (Placeholder)</p>
+    <div class="feed-row"><span class="t">Mark Carney's stand against Trump sparks Nobel Peace Prize buzz</span><span class="src">Wire</span><button class="btn btn-sm promote">Promote</button></div>
+    <div class="feed-row"><span class="t">TTC board approves fare freeze pilot for 2027</span><span class="src">Star</span><button class="btn btn-sm promote">Promote</button></div>
+    <div class="feed-row"><span class="t">Parliament Hill cat finds a home after viral campaign</span><span class="src">CBC</span><button class="btn btn-sm promote">Promote</button></div>
+  </div>
+  <div class="panel-card">
+    <h2>J Station (original)</h2>
+    <p class="sub">Latest run: today. Raw output, read only. (Placeholder)</p>
+    <div class="feed-row"><span class="t">Pope Leo XIV calls on the church to ally with artists against AI</span><span class="src">NYT</span><button class="btn btn-sm promote">Promote</button></div>
+    <div class="feed-row"><span class="t">Ontario expands 110 km/h zones to nearly 90 percent of freeways</span><span class="src">MTO</span><button class="btn btn-sm promote">Promote</button></div>
+    <div class="feed-row"><span class="t">Toronto Zoo announces panda twins expecting date</span><span class="src">BlogTO</span><button class="btn btn-sm promote">Promote</button></div>
+  </div>
+</section>
+
+<!-- CORKBOARD -->
+<section class="tab-panel" id="panel-corkboard" role="tabpanel">
+  <p class="hint">Fleeting ideas live here. Drag notes anywhere.</p>
+  <div class="board-toolbar">
+    <div class="note-add">
+      <input type="text" id="noteInput" placeholder="Scribble a note, press Enter" aria-label="New note">
+      <button class="btn btn-primary" id="noteAdd">Pin it</button>
+    </div>
+  </div>
+  <div class="board" id="board"></div>
+</section>
+
+<!-- THE KEEP -->
+<section class="tab-panel" id="panel-keep" role="tabpanel">
+  <div class="keep-wrap">
+    <aside class="keep-side">
+      <button class="keep-nav active" data-view="notes">Notes<span class="cnt" id="cntNotes"></span></button>
+      <button class="keep-nav" data-view="archive">Archive<span class="cnt" id="cntArch"></span></button>
+      <button class="keep-nav" data-view="trash">Trash<span class="cnt" id="cntTrash"></span></button>
+      <div class="keep-labels-head"><span>Labels</span><button class="btn btn-sm" id="keepLabelAdd">+ New</button></div>
+      <div id="keepLabelList"></div>
+      <p class="hint" style="margin:14px 0 0">Trash auto-empties after 30 days.</p>
+      <button class="btn btn-sm" id="keepEmptyTrash" style="margin-top:8px" hidden>Empty trash now</button>
+    </aside>
+    <div class="keep-main">
+      <div class="keep-toolbar">
+        <div class="keep-composer" id="keepComposer">
+          <div class="keep-composer-bar" id="keepComposerBar">Take a note...</div>
+          <input type="text" id="keepTitle" placeholder="Title" aria-label="Note title" hidden>
+          <textarea id="keepBody" placeholder="Take a note..." rows="2" aria-label="Note body" spellcheck="true" hidden></textarea>
+          <div class="keep-composer-actions" id="keepComposerActions" hidden>
+            <button class="btn btn-sm" id="keepCancel">Cancel</button>
+            <button class="btn btn-sm btn-primary" id="keepSave">Save</button>
+          </div>
+        </div>
+        <input type="text" id="keepSearch" placeholder="Search notes" aria-label="Search notes">
+      </div>
+      <div class="keep-sec-label" id="keepPinnedHead" hidden>Pinned</div>
+      <div class="keep-grid" id="keepPinned"></div>
+      <div class="keep-sec-label" id="keepOthersHead" hidden>Others</div>
+      <div class="keep-grid" id="keepGrid"></div>
+      <div class="keep-empty" id="keepEmpty" hidden>Nothing here yet.</div>
+    </div>
+  </div>
+  <div class="keep-overlay" id="keepOverlay" hidden>
+    <div class="keep-editor kc0" id="keepEditor" role="dialog" aria-modal="true" aria-label="Note editor">
+      <input type="text" class="ke-title" id="keTitle" placeholder="Title" spellcheck="true" aria-label="Note title">
+      <textarea class="ke-body" id="keBody" placeholder="Note" spellcheck="true" aria-label="Note body"></textarea>
+      <div id="keChecklist" hidden></div>
+      <button class="btn btn-sm" id="keAddItem" hidden>+ List item</button>
+      <div class="ke-row"><div class="ke-swatches" id="keSwatches"></div></div>
+      <div class="ke-row">
+        <button class="btn btn-sm" id="keMode">Make checklist</button>
+        <button class="btn btn-sm" id="keHideChecked" hidden>Hide checked</button>
+      </div>
+      <div class="ke-row"><span class="field-label" style="margin:0">Labels</span></div>
+      <div class="ke-labelpick" id="keLabels"></div>
+      <div class="ke-row"><input type="text" id="keNewLabel" placeholder="Create label, Enter to add" aria-label="Create label"></div>
+      <div class="ke-foot">
+        <div class="ke-tools">
+          <button class="btn btn-sm" id="kePin">Pin</button>
+          <button class="btn btn-sm" id="keArchive">Archive</button>
+          <button class="btn btn-sm" id="keTrash">Trash</button>
+          <button class="btn btn-sm" id="keRestore" hidden>Restore</button>
+          <button class="btn btn-sm" id="keDelete" hidden>Delete forever</button>
+        </div>
+        <button class="btn btn-sm btn-primary" id="keClose">Done</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERVIEWS -->
+<section class="tab-panel" id="panel-interviews" role="tabpanel">
+  <div class="panel-card">
+    <h2>Upcoming interviews</h2>
+    <p class="sub">Paste prep below each guest for reference. Copy and paste only. (Placeholder)</p>
+    <div class="iv-row"><span class="t"><strong>General Wayne Eyre</strong> - memoir Into the Breach</span><span class="badge">3:20</span><span class="badge">In-studio</span></div>
+    <div class="iv-row"><span class="t"><strong>Cam Maitland</strong> - Shocktober streaming picks</span><span class="badge">4:20</span><span class="badge">Zoom</span></div>
+    <div class="iv-row"><span class="t"><strong>Dolph Lundgren</strong> - new action slate</span><span class="badge">3:20</span><span class="badge">Pre-tape</span></div>
+  </div>
+</section>
+
+<!-- BUILDER -->
+<section class="tab-panel active" id="panel-builder" role="tabpanel">
+  <p class="hint">Drag cards between segments or reorder inside them. <span class="kbd">Up</span><span class="kbd">Down</span> move the focused card, <span class="kbd">Enter</span> opens or closes it, <span class="kbd">Esc</span> closes.</p>
+  <div class="builder-toolbar">
+    <h2 class="day-title">Today's <em>rundown</em></h2>
+    <div class="lock-controls">
+      <button class="btn btn-sm" id="lockAll">Lock all</button>
+      <button class="btn btn-sm" id="unlockAll">Unlock all</button>
+      <span class="toggle-row" style="margin:0"><button class="switch" id="printNotesAll" role="switch" aria-checked="false" aria-label="Include all producer notes in print"></button><span class="switch-label">Include all producer notes</span></span>
+    </div>
+  </div>
+  <div class="locked-banner" id="lockedBanner" hidden>
+    <div>
+      <div class="lb-title">Show locked.</div>
+      <div class="lb-sub">All six segments are finalized and read only.</div>
+    </div>
+    <button class="btn btn-primary" id="printBtn">Print drive sheet</button>
+  </div>
+  <div class="lanes" id="lanes">
+
+    <div class="lane" data-lane="s1">
+      <div class="lane-head">
+        <div class="lane-id"><span class="lane-time">3:05</span><h3 class="lane-title">The List<span class="lane-locked-tag" hidden>Locked</span></h3></div>
+        <div class="lane-actions">
+          <button class="btn btn-sm lane-add">+ Add story</button>
+          <button class="icon-btn lane-lock" aria-pressed="false" aria-label="Lock segment" title="Lock segment"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></button>
+        </div>
+      </div>
+      <div class="cards">
+        <article class="card" tabindex="0">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <p class="card-headline">Mark Carney's stand against Trump sparks Nobel Peace Prize buzz</p>
+          <div class="card-meta"><span class="src">Wire</span><span class="tag">The List</span></div>
+          <ul class="card-bullets">
+            <li>Chatter pairs a Nobel nod with Time Person of the Year talk for a sitting Canadian PM.</li>
+            <li>The phone question: does standing up to Trump make you Nobel material, or is the buzz ahead of itself?</li>
+          </ul>
+          <div class="card-details">
+            <div class="field-label">Links</div>
+            <div class="url-row"><a href="#" onclick="return false">wire.example/carney-trump-nobel-buzz</a></div>
+            <div class="field-label">Talking points</div>
+            <ul class="bullet-edit">
+              <li><span>Chatter pairs a Nobel nod with Time Person of the Year talk for a sitting Canadian PM.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+              <li><span>The phone question: does standing up to Trump make you Nobel material, or is the buzz ahead of itself?</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+            </ul>
+            <div class="field-label">Audio cue</div>
+            <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
+            <div class="field-label">Nico fetch</div>
+            <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+            <div class="field-label">Producer notes</div>
+            <textarea placeholder="Private notes, not printed"></textarea>
+            <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+          </div>
+        </article>
+        <article class="card" tabindex="0">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <p class="card-headline">Pope Leo XIV calls on the church to ally with artists against AI</p>
+          <div class="card-meta"><span class="src">NYT</span><span class="tag">The List</span></div>
+          <ul class="card-bullets">
+            <li>The Pope wrote that in the AI era it is urgent to tell human art from machine output.</li>
+            <li>Comes after reports of Anthropic consulting religious scholars on morals for Claude.</li>
+          </ul>
+          <div class="card-details">
+            <div class="field-label">Links</div>
+            <div class="url-row"><a href="#" onclick="return false">nytimes.com/2026/09/29/us/anthropic-claude-morals-ai</a></div>
+            <div class="field-label">Talking points</div>
+            <ul class="bullet-edit">
+              <li><span>The Pope wrote that in the AI era it is urgent to tell human art from machine output.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+              <li><span>Comes after reports of Anthropic consulting religious scholars on morals for Claude.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+            </ul>
+            <div class="field-label">Audio cue</div>
+            <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
+            <div class="field-label">Nico fetch</div>
+            <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+            <div class="field-label">Producer notes</div>
+            <textarea placeholder="Private notes, not printed"></textarea>
+            <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+          </div>
+        </article>
+        <article class="card" tabindex="0">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <p class="card-headline">King Charles' unlikely plan to heal the rift between William and Harry</p>
+          <div class="card-meta"><span class="src">Page Six</span><span class="tag">The List</span></div>
+          <ul class="card-bullets">
+            <li>New report details the King's behind the scenes push to reunite his sons.</li>
+            <li>Royal watchers split on whether a reunion helps the monarchy or just the headlines.</li>
+          </ul>
+          <div class="card-details">
+            <div class="field-label">Links</div>
+            <div class="url-row"><a href="#" onclick="return false">pagesix.com/royal-family/king-charles-william-harry</a></div>
+            <div class="field-label">Talking points</div>
+            <ul class="bullet-edit">
+              <li><span>New report details the King's behind the scenes push to reunite his sons.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+              <li><span>Royal watchers split on whether a reunion helps the monarchy or just the headlines.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+            </ul>
+            <div class="field-label">Audio cue</div>
+            <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
+            <div class="field-label">Nico fetch</div>
+            <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+            <div class="field-label">Producer notes</div>
+            <textarea placeholder="Private notes, not printed"></textarea>
+            <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+          </div>
+        </article>
+        <article class="card backup" tabindex="0">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <p class="card-headline">Trump's AI rebrand causes 'unprecedented' demand for Slovenian web domains<span class="backup-tag">BACKUP</span></p>
+          <div class="card-meta"><span class="src">BBC</span><span class="tag">The List</span></div>
+          <ul class="card-bullets">
+            <li>Domain registrations spiked after the rebrand talk.</li>
+            <li>The .si gold rush nobody saw coming.</li>
+          </ul>
+          <div class="card-details">
+            <div class="field-label">Links</div>
+            <div class="url-row"><a href="#" onclick="return false">bbc.com/news/articles/slovenia-domains</a></div>
+            <div class="field-label">Talking points</div>
+            <ul class="bullet-edit">
+              <li><span>Domain registrations spiked after the rebrand talk.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+              <li><span>The .si gold rush nobody saw coming.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+            </ul>
+            <div class="field-label">Audio cue</div>
+            <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
+            <div class="field-label">Nico fetch</div>
+            <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+            <div class="field-label">Producer notes</div>
+            <textarea placeholder="Private notes, not printed"></textarea>
+            <div class="toggle-row"><button class="switch" role="switch" aria-checked="true" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <div class="lane" data-lane="s2">
+      <div class="lane-head">
+        <div class="lane-id"><span class="lane-time">3:20</span><h3 class="lane-title">Guest<span class="lane-locked-tag" hidden>Locked</span></h3></div>
+        <div class="lane-actions">
+          <button class="btn btn-sm lane-add">+ Add story</button>
+          <button class="icon-btn lane-lock" aria-pressed="false" aria-label="Lock segment" title="Lock segment"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></button>
+        </div>
+      </div>
+      <div class="cards">
+        <div class="guest-block" data-guest>
+          <div class="guest-tools">
+            <span class="field-label">Guest block</span>
+            <select class="guest-pull" aria-label="Pull from interviews"><option value="">Pull from interviews</option></select>
+          </div>
+          <div class="field-label">Guest name</div>
+          <input type="text" class="guest-name-input" value="General Wayne Eyre" aria-label="Guest name" spellcheck="true">
+          <div class="guest-row2">
+            <div><div class="field-label">Slot</div><input type="text" class="guest-slot" value="3:20" aria-label="Slot time"></div>
+            <div><div class="field-label">Format</div><select class="guest-format" aria-label="Format"><option selected>In-studio</option><option>Zoom</option><option>Pre-tape</option><option>Hold</option></select></div>
+          </div>
+          <div class="field-label">Intro <span class="field-hint">paste ready, keeps line breaks</span></div>
+          <textarea class="guest-intro-input" rows="3" spellcheck="true" placeholder="Paste the guest intro here. Multi-paragraph pastes keep their line breaks.">Former Chief of the Defence Staff on his memoir Into the Breach, and what leadership looks like when the stakes are real.</textarea>
+          <div class="field-label">Segment info</div>
+          <textarea class="guest-seginfo" rows="2" spellcheck="true" placeholder="What the segment covers">Memoir Into the Breach: leadership under real stakes.</textarea>
+          <div class="field-label">Tape out <span class="tape-out">HOST speaks last</span></div>
+          <input type="text" class="guest-tapeout" value="" aria-label="Tape out" placeholder="Closing line, host speaks last" spellcheck="true">
+          <div class="field-label">Tease</div>
+          <input type="text" class="guest-tease" value="" aria-label="Tease" placeholder="Tease line for this guest" spellcheck="true">
+        </div>
+      </div>
+    </div>
+
+    <div class="lane" data-lane="s3">
+      <div class="lane-head">
+        <div class="lane-id"><span class="lane-time">3:40</span><h3 class="lane-title">Lifestyle Chat<span class="lane-locked-tag" hidden>Locked</span></h3></div>
+        <div class="lane-actions">
+          <button class="btn btn-sm lane-add">+ Add story</button>
+          <button class="icon-btn lane-lock" aria-pressed="false" aria-label="Lock segment" title="Lock segment"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></button>
+        </div>
+      </div>
+      <div class="cards">
+        <article class="card" tabindex="0">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <p class="card-headline">Half of pet owners say traveling with their pet beats traveling with a person</p>
+          <div class="card-meta"><span class="src">StudyFinds</span><span class="tag alt">Lifestyle</span></div>
+          <ul class="card-bullets">
+            <li>51 percent say the pet wins; 45 percent have turned down trips the animal could not join.</li>
+            <li>Guilt drives it: nearly half worry about their pet the whole time they are away.</li>
+          </ul>
+          <span class="card-audio">CLIP - "don't settle"</span>
+          <div class="card-details">
+            <div class="field-label">Links</div>
+            <div class="url-row"><a href="#" onclick="return false">studyfinds.com/pet-owners-prefer-traveling-with-pets</a></div>
+            <div class="field-label">Talking points</div>
+            <ul class="bullet-edit">
+              <li><span>51 percent say the pet wins; 45 percent have turned down trips the animal could not join.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+              <li><span>Guilt drives it: nearly half worry about their pet the whole time they are away.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+            </ul>
+            <div class="field-label">Audio cue</div>
+            <input type="text" value='CLIP - "don&apos;t settle"'>
+            <div class="field-label">Nico fetch</div>
+            <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+            <div class="field-label">Producer notes</div>
+            <textarea placeholder="Private notes, not printed"></textarea>
+            <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+          </div>
+        </article>
+        <article class="card" tabindex="0">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <p class="card-headline">Cuffing season: the psychology behind fall dating</p>
+          <div class="card-meta"><span class="src">BBC</span><span class="tag alt">Lifestyle</span></div>
+          <ul class="card-bullets">
+            <li>Shorter days and cold weather push singles toward short term partners, October through March.</li>
+            <li>Dating apps report sign up spikes as the temperature drops.</li>
+          </ul>
+          <div class="card-details">
+            <div class="field-label">Links</div>
+            <div class="url-row"><a href="#" onclick="return false">bbc.com/future/article/cuffing-season</a></div>
+            <div class="field-label">Talking points</div>
+            <ul class="bullet-edit">
+              <li><span>Shorter days and cold weather push singles toward short term partners, October through March.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+              <li><span>Dating apps report sign up spikes as the temperature drops.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+            </ul>
+            <div class="field-label">Audio cue</div>
+            <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
+            <div class="field-label">Nico fetch</div>
+            <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+            <div class="field-label">Producer notes</div>
+            <textarea placeholder="Private notes, not printed"></textarea>
+            <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+          </div>
+        </article>
+        <article class="card" tabindex="0">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <p class="card-headline">Guelph homecoming chaos puts other schools on alert</p>
+          <div class="card-meta"><span class="src">Toronto Star</span><span class="tag alt">Lifestyle</span></div>
+          <ul class="card-bullets">
+            <li>Dozens sent to hospital, tactical unit called in.</li>
+            <li>Community leaders now urging coordinated crackdowns on unsanctioned parties.</li>
+          </ul>
+          <div class="card-details">
+            <div class="field-label">Links</div>
+            <div class="url-row"><a href="#" onclick="return false">thestar.com/guelph-homecoming</a></div>
+            <div class="field-label">Talking points</div>
+            <ul class="bullet-edit">
+              <li><span>Dozens sent to hospital, tactical unit called in.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+              <li><span>Community leaders now urging coordinated crackdowns on unsanctioned parties.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+            </ul>
+            <div class="field-label">Audio cue</div>
+            <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
+            <div class="field-label">Nico fetch</div>
+            <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+            <div class="field-label">Producer notes</div>
+            <textarea placeholder="Private notes, not printed"></textarea>
+            <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <div class="lane" data-lane="s4">
+      <div class="lane-head">
+        <div class="lane-id"><span class="lane-time">4:00</span><h3 class="lane-title">Trending Today<span class="lane-locked-tag" hidden>Locked</span></h3></div>
+        <div class="lane-actions">
+          <button class="btn btn-sm lane-add">+ Add story</button>
+          <button class="icon-btn lane-lock" aria-pressed="false" aria-label="Lock segment" title="Lock segment"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></button>
+        </div>
+      </div>
+      <div class="cards">
+        <article class="card" tabindex="0">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <p class="card-headline">Paramount-Warner Bros. unveils its new name: Skydance</p>
+          <div class="card-meta"><span class="src">Variety</span><span class="tag">Trending</span></div>
+          <ul class="card-bullets">
+            <li>David Ellison picked his original production company name for the whole empire.</li>
+            <li>Worst rebrands of all time: does it compare to Musk and Twitter?</li>
+          </ul>
+          <div class="card-details">
+            <div class="field-label">Links</div>
+            <div class="url-row"><a href="#" onclick="return false">variety.com/paramount-warner-bros-skydance</a></div>
+            <div class="field-label">Talking points</div>
+            <ul class="bullet-edit">
+              <li><span>David Ellison picked his original production company name for the whole empire.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+              <li><span>Worst rebrands of all time: does it compare to Musk and Twitter?</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+            </ul>
+            <div class="field-label">Audio cue</div>
+            <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
+            <div class="field-label">Nico fetch</div>
+            <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+            <div class="field-label">Producer notes</div>
+            <textarea placeholder="Private notes, not printed"></textarea>
+            <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+          </div>
+        </article>
+        <article class="card" tabindex="0">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <p class="card-headline">Dane Cook offered to forgive his brother's $12 million debt for one thing</p>
+          <div class="card-meta"><span class="src">People</span><span class="tag">Trending</span></div>
+          <ul class="card-bullets">
+            <li>Waive the restitution if his brother sits for the documentary. He was turned down.</li>
+            <li>His brother walked out of a bank with $3 million in duffel bags. Brazen is the word.</li>
+          </ul>
+          <div class="card-details">
+            <div class="field-label">Links</div>
+            <div class="url-row"><a href="#" onclick="return false">people.com/dane-cook-brother-debt</a></div>
+            <div class="field-label">Talking points</div>
+            <ul class="bullet-edit">
+              <li><span>Waive the restitution if his brother sits for the documentary. He was turned down.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+              <li><span>His brother walked out of a bank with $3 million in duffel bags. Brazen is the word.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+            </ul>
+            <div class="field-label">Audio cue</div>
+            <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
+            <div class="field-label">Nico fetch</div>
+            <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+            <div class="field-label">Producer notes</div>
+            <textarea placeholder="Private notes, not printed"></textarea>
+            <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+          </div>
+        </article>
+        <article class="card" tabindex="0">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <p class="card-headline">Jim Carrey marries Min Ah months after going public</p>
+          <div class="card-meta"><span class="src">CBC</span><span class="tag">Trending</span></div>
+          <ul class="card-bullets">
+            <li>The Canadian comedy legend tied the knot in Paris.</li>
+            <li>Very little is known about his new bride, which for Carrey is exactly the point.</li>
+          </ul>
+          <div class="card-details">
+            <div class="field-label">Links</div>
+            <div class="url-row"><a href="#" onclick="return false">cbc.ca/jim-carrey-marries</a></div>
+            <div class="field-label">Talking points</div>
+            <ul class="bullet-edit">
+              <li><span>The Canadian comedy legend tied the knot in Paris.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+              <li><span>Very little is known about his new bride, which for Carrey is exactly the point.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+            </ul>
+            <div class="field-label">Audio cue</div>
+            <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
+            <div class="field-label">Nico fetch</div>
+            <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+            <div class="field-label">Producer notes</div>
+            <textarea placeholder="Private notes, not printed"></textarea>
+            <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+          </div>
+        </article>
+        <article class="card" tabindex="0">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <p class="card-headline">Michael J. Fox promoted within the Order of Canada</p>
+          <div class="card-meta"><span class="src">Global News</span><span class="tag">Trending</span></div>
+          <ul class="card-bullets">
+            <li>Promoted to Companion at Rideau Hall for his Parkinson's advocacy.</li>
+            <li>$2.5 billion raised for research. A Canadian icon, full stop.</li>
+          </ul>
+          <div class="card-details">
+            <div class="field-label">Links</div>
+            <div class="url-row"><a href="#" onclick="return false">globalnews.ca/michael-j-fox-order-of-canada</a></div>
+            <div class="field-label">Talking points</div>
+            <ul class="bullet-edit">
+              <li><span>Promoted to Companion at Rideau Hall for his Parkinson's advocacy.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+              <li><span>$2.5 billion raised for research. A Canadian icon, full stop.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+            </ul>
+            <div class="field-label">Audio cue</div>
+            <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
+            <div class="field-label">Nico fetch</div>
+            <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+            <div class="field-label">Producer notes</div>
+            <textarea placeholder="Private notes, not printed"></textarea>
+            <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <div class="lane" data-lane="s5">
+      <div class="lane-head">
+        <div class="lane-id"><span class="lane-time">4:20</span><h3 class="lane-title">Guest<span class="lane-locked-tag" hidden>Locked</span></h3></div>
+        <div class="lane-actions">
+          <button class="btn btn-sm lane-add">+ Add story</button>
+          <button class="icon-btn lane-lock" aria-pressed="false" aria-label="Lock segment" title="Lock segment"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></button>
+        </div>
+      </div>
+      <div class="cards">
+        <div class="guest-block" data-guest>
+          <div class="guest-tools">
+            <span class="field-label">Guest block</span>
+            <select class="guest-pull" aria-label="Pull from interviews"><option value="">Pull from interviews</option></select>
+          </div>
+          <div class="field-label">Guest name</div>
+          <input type="text" class="guest-name-input" value="Cam Maitland" aria-label="Guest name" spellcheck="true">
+          <div class="guest-row2">
+            <div><div class="field-label">Slot</div><input type="text" class="guest-slot" value="4:20" aria-label="Slot time"></div>
+            <div><div class="field-label">Format</div><select class="guest-format" aria-label="Format"><option>In-studio</option><option selected>Zoom</option><option>Pre-tape</option><option>Hold</option></select></div>
+          </div>
+          <div class="field-label">Intro <span class="field-hint">paste ready, keeps line breaks</span></div>
+          <textarea class="guest-intro-input" rows="3" spellcheck="true" placeholder="Paste the guest intro here. Multi-paragraph pastes keep their line breaks.">Shocktober streaming picks and the week's theatrical releases, from Verity to Evil Dead Burn.</textarea>
+          <div class="field-label">Segment info</div>
+          <textarea class="guest-seginfo" rows="2" spellcheck="true" placeholder="What the segment covers">Shocktober streaming picks plus theatrical releases.</textarea>
+          <div class="field-label">Tape out <span class="tape-out">HOST speaks last</span></div>
+          <input type="text" class="guest-tapeout" value="" aria-label="Tape out" placeholder="Closing line, host speaks last" spellcheck="true">
+          <div class="field-label">Tease</div>
+          <input type="text" class="guest-tease" value="" aria-label="Tease" placeholder="Tease line for this guest" spellcheck="true">
+        </div>
+      </div>
+    </div>
+
+    <div class="lane" data-lane="s6">
+      <div class="lane-head">
+        <div class="lane-id"><span class="lane-time">4:40</span><h3 class="lane-title">Kicker / Goodbyes<span class="lane-locked-tag" hidden>Locked</span></h3></div>
+        <div class="lane-actions">
+          <button class="btn btn-sm lane-add">+ Add story</button>
+          <button class="icon-btn lane-lock" aria-pressed="false" aria-label="Lock segment" title="Lock segment"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></button>
+        </div>
+      </div>
+      <div class="cards">
+        <article class="card" tabindex="0">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <p class="card-headline">Fat Bear Week crowns its heavyweight champion: 89 Backpack</p>
+          <div class="card-meta"><span class="src">Global News</span><span class="tag">Kicker</span></div>
+          <ul class="card-bullets card-bullets-empty">
+            <li class="empty-note" style="list-style:none;color:var(--muted);font-style:italic">No summary yet. Try Fetch with Nico below.</li>
+          </ul>
+          <div class="card-details">
+            <div class="field-label">Links</div>
+            <div class="url-row"><a href="#" onclick="return false">globalnews.ca/fat-bear-week-2026-winner</a></div>
+            <div class="field-label">Talking points</div>
+            <ul class="bullet-edit">
+            </ul>
+            <div class="field-label">Audio cue</div>
+            <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
+            <div class="field-label">Nico fetch</div>
+            <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+            <div class="field-label">Producer notes</div>
+            <textarea placeholder="Private notes, not printed"></textarea>
+            <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+          </div>
+        </article>
+        <article class="card" tabindex="0">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <p class="card-headline">Brian May turned 157 acres of empty farmland into a wildlife haven</p>
+          <div class="card-meta"><span class="src">People</span><span class="tag">Kicker</span></div>
+          <ul class="card-bullets">
+            <li>100,000 trees planted on the Queen guitarist's nature reserve.</li>
+            <li>The feel good closer your Friday needs.</li>
+          </ul>
+          <div class="card-details">
+            <div class="field-label">Links</div>
+            <div class="url-row"><a href="#" onclick="return false">people.com/brian-may-nature-reserve</a></div>
+            <div class="field-label">Talking points</div>
+            <ul class="bullet-edit">
+              <li><span>100,000 trees planted on the Queen guitarist's nature reserve.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+              <li><span>The feel good closer your Friday needs.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+            </ul>
+            <div class="field-label">Audio cue</div>
+            <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
+            <div class="field-label">Nico fetch</div>
+            <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+            <div class="field-label">Producer notes</div>
+            <textarea placeholder="Private notes, not printed"></textarea>
+            <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+          </div>
+        </article>
+        <article class="card" tabindex="0">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <p class="card-headline">St. Louis man learns Michael McDonald is his biological father</p>
+          <div class="card-meta"><span class="src">People</span><span class="tag">Kicker</span></div>
+          <ul class="card-bullets">
+            <li>A 23andMe test by a half brother cracked a 60 year mystery.</li>
+            <li>McDonald carried the guilt for decades. An emotional reunion followed.</li>
+          </ul>
+          <span class="card-audio">clip - in: tell me about yourself / out: thinking about him</span>
+          <div class="card-details">
+            <div class="field-label">Links</div>
+            <div class="url-row"><a href="#" onclick="return false">people.com/michael-mcdonald-biological-father</a></div>
+            <div class="field-label">Talking points</div>
+            <ul class="bullet-edit">
+              <li><span>A 23andMe test by a half brother cracked a 60 year mystery.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+              <li><span>McDonald carried the guilt for decades. An emotional reunion followed.</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>
+            </ul>
+            <div class="field-label">Audio cue</div>
+            <input type="text" value="clip - in: tell me about yourself / out: thinking about him">
+            <div class="field-label">Nico fetch</div>
+            <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+            <div class="field-label">Producer notes</div>
+            <textarea placeholder="Private notes, not printed"></textarea>
+            <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+  </div>
+</section>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+/* ================= CONFIG =================
+   Paste the Gemini API key below. It ships pre-installed;
+   no key entry UI is needed in the prototype. */
+const GEMINI_API_KEY="REFERENCE_BUILD_KEY_NOT_INCLUDED"; // pre-installed; no user entry needed
+/* =============== END CONFIG =============== */
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = (sel, el) => (el || document).querySelector(sel);
+const $$ = (sel, el) => Array.from((el || document).querySelectorAll(sel));
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------- tabs ---------- */
+$$('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    $$('.tab').forEach(b => b.classList.remove('active'));
+    $$('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ---------- theme ---------- */
+const themeBtn = document.getElementById('themeToggle');
+themeBtn.addEventListener('click', () => {
+  const html = document.documentElement;
+  const dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  themeBtn.textContent = dark ? 'Dark mode' : 'Light mode';
+});
+
+/* ---------- accent switcher ---------- */
+$$('.swatch').forEach(sw => {
+  sw.addEventListener('click', () => {
+    document.documentElement.setAttribute('data-accent', sw.dataset.accent);
+    $$('.swatch').forEach(s => s.classList.toggle('active', s === sw));
+  });
+});
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function laneLocked(cardOrLane) {
+  const lane = cardOrLane.classList && cardOrLane.classList.contains('lane')
+    ? cardOrLane : cardOrLane.closest('.lane');
+  return lane ? lane.classList.contains('locked') : false;
+}
+
+/* ---------- sortable: drag and drop with the motion recipe ---------- */
+let justDragged = false;
+const laneSortables = {};
+if (window.Sortable) {
+$$('.lane .cards').forEach(list => {
+  const lane = list.closest('.lane');
+  laneSortables[lane.dataset.lane] = new Sortable(list, {
+    group: 'cards',
+    draggable: '.card:not(.expanded)',
+    animation: REDUCED ? 0 : 220,
+    easing: 'cubic-bezier(0.16,1,0.3,1)',
+    ghostClass: 'drag-ghost',
+    chosenClass: 'is-dragging',
+    dragClass: 'is-dragging',
+    handle: '.card',
+    filter: '.guest-block',
+    onStart(evt) {
+      justDragged = true;
+      evt.item.classList.add('is-dragging');
+    },
+    onEnd(evt) {
+      const item = evt.item;
+      item.classList.remove('is-dragging');
+      const lane = item.closest('.lane');
+      if (lane) {
+        lane.classList.add('lane-flash');
+        setTimeout(() => lane.classList.remove('lane-flash'), 450);
+      }
+      if (!REDUCED) {
+        item.classList.add('confirm-pulse');
+        item.addEventListener('animationend', () => item.classList.remove('confirm-pulse'), { once: true });
+      }
+      setTimeout(() => { justDragged = false; }, 120);
+    }
+  });
+});
+} else {
+  console.warn('SortableJS failed to load; drag and drop disabled.');
+}
+
+/* ---------- card expand / collapse (delegated) ---------- */
+document.addEventListener('click', e => {
+  const del = e.target.closest('.bullet-del');
+  if (del) {
+    const card = del.closest('.card');
+    if (laneLocked(card)) return;
+    const li = del.closest('li');
+    const editList = li.parentNode;
+    if (editList.children.length <= 1) {
+      const sp = li.querySelector('span');
+      sp.textContent = '';
+      sp.focus();
+    } else {
+      li.remove();
+    }
+    syncBulletPreview(card);
+    return;
+  }
+  const sw = e.target.closest('.switch:not(.print-switch)');
+  if (sw) {
+    const card = sw.closest('.card');
+    if (!card || laneLocked(card)) return;
+    const on = sw.getAttribute('aria-checked') === 'true';
+    sw.setAttribute('aria-checked', on ? 'false' : 'true');
+    const headline = card.querySelector('.card-headline');
+    if (on) {
+      card.classList.remove('backup');
+      const tag = headline.querySelector('.backup-tag');
+      if (tag) tag.remove();
+    } else {
+      card.classList.add('backup');
+      if (!headline.querySelector('.backup-tag')) {
+        const tag = document.createElement('span');
+        tag.className = 'backup-tag';
+        tag.textContent = 'BACKUP';
+        headline.appendChild(tag);
+      }
+    }
+    return;
+  }
+  const psw = e.target.closest('.print-switch');
+  if (psw) {
+    const card = psw.closest('.card');
+    if (!card || laneLocked(card)) return;
+    const on = psw.getAttribute('aria-checked') === 'true';
+    setCardPrintNote(card, !on);
+    return;
+  }
+  const nico = e.target.closest('.nico-btn');
+  if (nico) {
+    const card = nico.closest('.card');
+    if (laneLocked(card)) return;
+    nicoFetch(card, nico);
+    return;
+  }
+  const addB = e.target.closest('.add-bullet');
+  if (addB) {
+    const card = addB.closest('.card');
+    if (laneLocked(card)) return;
+    addBulletRow(card.querySelector('.bullet-edit'), true);
+    return;
+  }
+  const card = e.target.closest('.card');
+  if (card && !laneLocked(card)) {
+    if (justDragged) return;
+    if (e.target.closest('button, input, textarea, a, [contenteditable="true"]')) return;
+    card.classList.toggle('expanded');
+  }
+});
+
+document.addEventListener('keydown', e => {
+  const card = e.target.closest('.card');
+  if (!card || laneLocked(card)) return;
+  const inField = e.target.closest('input, textarea, [contenteditable="true"]');
+  const bSpan = e.target.closest && e.target.closest('.bullet-edit li span[contenteditable="true"]');
+  if (bSpan && e.key === 'Enter') {
+    e.preventDefault();
+    const li = bSpan.closest('li');
+    const ul = li.parentNode;
+    if (li.nextElementSibling) {
+      li.nextElementSibling.querySelector('span').focus();
+    } else {
+      addBulletRow(ul, true);
+    }
+    return;
+  }
+  if (e.key === 'Enter' && !inField) {
+    e.preventDefault();
+    card.classList.toggle('expanded');
+  } else if (e.key === 'Escape') {
+    card.classList.remove('expanded');
+    card.focus();
+  } else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && !inField) {
+    e.preventDefault();
+    const sib = e.key === 'ArrowUp' ? card.previousElementSibling : card.nextElementSibling;
+    if (sib && sib.classList.contains('card')) {
+      if (e.key === 'ArrowUp') card.parentNode.insertBefore(card, sib);
+      else card.parentNode.insertBefore(sib, card);
+      card.focus();
+      const lane = card.closest('.lane');
+      lane.classList.add('lane-flash');
+      setTimeout(() => lane.classList.remove('lane-flash'), 450);
+    }
+  }
+});
+
+/* ---------- Fetch with Nico: real Gemini url_context implementation ---------- */
+const NICO_FALLBACKS = ['gemini-3.8-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+let nicoChainCache = null;
+
+function nicoRank(name) {
+  const n = name.toLowerCase();
+  if (!/gemini/.test(n) || !/flash/.test(n)) return -1;
+  if (/(vision|embedding|aqa|tts|image|audio|live|robot|thinking)/.test(n)) return -1;
+  let score = /flash-lite/.test(n) ? 1000 : 0;
+  const ver = (n.match(/gemini-(\d+(?:\.\d+)?)/) || [])[1];
+  score += ver ? parseFloat(ver) * 10 : 0;
+  if (/preview|exp/.test(n)) score -= 3;
+  return score;
+}
+async function nicoDiscoverModels(key) {
+  try {
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=' + encodeURIComponent(key));
+    if (!res.ok) return null;
+    const data = await res.json();
+    const ranked = (data.models || [])
+      .filter(m => (m.supportedGenerationMethods || []).some(x => /generateContent/i.test(x)))
+      .map(m => (m.name || '').replace(/^models\//, ''))
+      .map(n => ({ n, s: nicoRank(n) }))
+      .filter(x => x.n && x.s > 0)
+      .sort((a, b) => b.s - a.s)
+      .map(x => x.n);
+    return ranked.length ? ranked : null;
+  } catch (e) { return null; }
+}
+async function nicoGetChain(key) {
+  if (nicoChainCache) return nicoChainCache;
+  const chain = await nicoDiscoverModels(key);
+  let list = (chain && chain.length) ? chain.slice() : NICO_FALLBACKS.slice();
+  list = list.filter(m => m !== 'gemini-3.8-flash');
+  list.unshift('gemini-3.8-flash');
+  nicoChainCache = list;
+  return nicoChainCache;
+}
+async function nicoRaw(key, model, body) {
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent';
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    let msg = 'HTTP ' + res.status;
+    try { const e = await res.json(); if (e.error && e.error.message) msg = e.error.message; } catch (x) {}
+    throw new Error(msg);
+  }
+  const data = await res.json();
+  const cand = data && data.candidates && data.candidates[0];
+  const parts = cand && cand.content && cand.content.parts;
+  const text = Array.isArray(parts) ? parts.map(p => p.text || '').join('') : '';
+  return { text, cand };
+}
+async function nicoCall(key, body) {
+  const chain = await nicoGetChain(key);
+  let lastErr = null;
+  for (const model of chain) {
+    try {
+      const r = await nicoRaw(key, model, body);
+      return { text: r.text, cand: r.cand, model };
+    } catch (e) {
+      if (/API key not valid|API_KEY_INVALID/i.test(e.message)) throw e;
+      if (/invalid.?argument/i.test(e.message) && body.generationConfig && body.generationConfig.thinkingConfig) {
+        const b2 = JSON.parse(JSON.stringify(body));
+        delete b2.generationConfig.thinkingConfig;
+        try {
+          const r = await nicoRaw(key, model, b2);
+          return { text: r.text, cand: r.cand, model };
+        } catch (e2) { lastErr = e2; }
+      } else lastErr = e;
+    }
+  }
+  throw lastErr || new Error('every model failed');
+}
+function nicoParseBullets(out) {
+  return out.split(/\n+/)
+    .map(l => l.replace(/^\s*[-\u2022*]\s*/, '').replace(/^\s*\d+[.)]\s*/, '').trim())
+    .filter(l => l.length > 1 && !/^TITLE:/i.test(l))
+    .slice(0, 10);
+}
+const NICO_RULES = 'Rules: 7-9 bullets, each one complete information-dense sentence, past tense, neutral wire-service style. '
+  + 'Keep specifics: names, dates, places, numbers, and verbatim quotes in quotation marks (at least two when the article has them). '
+  + 'Lead with the core news, then background and reactions. Facts only, no editorializing. Use only what the article states.';
+const NICO_CONTRACT = 'Output exactly this: first a single line "TITLE: <the headline>", then the bullets, each on its own line starting with "- ". Nothing else.';
+function nicoParseTitle(out) {
+  const titleLine = out.split(/\n/).find(l => /^\s*TITLE:/i.test(l));
+  return titleLine ? titleLine.replace(/^\s*TITLE:\s*/i, '').trim() : '';
+}
+async function geminiSummarizeUrl(key, url) {
+  const prompt = 'You are building a radio show prep sheet. Open and read the article at the URL below, then write a bulleted brief the host can read on air.\n\n'
+    + NICO_RULES + '\n\n'
+    + 'URL: ' + url + '\n\n'
+    + NICO_CONTRACT;
+  const { text: out, cand, model } = await nicoCall(key, {
+    contents: [{ parts: [{ text: prompt }] }],
+    tools: [{ url_context: {} }],
+    generationConfig: { temperature: 0.25, maxOutputTokens: 3072, thinkingConfig: { thinkingBudget: 0 } }
+  });
+  if (!out) throw new Error('empty response from Gemini');
+  const meta = (cand && (cand.urlContextMetadata || cand.url_context_metadata)) || null;
+  const rows = meta && (meta.urlMetadata || meta.url_metadata) || [];
+  const verified = Array.isArray(rows) && rows.some(r => /SUCCESS/i.test(r.urlRetrievalStatus || r.url_retrieval_status || ''));
+  if (!verified) throw new Error('Gemini could not retrieve that URL (url_context did not fetch the page)');
+  const titleLine = out.split(/\n/).find(l => /^\s*TITLE:/i.test(l));
+  const headline = titleLine ? titleLine.replace(/^\s*TITLE:\s*/i, '').trim() : '';
+  const bullets = nicoParseBullets(out);
+  if (!bullets.length) throw new Error('Gemini returned no usable bullets');
+  return { headline, bullets, model };
+}
+/* Summarize text we fetched ourselves (tweet text, Jina article text). No url_context needed. */
+async function geminiSummarizeText(key, text, headline) {
+  const prompt = 'You are building a radio show prep sheet. Read the text below and write a bulleted brief the host can read on air.\n\n'
+    + NICO_RULES + '\n\n'
+    + 'Headline: ' + (headline || '(unknown)') + '\n\n'
+    + 'Text:\n"""\n' + text.slice(0, 24000) + '\n"""\n\n'
+    + NICO_CONTRACT;
+  const { text: out, model } = await nicoCall(key, {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.25, maxOutputTokens: 3072, thinkingConfig: { thinkingBudget: 0 } }
+  });
+  if (!out) throw new Error('empty response from Gemini');
+  const bullets = nicoParseBullets(out);
+  if (!bullets.length) throw new Error('Gemini returned no usable bullets');
+  return { headline: nicoParseTitle(out), bullets, model };
+}
+/* X/Twitter special case: fetch tweet text via the fxtwitter API. */
+function nicoTweetId(url) {
+  const m = String(url).match(/^(?:https?:\/\/)?(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]{1,15})\/status\/(\d+)/i);
+  return m ? { user: m[1], id: m[2] } : null;
+}
+async function nicoFetchTweetText(url) {
+  const t = nicoTweetId(url);
+  if (!t) throw new Error('not a tweet URL');
+  const res = await fetch('https://api.fxtwitter.com/' + t.user + '/status/' + t.id);
+  if (!res.ok) throw new Error('fxtwitter HTTP ' + res.status);
+  const data = await res.json();
+  const tw = data && data.tweet;
+  if (!tw || !tw.text) throw new Error('fxtwitter returned no tweet text');
+  const author = (tw.author && (tw.author.name || tw.author.screen_name)) || t.user;
+  return { text: 'Tweet by ' + author + ':\n' + tw.text, author };
+}
+/* Jina Reader: fetch readable article text for any URL. */
+async function nicoJinaText(url) {
+  const res = await fetch('https://r.jina.ai/' + url);
+  if (!res.ok) throw new Error('Jina HTTP ' + res.status);
+  const raw = await res.text();
+  const m = raw.match(/Markdown Content:\s*([\s\S]*)$/);
+  const body = (m ? m[1] : raw).trim();
+  if (body.length < 200) throw new Error('Jina returned too little text');
+  const tm = raw.match(/^Title:\s*(.+)$/m);
+  return { text: body, title: tm ? tm[1].trim() : '' };
+}
+/* Last resort: Google Search grounding on the card headline. Never the default. */
+async function geminiSummarizeSearch(key, headline) {
+  const prompt = 'You are building a radio show prep sheet. Use Google Search to research this story, then write a bulleted brief the host can read on air.\n\n'
+    + NICO_RULES + '\n\n'
+    + 'Story: ' + headline + '\n\n'
+    + NICO_CONTRACT;
+  const { text: out, model } = await nicoCall(key, {
+    contents: [{ parts: [{ text: prompt }] }],
+    tools: [{ google_search: {} }],
+    generationConfig: { temperature: 0.25, maxOutputTokens: 3072, thinkingConfig: { thinkingBudget: 0 } }
+  });
+  if (!out) throw new Error('empty response from Gemini');
+  const bullets = nicoParseBullets(out);
+  if (!bullets.length) throw new Error('Gemini returned no usable bullets');
+  return { headline: nicoParseTitle(out) || headline, bullets, model };
+}
+function nicoIsKeyError(e) {
+  return /API key not valid|API_KEY_INVALID/i.test((e && e.message) || '');
+}
+/* Full chain: url_context -> tweet text -> Jina -> Google Search. Each step only if the previous failed. */
+async function nicoFetchChain(key, card) {
+  const url = nicoPrimaryUrl(card);
+  const headline = cardHeadlineText(card);
+  try {
+    const r = await geminiSummarizeUrl(key, url);
+    return Object.assign({ via: 'url' }, r);
+  } catch (e1) {
+    if (nicoIsKeyError(e1)) throw e1;
+    if (nicoTweetId(url)) {
+      try {
+        const tw = await nicoFetchTweetText(url);
+        const r = await geminiSummarizeText(key, tw.text, headline);
+        return Object.assign({ via: 'tweet' }, r);
+      } catch (e2) { /* fall through to Jina */ }
+    }
+    try {
+      const jr = await nicoJinaText(url);
+      const r = await geminiSummarizeText(key, jr.text, jr.title || headline);
+      return Object.assign({ via: 'jina' }, r);
+    } catch (e3) { /* fall through to Google Search */ }
+    const r = await geminiSummarizeSearch(key, headline);
+    return Object.assign({ via: 'search' }, r);
+  }
+}
+function nicoPrimaryUrl(card) {
+  const a = card.querySelector('.url-row a');
+  if (!a) return '';
+  const href = a.getAttribute('href') || '';
+  if (/^https?:\/\//i.test(href)) return href;
+  const t = a.textContent.trim();
+  return /^https?:\/\//i.test(t) ? t : 'https://' + t;
+}
+function nicoClearState(card) {
+  const e = card.querySelector('.nico-error');
+  if (e) e.remove();
+  const c = card.querySelector('.nico-calm');
+  if (c) c.remove();
+}
+function nicoCalm(card, nico, msg) {
+  nicoClearState(card);
+  const d = document.createElement('div');
+  d.className = 'nico-calm';
+  d.textContent = msg;
+  nico.parentNode.insertBefore(d, nico.nextSibling);
+}
+function nicoError(card, nico, msg, retry) {
+  nicoClearState(card);
+  const err = document.createElement('div');
+  err.className = 'nico-error';
+  const span = document.createElement('span');
+  span.textContent = 'Nico could not fetch this: ' + msg + (retry ? ' ' : '');
+  err.appendChild(span);
+  if (retry) {
+    const a = document.createElement('a');
+    a.href = '#';
+    a.textContent = 'Retry';
+    a.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); nicoFetch(card, nico); });
+    err.appendChild(a);
+  }
+  nico.parentNode.insertBefore(err, nico.nextSibling);
+}
+function cardHeadlineText(card) {
+  const hEl = card.querySelector('.card-headline');
+  if (!hEl) return '';
+  const first = hEl.firstChild;
+  return first && first.nodeType === 3 ? first.textContent.trim() : hEl.textContent.trim();
+}
+function applyNicoResult(card, headline, bullets) {
+  const hEl = card.querySelector('.card-headline');
+  const current = cardHeadlineText(card);
+  if (headline && (!current || /^untitled story$/i.test(current))) {
+    const tag = hEl.querySelector('.backup-tag');
+    hEl.textContent = headline;
+    if (tag) hEl.appendChild(tag);
+  }
+  const editList = card.querySelector('.bullet-edit');
+  const preview = card.querySelector('.card-bullets');
+  editList.innerHTML = '';
+  preview.innerHTML = '';
+  bullets.forEach(text => {
+    const li = document.createElement('li');
+    const span = document.createElement('span');
+    span.textContent = text;
+    span.setAttribute('contenteditable', 'true');
+    span.setAttribute('spellcheck', 'true');
+    const del = document.createElement('button');
+    del.className = 'bullet-del';
+    del.setAttribute('aria-label', 'Delete bullet');
+    del.textContent = '\u00d7';
+    li.appendChild(span); li.appendChild(del);
+    editList.appendChild(li);
+    const pli = document.createElement('li');
+    pli.textContent = text;
+    preview.appendChild(pli);
+  });
+}
+async function nicoFetch(card, nico) {
+  const key = (typeof GEMINI_API_KEY === 'string' ? GEMINI_API_KEY : '').trim();
+  if (!key) { nicoCalm(card, nico, 'API key not installed yet.'); return; }
+  const url = nicoPrimaryUrl(card);
+  if (!url) { nicoError(card, nico, 'no link on this card yet. Add a URL first.', false); return; }
+  nico.classList.add('loading');
+  nico.querySelector('.nico-label').textContent = 'Fetching';
+  nicoClearState(card);
+  card.querySelectorAll('.via-badge').forEach(b => b.remove());
+  try {
+    const { headline, bullets, model, via } = await nicoFetchChain(key, card);
+    applyNicoResult(card, headline, bullets);
+    card.dataset.fetched = 'true';
+    if (via === 'search') {
+      const meta = card.querySelector('.card-meta');
+      if (meta) {
+        const b = document.createElement('span');
+        b.className = 'via-badge';
+        b.textContent = 'via Google search';
+        meta.appendChild(b);
+      }
+    }
+    toast('Nico fetched it (' + model + (via === 'search' ? ', via Google search' : '') + ')');
+  } catch (err) {
+    nicoError(card, nico, (err && err.message) || 'fetch failed', true);
+  } finally {
+    nico.classList.remove('loading');
+    nico.querySelector('.nico-label').textContent = 'Fetch with Nico';
+  }
+}
+
+/* ---------- add story (per-lane inline composer) ---------- */
+function cardTemplate(headline, url) {
+  const safeH = escapeHtml(headline || 'Untitled story');
+  const linkRow = url
+    ? `<div class="url-row"><a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a></div>`
+    : '';
+  return `<span class="grip" aria-hidden="true">⠿</span>
+    <span class="mini-arrows"><button type="button" class="mv-up" aria-label="Move card up" title="Move up">▲</button><button type="button" class="mv-dn" aria-label="Move card down" title="Move down">▼</button></span>
+    <p class="card-headline">${safeH}</p>
+    <div class="card-meta"><span class="src">Manual</span><span class="tag">Story</span></div>
+    <ul class="card-bullets"><li class="empty-note" style="list-style:none;color:var(--muted);font-style:italic">No summary yet. Try Fetch with Nico below.</li></ul>
+    <div class="card-details">
+      <div class="field-label">Links</div>
+      ${linkRow}
+      <div class="field-label">Talking points</div>
+      <ul class="bullet-edit"><li><span contenteditable="true" spellcheck="true"></span><button class="bullet-del" aria-label="Delete bullet">×</button></li></ul>
+      <button type="button" class="btn btn-sm add-bullet">+ Add talking point</button>
+      <div class="field-label">Audio cue</div>
+      <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
+      <div class="field-label">Nico fetch</div>
+      <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
+      <div class="field-label">Producer notes</div>
+      <textarea class="prod-notes" placeholder="Private notes, not printed"></textarea>
+      <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
+      <div class="toggle-row"><button class="switch print-switch" role="switch" aria-checked="false" aria-label="Include producer note in print"></button><span class="switch-label">Include in print</span></div>
+      <div class="card-move"><span class="mv-label">Move</span><button type="button" class="mv-btn mv-up-big" aria-label="Move card up">▲ Up</button><button type="button" class="mv-btn mv-dn-big" aria-label="Move card down">▼ Down</button></div>
+    </div>`;
+}
+
+function openComposer(lane) {
+  if (laneLocked(lane)) return;
+  if (lane.querySelector('.composer')) return;
+  const box = lane.querySelector('.cards');
+  const form = document.createElement('div');
+  form.className = 'composer';
+  form.innerHTML = `<div class="field-label">New story</div>
+    <input type="text" class="composer-headline" placeholder="Headline" aria-label="Headline">
+    <input type="text" class="composer-url" placeholder="Link (optional)" aria-label="Link" style="margin-top:8px">
+    <div class="composer-row">
+      <button class="btn btn-primary btn-sm composer-add">Add</button>
+      <button class="btn btn-sm composer-cancel">Cancel</button>
+    </div>`;
+  box.appendChild(form);
+  const hInput = form.querySelector('.composer-headline');
+  const uInput = form.querySelector('.composer-url');
+  hInput.focus();
+  const commit = () => {
+    const h = hInput.value.trim();
+    const u = uInput.value.trim();
+    if (!h && !u) { form.remove(); return; }
+    const el = document.createElement('article');
+    el.className = 'card';
+    el.setAttribute('tabindex', '0');
+    el.innerHTML = cardTemplate(h, u);
+    box.appendChild(el);
+    form.remove();
+    el.classList.add('expanded');
+    el.classList.add('just-added');
+    setTimeout(() => el.classList.remove('just-added'), 1400);
+    el.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'nearest' });
+    const l = el.closest('.lane');
+    l.classList.add('lane-flash');
+    setTimeout(() => l.classList.remove('lane-flash'), 450);
+    toast('Story added');
+  };
+  form.querySelector('.composer-add').addEventListener('click', commit);
+  form.querySelector('.composer-cancel').addEventListener('click', () => form.remove());
+  hInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') commit();
+    if (e.key === 'Escape') form.remove();
+  });
+  uInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') commit();
+    if (e.key === 'Escape') form.remove();
+  });
+}
+
+$$('.lane-add').forEach(btn => {
+  btn.addEventListener('click', () => openComposer(btn.closest('.lane')));
+});
+
+/* ---------- segment lock ---------- */
+function updateShowLock() {
+  const lanes = $$('.lane');
+  const all = lanes.length > 0 && lanes.every(l => l.classList.contains('locked'));
+  document.getElementById('lockedBanner').hidden = !all;
+}
+
+function setLaneLocked(lane, locked) {
+  lane.classList.toggle('locked', locked);
+  const btn = lane.querySelector('.lane-lock');
+  btn.classList.toggle('on', locked);
+  btn.setAttribute('aria-pressed', String(locked));
+  btn.setAttribute('aria-label', locked ? 'Unlock segment' : 'Lock segment');
+  btn.setAttribute('title', locked ? 'Unlock segment' : 'Lock segment');
+  const add = lane.querySelector('.lane-add');
+  if (add) add.disabled = locked;
+  const tag = lane.querySelector('.lane-locked-tag');
+  if (tag) tag.hidden = !locked;
+  const s = laneSortables[lane.dataset.lane];
+  if (s) s.option('disabled', locked);
+  updateShowLock();
+}
+
+$$('.lane-lock').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const lane = btn.closest('.lane');
+    const locked = !lane.classList.contains('locked');
+    setLaneLocked(lane, locked);
+    toast(locked ? 'Segment locked' : 'Segment unlocked');
+  });
+});
+
+document.getElementById('lockAll').addEventListener('click', () => {
+  $$('.lane').forEach(lane => setLaneLocked(lane, true));
+  toast('All segments locked');
+});
+document.getElementById('unlockAll').addEventListener('click', () => {
+  $$('.lane').forEach(lane => setLaneLocked(lane, false));
+  toast('All segments unlocked');
+});
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+
+
+/* ---------- card arrows: collapsed = small arrows, expanded = prominent arrows, never drag while expanded ---------- */
+function moveCard(card, dir) {
+  if (!card || laneLocked(card)) return;
+  const sib = dir < 0 ? card.previousElementSibling : card.nextElementSibling;
+  if (!sib || !sib.classList.contains('card')) return;
+  if (dir < 0) card.parentNode.insertBefore(card, sib);
+  else card.parentNode.insertBefore(sib, card);
+  card.focus({ preventScroll: true });
+  const lane = card.closest('.lane');
+  lane.classList.add('lane-flash');
+  setTimeout(() => lane.classList.remove('lane-flash'), 450);
+}
+$$('.card').forEach(card => {
+  if (!card.querySelector('.mini-arrows')) {
+    const g = card.querySelector('.grip');
+    const wrap = document.createElement('span');
+    wrap.className = 'mini-arrows';
+    wrap.innerHTML = '<button type="button" class="mv-up" aria-label="Move card up" title="Move up">▲</button><button type="button" class="mv-dn" aria-label="Move card down" title="Move down">▼</button>';
+    card.insertBefore(wrap, g);
+  }
+  const det = card.querySelector('.card-details');
+  if (det && !det.querySelector('.card-move')) {
+    const row = document.createElement('div');
+    row.className = 'card-move';
+    row.innerHTML = '<span class="mv-label">Move</span><button type="button" class="mv-btn mv-up-big" aria-label="Move card up">▲ Up</button><button type="button" class="mv-btn mv-dn-big" aria-label="Move card down">▼ Down</button>';
+    det.appendChild(row);
+  }
+});
+document.addEventListener('click', e => {
+  const mv = e.target.closest('.mv-up, .mv-dn, .mv-up-big, .mv-dn-big');
+  if (mv) {
+    e.stopPropagation();
+    const card = mv.closest('.card');
+    moveCard(card, (mv.classList.contains('mv-up') || mv.classList.contains('mv-up-big')) ? -1 : 1);
+  }
+}, true);
+
+/* ---------- guest lanes: editable fields, autogrow, pull from interviews ---------- */
+$$('.guest-block textarea').forEach(ta => {
+  const grow = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; };
+  ta.addEventListener('input', grow);
+  grow();
+});
+const INTERVIEWS = [
+  { name: 'General Wayne Eyre', desc: 'memoir Into the Breach', slot: '3:20', format: 'In-studio' },
+  { name: 'Cam Maitland', desc: 'Shocktober streaming picks', slot: '4:20', format: 'Zoom' },
+  { name: 'Dolph Lundgren', desc: 'new action slate', slot: '3:20', format: 'Pre-tape' }
+];
+$$('.guest-pull').forEach(sel => {
+  INTERVIEWS.forEach((iv, i) => {
+    const o = document.createElement('option');
+    o.value = String(i);
+    o.textContent = iv.name + ' (' + iv.slot + ')';
+    sel.appendChild(o);
+  });
+  sel.addEventListener('change', () => {
+    if (sel.value === '') return;
+    const iv = INTERVIEWS[+sel.value];
+    const block = sel.closest('.guest-block');
+    block.querySelector('.guest-name-input').value = iv.name;
+    block.querySelector('.guest-slot').value = iv.slot;
+    block.querySelector('.guest-format').value = iv.format;
+    const seg = block.querySelector('.guest-seginfo');
+    if (!seg.value.trim()) { seg.value = iv.desc; seg.dispatchEvent(new Event('input')); }
+    toast('Pulled in ' + iv.name);
+  });
+});
+
+
+/* ---------- The Keep: notes, checklists, labels, pin, archive, trash ---------- */
+const KEEP_TINTS = ['#FFFFFF','#FBE9E9','#FCEFD9','#FFF6D8','#DFF0E3','#DCEAFB','#E6E2F8','#F4DCE8'];
+let keepSeq = 1, keepNotes = [], keepLabels = ['Show prep','Guests','Ideas'];
+let keepView = 'notes', keepLabelFilter = null, keepQuery = '', keepEditingId = null;
+
+function keepSeed(title, body, opts) {
+  const n = Object.assign({ id: keepSeq++, title: title || '', body: body || '', checklist: false,
+    items: [], color: 0, labels: [], pinned: false, archived: false, trashed: false,
+    trashedAt: 0, hideChecked: false, created: Date.now() }, opts || {});
+  keepNotes.push(n);
+  return n;
+}
+keepSeed("Today's must-dos", '', { pinned: true, color: 5, labels: ['Show prep'], checklist: true, items: [
+  { text: 'Lock s1 topics by 2pm', checked: false },
+  { text: 'Confirm 4:20 guest Zoom link', checked: false },
+  { text: 'Print drive sheets', checked: true }
+]});
+keepSeed('Liza cold open idea', 'Open on the Guelph homecoming story, then ask listeners for their wildest frosh week memory. Keep it to 90 seconds before the first guest.', { color: 3, labels: ['Ideas'] });
+keepSeed('Guest wishlist', '', { color: 1, labels: ['Guests'], checklist: true, items: [
+  { text: 'Chris Hansen outreach', checked: false },
+  { text: 'Follow up on PR contact', checked: true }
+]});
+keepSeed('Old bit: traffic reporter characters', 'Retired for now. Might revive for a slow Friday.', { archived: true, color: 0, labels: ['Ideas'] });
+keepSeed('scratch test note', 'delete me', { trashed: true, trashedAt: Date.now() - 31 * 864e5, color: 0 });
+
+function keepMatch(n) {
+  if (keepView === 'notes' && (n.archived || n.trashed)) return false;
+  if (keepView === 'archive' && (!n.archived || n.trashed)) return false;
+  if (keepView === 'trash' && !n.trashed) return false;
+  if (keepLabelFilter && n.labels.indexOf(keepLabelFilter) < 0) return false;
+  if (keepQuery) {
+    const hay = (n.title + ' ' + n.body + ' ' + n.items.map(i => i.text).join(' ')).toLowerCase();
+    if (hay.indexOf(keepQuery) < 0) return false;
+  }
+  return true;
+}
+function keepCardInner(n) {
+  let s = n.title ? '<h4>' + escapeHtml(n.title) + '</h4>' : '';
+  if (n.checklist) {
+    const vis = n.items.filter(i => !(n.hideChecked && i.checked)).slice(0, 4);
+    s += vis.map(i => '<div class="keep-checkrow"><span class="kbox' + (i.checked ? ' on' : '') + '">' + (i.checked ? '&#10003;' : '') + '</span><span class="kcheck' + (i.checked ? ' done' : '') + '">' + escapeHtml(i.text) + '</span></div>').join('')
+      || '<p class="kb" style="color:var(--muted)">Empty list</p>';
+    if (n.items.length > 4) s += '<p class="kb" style="color:var(--muted)">+' + (n.items.length - 4) + ' more</p>';
+  } else {
+    const t = n.body.length > 220 ? n.body.slice(0, 220) + '\u2026' : n.body;
+    s += '<p class="kb">' + escapeHtml(t) + '</p>';
+  }
+  if (n.labels.length) s += '<div class="klabels">' + n.labels.map(l => '<span class="klabel">' + escapeHtml(l) + '</span>').join('') + '</div>';
+  return s;
+}
+function keepMount(grid, n) {
+  const d = document.createElement('div');
+  d.className = 'keep-note kc' + n.color;
+  d.innerHTML = keepCardInner(n);
+  d.addEventListener('click', () => keepOpen(n.id));
+  grid.appendChild(d);
+}
+function keepRender() {
+  const now = Date.now();
+  keepNotes = keepNotes.filter(n => !(n.trashed && now - n.trashedAt > 30 * 864e5));
+  const list = keepNotes.filter(keepMatch);
+  const pinned = keepView === 'notes' ? list.filter(n => n.pinned) : [];
+  const rest = list.filter(n => !(keepView === 'notes' && n.pinned));
+  const pg = document.getElementById('keepPinned'), og = document.getElementById('keepGrid');
+  pg.innerHTML = ''; og.innerHTML = '';
+  pinned.forEach(n => keepMount(pg, n));
+  rest.forEach(n => keepMount(og, n));
+  document.getElementById('keepPinnedHead').hidden = !pinned.length;
+  document.getElementById('keepOthersHead').hidden = !(pinned.length && rest.length);
+  document.getElementById('keepEmpty').hidden = !!list.length;
+  document.getElementById('cntNotes').textContent = keepNotes.filter(n => !n.archived && !n.trashed).length;
+  document.getElementById('cntArch').textContent = keepNotes.filter(n => n.archived && !n.trashed).length;
+  document.getElementById('cntTrash').textContent = keepNotes.filter(n => n.trashed).length;
+  document.getElementById('keepEmptyTrash').hidden = keepView !== 'trash' || !keepNotes.some(n => n.trashed);
+  const ll = document.getElementById('keepLabelList');
+  ll.innerHTML = '';
+  keepLabels.forEach(l => {
+    const b = document.createElement('button');
+    b.className = 'keep-label' + (keepLabelFilter === l ? ' active' : '');
+    const cnt = keepNotes.filter(n => !n.archived && !n.trashed && n.labels.indexOf(l) >= 0).length;
+    b.innerHTML = '<span class="dot"></span><span>' + escapeHtml(l) + '</span><span class="cnt">' + cnt + '</span>';
+    b.addEventListener('click', () => { keepLabelFilter = keepLabelFilter === l ? null : l; keepRender(); });
+    ll.appendChild(b);
+  });
+}
+$$('.keep-nav').forEach(b => b.addEventListener('click', () => {
+  $$('.keep-nav').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  keepView = b.dataset.view;
+  keepLabelFilter = null;
+  keepRender();
+}));
+document.getElementById('keepSearch').addEventListener('input', e => {
+  keepQuery = e.target.value.trim().toLowerCase();
+  keepRender();
+});
+document.getElementById('keepLabelAdd').addEventListener('click', () => {
+  const name = prompt('Label name');
+  if (name && name.trim() && keepLabels.indexOf(name.trim()) < 0) {
+    keepLabels.push(name.trim());
+    keepRender();
+    toast('Label created');
+  }
+});
+document.getElementById('keepEmptyTrash').addEventListener('click', () => {
+  keepNotes = keepNotes.filter(n => !n.trashed);
+  keepRender();
+  toast('Trash emptied');
+});
+/* composer */
+const keepComposer = document.getElementById('keepComposer');
+function keepExpandComposer() {
+  keepComposer.classList.add('open');
+  document.getElementById('keepComposerBar').hidden = true;
+  document.getElementById('keepTitle').hidden = false;
+  const body = document.getElementById('keepBody');
+  body.hidden = false;
+  document.getElementById('keepComposerActions').hidden = false;
+  body.focus();
+}
+function keepCollapseComposer() {
+  keepComposer.classList.remove('open');
+  document.getElementById('keepComposerBar').hidden = false;
+  document.getElementById('keepTitle').hidden = true;
+  document.getElementById('keepBody').hidden = true;
+  document.getElementById('keepComposerActions').hidden = true;
+  document.getElementById('keepTitle').value = '';
+  document.getElementById('keepBody').value = '';
+  document.getElementById('keepBody').style.height = 'auto';
+}
+keepComposer.addEventListener('click', e => {
+  if (!keepComposer.classList.contains('open') && !e.target.closest('button')) keepExpandComposer();
+});
+document.getElementById('keepBody').addEventListener('input', function () {
+  this.style.height = 'auto';
+  this.style.height = this.scrollHeight + 'px';
+});
+document.getElementById('keepCancel').addEventListener('click', e => { e.stopPropagation(); keepCollapseComposer(); });
+document.getElementById('keepSave').addEventListener('click', e => {
+  e.stopPropagation();
+  const t = document.getElementById('keepTitle').value.trim();
+  const b = document.getElementById('keepBody').value.trim();
+  if (!t && !b) { keepCollapseComposer(); return; }
+  keepSeed(t, b, {});
+  keepCollapseComposer();
+  keepRender();
+  toast('Note saved');
+});
+/* editor overlay */
+const keepOverlay = document.getElementById('keepOverlay');
+const keepEditor = document.getElementById('keepEditor');
+function keepNote() { return keepNotes.find(x => x.id === keepEditingId); }
+function keepSyncEditorChrome() {
+  const n = keepNote(); if (!n) return;
+  keepEditor.className = 'keep-editor kc' + n.color;
+  document.getElementById('kePin').textContent = n.pinned ? 'Unpin' : 'Pin';
+  document.getElementById('keArchive').textContent = n.archived ? 'Unarchive' : 'Archive';
+  document.getElementById('keTrash').hidden = n.trashed;
+  document.getElementById('keRestore').hidden = !n.trashed && !n.archived;
+  document.getElementById('keDelete').hidden = !n.trashed;
+  document.getElementById('keMode').textContent = n.checklist ? 'Make note' : 'Make checklist';
+  document.getElementById('keHideChecked').hidden = !n.checklist;
+  document.getElementById('keHideChecked').textContent = n.hideChecked ? 'Show checked' : 'Hide checked';
+}
+function keepRenderChecklistEditor() {
+  const n = keepNote(); if (!n) return;
+  const box = document.getElementById('keChecklist');
+  box.innerHTML = '';
+  const vis = n.items.filter(i => !(n.hideChecked && i.checked));
+  vis.forEach(i => {
+    const row = document.createElement('div');
+    row.className = 'ke-check-item' + (i.checked ? ' done' : '');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.checked = i.checked; cb.setAttribute('aria-label', 'Checked');
+    cb.addEventListener('change', () => { i.checked = cb.checked; keepRenderChecklistEditor(); });
+    const tx = document.createElement('input');
+    tx.type = 'text'; tx.value = i.text; tx.setAttribute('aria-label', 'List item');
+    tx.addEventListener('input', () => { i.text = tx.value; });
+    const x = document.createElement('button');
+    x.className = 'ke-x'; x.textContent = '\u00d7'; x.setAttribute('aria-label', 'Delete item');
+    x.addEventListener('click', () => { n.items.splice(n.items.indexOf(i), 1); keepRenderChecklistEditor(); });
+    row.appendChild(cb); row.appendChild(tx); row.appendChild(x);
+    box.appendChild(row);
+  });
+  const sunk = n.items.filter(i => i.checked);
+  n.items.sort((a, b) => (a.checked ? 1 : 0) - (b.checked ? 1 : 0));
+}
+function keepRenderLabelPick() {
+  const n = keepNote(); if (!n) return;
+  const box = document.getElementById('keLabels');
+  box.innerHTML = '';
+  keepLabels.forEach(l => {
+    const lab = document.createElement('label');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.checked = n.labels.indexOf(l) >= 0;
+    cb.addEventListener('change', () => {
+      if (cb.checked && n.labels.indexOf(l) < 0) n.labels.push(l);
+      if (!cb.checked) n.labels = n.labels.filter(x => x !== l);
+    });
+    lab.appendChild(cb);
+    lab.appendChild(document.createTextNode(l));
+    box.appendChild(lab);
+  });
+}
+function keepRenderSwatches() {
+  const n = keepNote(); if (!n) return;
+  const box = document.getElementById('keSwatches');
+  box.innerHTML = '';
+  KEEP_TINTS.forEach((t, i) => {
+    const b = document.createElement('button');
+    b.className = 'ke-sw' + (n.color === i ? ' active' : '');
+    b.style.background = t;
+    b.setAttribute('aria-label', 'Note color ' + (i + 1));
+    b.addEventListener('click', () => { n.color = i; keepRenderSwatches(); keepSyncEditorChrome(); });
+    box.appendChild(b);
+  });
+}
+function keepOpen(id) {
+  const n = keepNotes.find(x => x.id === id); if (!n) return;
+  keepEditingId = id;
+  document.getElementById('keTitle').value = n.title;
+  document.getElementById('keBody').value = n.body;
+  document.getElementById('keBody').hidden = n.checklist;
+  document.getElementById('keChecklist').hidden = !n.checklist;
+  document.getElementById('keAddItem').hidden = !n.checklist;
+  keepRenderChecklistEditor(); keepRenderLabelPick(); keepRenderSwatches(); keepSyncEditorChrome();
+  keepOverlay.hidden = false;
+}
+function keepSaveEditor() {
+  const n = keepNote(); if (!n) return;
+  n.title = document.getElementById('keTitle').value;
+  if (!n.checklist) n.body = document.getElementById('keBody').value;
+}
+function keepClose() {
+  keepSaveEditor();
+  keepOverlay.hidden = true;
+  keepEditingId = null;
+  keepRender();
+}
+document.getElementById('keClose').addEventListener('click', keepClose);
+keepOverlay.addEventListener('click', e => { if (e.target === keepOverlay) keepClose(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !keepOverlay.hidden) keepClose();
+});
+document.getElementById('keMode').addEventListener('click', () => {
+  const n = keepNote(); if (!n) return;
+  keepSaveEditor();
+  n.checklist = !n.checklist;
+  if (n.checklist && !n.items.length) {
+    n.items = n.body.split('\n').map(t => t.trim()).filter(Boolean).map(t => ({ text: t, checked: false }));
+    if (!n.items.length) n.items = [{ text: '', checked: false }];
+  }
+  if (!n.checklist) n.body = n.items.map(i => (i.checked ? '[x] ' : '') + i.text).join('\n');
+  document.getElementById('keBody').hidden = n.checklist;
+  document.getElementById('keChecklist').hidden = !n.checklist;
+  document.getElementById('keAddItem').hidden = !n.checklist;
+  keepRenderChecklistEditor(); keepSyncEditorChrome();
+});
+document.getElementById('keAddItem').addEventListener('click', () => {
+  const n = keepNote(); if (!n) return;
+  n.items.push({ text: '', checked: false });
+  keepRenderChecklistEditor();
+  const inputs = document.querySelectorAll('#keChecklist .ke-check-item input[type=text]');
+  inputs[inputs.length - 1].focus();
+});
+document.getElementById('keHideChecked').addEventListener('click', () => {
+  const n = keepNote(); if (!n) return;
+  n.hideChecked = !n.hideChecked;
+  keepRenderChecklistEditor(); keepSyncEditorChrome();
+});
+document.getElementById('keNewLabel').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const v = e.target.value.trim();
+  if (v && keepLabels.indexOf(v) < 0) keepLabels.push(v);
+  const n = keepNote();
+  if (v && n && n.labels.indexOf(v) < 0) n.labels.push(v);
+  e.target.value = '';
+  keepRenderLabelPick();
+});
+document.getElementById('kePin').addEventListener('click', () => { const n = keepNote(); if (n) { n.pinned = !n.pinned; keepSyncEditorChrome(); } });
+document.getElementById('keArchive').addEventListener('click', () => { const n = keepNote(); if (n) { n.archived = !n.archived; if (n.archived) n.pinned = false; keepSyncEditorChrome(); toast(n.archived ? 'Archived' : 'Unarchived'); } });
+document.getElementById('keTrash').addEventListener('click', () => { const n = keepNote(); if (n) { n.trashed = true; n.trashedAt = Date.now(); n.pinned = false; keepSyncEditorChrome(); toast('Moved to trash'); } });
+document.getElementById('keRestore').addEventListener('click', () => { const n = keepNote(); if (n) { n.trashed = false; n.archived = false; keepSyncEditorChrome(); toast('Restored'); } });
+document.getElementById('keDelete').addEventListener('click', () => {
+  keepNotes = keepNotes.filter(x => x.id !== keepEditingId);
+  keepOverlay.hidden = true; keepEditingId = null; keepRender();
+  toast('Deleted forever');
+});
+keepRender();
+
+
+/* ---------- printable producer notes ---------- */
+function syncPrintNote(card) {
+  const ta = card.querySelector('.prod-notes');
+  const slot = card.querySelector('.print-note');
+  if (ta && slot) slot.textContent = ta.value.trim();
+}
+function setCardPrintNote(card, on) {
+  const sw = card.querySelector('.print-switch');
+  if (sw) sw.setAttribute('aria-checked', on ? 'true' : 'false');
+  card.classList.toggle('print-notes', on);
+  syncPrintNote(card);
+}
+document.addEventListener('input', e => {
+  if (e.target.classList && e.target.classList.contains('prod-notes')) {
+    const card = e.target.closest('.card');
+    if (card) syncPrintNote(card);
+  }
+});
+$$('.card').forEach(card => {
+  const det = card.querySelector('.card-details');
+  if (det && !det.querySelector('.print-switch')) {
+    const ta = det.querySelector('textarea[placeholder="Private notes, not printed"]');
+    if (ta) ta.classList.add('prod-notes');
+    const anchor = det.querySelector('.toggle-row');
+    if (anchor) {
+      const row = document.createElement('div');
+      row.className = 'toggle-row';
+      row.innerHTML = '<button class="switch print-switch" role="switch" aria-checked="false" aria-label="Include producer note in print"></button><span class="switch-label">Include in print</span>';
+      anchor.parentNode.insertBefore(row, anchor.nextSibling);
+    }
+  }
+  if (!card.querySelector('.print-note')) {
+    const slot = document.createElement('div');
+    slot.className = 'print-note';
+    slot.setAttribute('aria-hidden', 'true');
+    card.appendChild(slot);
+  }
+});
+document.getElementById('printNotesAll').addEventListener('click', function () {
+  const on = this.getAttribute('aria-checked') !== 'true';
+  this.setAttribute('aria-checked', on ? 'true' : 'false');
+  $$('.card').forEach(card => setCardPrintNote(card, on));
+  toast(on ? 'All producer notes will print' : 'Producer notes excluded from print');
+});
+
+
+/* ---------- talking points: add, remove, edit, preview sync ---------- */
+function addBulletRow(ul, focusIt) {
+  if (!ul) return null;
+  const li = document.createElement('li');
+  const sp = document.createElement('span');
+  sp.setAttribute('contenteditable', 'true');
+  sp.setAttribute('spellcheck', 'true');
+  const del = document.createElement('button');
+  del.className = 'bullet-del';
+  del.setAttribute('aria-label', 'Delete bullet');
+  del.textContent = '\u00d7';
+  li.appendChild(sp); li.appendChild(del);
+  ul.appendChild(li);
+  if (focusIt) sp.focus();
+  return li;
+}
+function syncBulletPreview(card) {
+  if (!card) return;
+  const editList = card.querySelector('.bullet-edit');
+  const preview = card.querySelector('.card-bullets');
+  if (!editList || !preview) return;
+  const texts = Array.from(editList.querySelectorAll('li span')).map(s => s.textContent.trim()).filter(Boolean);
+  preview.innerHTML = '';
+  if (!texts.length) {
+    const em = document.createElement('li');
+    em.className = 'empty-note';
+    em.style.cssText = 'list-style:none;color:var(--muted);font-style:italic';
+    em.textContent = 'No summary yet. Try Fetch with Nico below.';
+    preview.appendChild(em);
+  } else {
+    texts.forEach(t => { const li = document.createElement('li'); li.textContent = t; preview.appendChild(li); });
+  }
+}
+$$('.card .bullet-edit').forEach(ul => {
+  ul.querySelectorAll('li span').forEach(sp => {
+    sp.setAttribute('contenteditable', 'true');
+    sp.setAttribute('spellcheck', 'true');
+  });
+  if (!ul.nextElementSibling || !ul.nextElementSibling.classList.contains('add-bullet')) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn btn-sm add-bullet';
+    b.textContent = '+ Add talking point';
+    ul.parentNode.insertBefore(b, ul.nextSibling);
+  }
+});
+document.addEventListener('input', e => {
+  const sp = e.target.closest && e.target.closest('.bullet-edit li span[contenteditable="true"]');
+  if (sp) syncBulletPreview(sp.closest('.card'));
+});
+document.addEventListener('paste', e => {
+  const sp = e.target.closest && e.target.closest('.bullet-edit li span[contenteditable="true"]');
+  if (!sp) return;
+  e.preventDefault();
+  const text = ((e.clipboardData || window.clipboardData).getData('text/plain') || '').replace(/\s+/g, ' ');
+  document.execCommand('insertText', false, text);
+});
+
+/* ---------- demo hooks (screenshot states only, not used in normal load) ---------- */
+(function demoState() {
+  const q = new URLSearchParams(location.search).get('demo');
+  if (q === 'locked') {
+    $$('.lane').forEach(lane => setLaneLocked(lane, true));
+  } else if (q === 'composer') {
+    openComposer(document.querySelector('.lane[data-lane="s1"]'));
+  } else if (q === 'keep') {
+    document.querySelector('.tab[data-tab="keep"]').click();
+  } else if (q === 'guestpaste') {
+    const ta = document.querySelector('.lane[data-lane="s2"] .guest-intro-input');
+    ta.value = 'Good afternoon and welcome back.\n\nOur next guest spent 38 years in uniform, rising all the way to Chief of the Defence Staff.\n\nPlease welcome General Wayne Eyre, here to talk about his brand new memoir Into the Breach.';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+})();
+
+/* ---------- corkboard ---------- */
+const board = document.getElementById('board');
+const NOTE_COLORS = ['#FFF3B0', '#FFD6E0', '#D8EBFF', '#D9F2D0', '#FFE7C2'];
+function tilt() { return (Math.random() * 6 - 3).toFixed(1) + 'deg'; }
+function addNote(text, x, y) {
+  const note = document.createElement('div');
+  note.className = 'note';
+  note.style.background = NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)];
+  note.style.left = (x !== undefined ? x : 20 + Math.random() * 320) + 'px';
+  note.style.top = (y !== undefined ? y : 20 + Math.random() * 320) + 'px';
+  note.style.transform = 'rotate(' + tilt() + ')';
+  const pin = document.createElement('div');
+  pin.className = 'pin';
+  const p = document.createElement('p');
+  p.textContent = text;
+  const actions = document.createElement('div');
+  actions.className = 'note-actions';
+  const del = document.createElement('button');
+  del.textContent = 'Delete';
+  del.addEventListener('click', e => { e.stopPropagation(); note.remove(); });
+  actions.appendChild(del);
+  note.appendChild(pin); note.appendChild(p); note.appendChild(actions);
+  board.appendChild(note);
+  note.addEventListener('pointerdown', e => {
+    if (e.target.closest('button')) return;
+    e.preventDefault();
+    note.classList.add('dragging');
+    const startX = e.clientX, startY = e.clientY;
+    const origX = note.offsetLeft, origY = note.offsetTop;
+    note.setPointerCapture(e.pointerId);
+    const move = ev => {
+      note.style.left = Math.max(0, Math.min(board.clientWidth - 200, origX + ev.clientX - startX)) + 'px';
+      note.style.top = Math.max(0, origY + ev.clientY - startY) + 'px';
+    };
+    const up = () => {
+      note.classList.remove('dragging');
+      note.removeEventListener('pointermove', move);
+      note.removeEventListener('pointerup', up);
+    };
+    note.addEventListener('pointermove', move);
+    note.addEventListener('pointerup', up);
+  });
+  return note;
+}
+addNote('Ask Liza about her Guelph frosh week story for lifestyle chat', 40, 40);
+addNote('Clip idea: Carney soundbite vs Trump rally audio back to back', 300, 120);
+addNote('Kicker backup: penguin discovered for first time in 100 years?', 90, 260);
+const noteInput = document.getElementById('noteInput');
+function pinNote() {
+  const v = noteInput.value.trim();
+  if (!v) return;
+  addNote(v);
+  noteInput.value = '';
+  noteInput.focus();
+}
+document.getElementById('noteAdd').addEventListener('click', pinNote);
+noteInput.addEventListener('keydown', e => { if (e.key === 'Enter') pinNote(); });
+$$('.promote').forEach(b => b.addEventListener('click', () => toast('Promoted (demo)')));
+</script>
+</body>
+</html>
