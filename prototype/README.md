@@ -8,9 +8,12 @@
   auto-wipe, no source labels.
 - `prototype-v20-builder-layout.html`: functional reference. Builder
   Standard (default) vs Grid layout toggle, per-card Copy for Sheets.
-- `prototype-v21-rundown-format.html`: latest functional reference. Builder
+- `prototype-v21-rundown-format.html`: functional reference. Builder
   Standard mode mirrors the sheet anatomy (TOPIC rows, TEASE rows, HOUR 2,
   fixed header/footer furniture), in-app print preview.
+- `prototype-v22-tools.html`: latest functional reference. Tools & Resources tab
+  (JayStation, Story Scout Next, Nico Fetcher cards + add/edit/delete),
+  Settings page with browser-only API key management (no key in repo).
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
