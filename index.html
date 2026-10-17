@@ -4100,19 +4100,32 @@ const TOOL_DEFAULTS = [
     category: 'App', builtin: true },
   { id: 'tool-nico-fetcher', name: 'Nico Fetcher', url: 'https://jasonroti-pixel.github.io/daily-goods-rundowns/summarizer.html',
     desc: "The standalone AI summarizer. Paste in any article link and get back a headline plus sharp talking-point bullets. The same engine the hub's per-card fetch is ported from.",
-    category: 'App', builtin: true }
+    category: 'App', builtin: true },
+  { id: 'tool-artcraft', name: 'ArtCraft', url: 'https://getartcraft.com/',
+    desc: "Free, open-source creative suite, written from scratch in Rust with AI coding agents. The Crafting Apps replace paid software for free: PhotoCraft for Photoshop, VectorCraft for Illustrator, FilmCraft for Premiere Pro, LightCraft for Lightroom, EffectCraft for After Effects, DesignCraft for InDesign, PdfCraft for Acrobat, WordCraft for Word, GridCraft for Excel, DeckCraft for PowerPoint, SoundCraft for audio, CADCraft for drafting. The AI studio side gives controllable image and video generation (pose the scene first, then generate) without aggregator subscriptions.",
+    category: 'Software', builtin: false }
 ];
 function toolsLoad() {
   try {
     const raw = localStorage.getItem(TOOLS_STORE_KEY);
     if (!raw) {
-      const seed = { items: TOOL_DEFAULTS.map(d => Object.assign({}, d)) };
+      const seed = { items: TOOL_DEFAULTS.map(d => Object.assign({}, d)), deleted: [] };
       localStorage.setItem(TOOLS_STORE_KEY, JSON.stringify(seed));
       return seed;
     }
     const p = JSON.parse(raw);
-    return { items: Array.isArray(p.items) ? p.items : [] };
-  } catch (e) { return { items: [] }; }
+    const state = { items: Array.isArray(p.items) ? p.items : [], deleted: Array.isArray(p.deleted) ? p.deleted : [] };
+    /* defaults merge: append any default missing from items unless the user deleted it */
+    let added = false;
+    TOOL_DEFAULTS.forEach(d => {
+      if (!state.items.some(x => x.id === d.id) && state.deleted.indexOf(d.id) === -1) {
+        state.items.push(Object.assign({}, d));
+        added = true;
+      }
+    });
+    if (added) { try { localStorage.setItem(TOOLS_STORE_KEY, JSON.stringify(state)); } catch (e) {} }
+    return state;
+  } catch (e) { return { items: [], deleted: [] }; }
 }
 let toolsState = toolsLoad();
 function toolsSave() {
@@ -4194,6 +4207,7 @@ document.getElementById('panel-tools').addEventListener('click', e => {
     const t = toolsState.items.find(x => x.id === id);
     if (t && confirm('Delete "' + t.name + '" from Tools & Resources?')) {
       toolsState.items = toolsState.items.filter(x => x.id !== id);
+      if (TOOL_DEFAULTS.some(d => d.id === id) && toolsState.deleted.indexOf(id) === -1) toolsState.deleted.push(id);
       if (toolEditingId === id) toolHideComposer();
       toolsSave();
       renderTools();
