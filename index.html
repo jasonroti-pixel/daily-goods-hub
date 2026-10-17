@@ -223,6 +223,22 @@ h1,h2,.lane-title,.brand,.guest-name{font-family:'Fraunces',Georgia,serif}
 .seg-control button{border:none;background:transparent;padding:6px 14px;border-radius:7px;font-family:'Geist',sans-serif;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;transition:background 150ms var(--ease),color 150ms var(--ease)}
 .seg-control button.active{background:var(--accent);color:#fff;box-shadow:0 2px 6px rgba(55,108,255,.35)}
 .seg-control button:focus-visible{outline:2px solid var(--marker);outline-offset:1px}
+
+/* ---------- per-segment type switch: interview | talk ---------- */
+.lane[data-segtype="interview"] > .cards{display:none}
+.lane[data-segtype="talk"] > .guest-pane{display:none}
+.lane[data-segtype="interview"] .lane-add{display:none}
+#panel-builder[data-layout="standard"] .lane[data-segtype="interview"] .rd-infolabel{display:none}
+.segtype{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:2px;gap:2px}
+.segtype-btn{border:none;background:transparent;padding:5px 10px;border-radius:6px;font-family:'Geist',sans-serif;font-size:11.5px;font-weight:600;color:var(--muted);cursor:pointer}
+.segtype-btn.active{background:var(--accent);color:#fff}
+.segtype-btn:focus-visible{outline:2px solid var(--marker);outline-offset:1px}
+.card{position:relative}
+.card-del{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface-2);color:var(--muted);font-size:14px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;opacity:.55;z-index:3}
+.card-del:hover{opacity:1;color:#fff;background:#c0392b;border-color:#c0392b}
+.lane.locked .card-del,.lane.locked .card-del-big{display:none}
+.card-del-big{margin-top:10px}
+.icon-btn:disabled{opacity:.35;cursor:default}
 /* Grid = the original compact layout */
 #panel-builder[data-layout="grid"] .lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 @media(max-width:1100px){#panel-builder[data-layout="grid"] .lanes{grid-template-columns:repeat(2,1fr)}}
@@ -732,7 +748,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 @media(max-width:700px){.ppv-row{flex-direction:column;gap:4px}.ppv-lab{flex:none}}
 
 @media print{
-  .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast,.copy-btn,#rdTotsReset{display:none !important}
+  .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast,.copy-btn,.card-del,.card-del-big,#rdTotsReset{display:none !important}
   .tab-panel{display:none}
   .tab-panel.active{display:block}
   html[data-theme="dark"]{--ink:#000;--muted:#444;--surface:#fff;--surface-2:#fff;--border:#999;--accent-strong:#000;--card-border:#999;--backup-bg:#fff}
@@ -941,6 +957,8 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
   <div class="builder-toolbar">
     <h2 class="day-title">Today's <em>rundown</em></h2>
     <div class="lock-controls">
+      <button class="icon-btn" id="undoBtn" aria-label="Undo" title="Undo (Ctrl+Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+      <button class="icon-btn" id="redoBtn" aria-label="Redo" title="Redo (Ctrl+Shift+Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
       <div class="seg-control" role="group" aria-label="Builder layout">
         <button type="button" data-blayout="standard" class="active">Standard</button>
         <button type="button" data-blayout="grid">Grid</button>
@@ -1494,6 +1512,75 @@ delete rdFurn.zoom;
 rdFurn.guests = rdFurn.guests || {};
 function rdSaveFurn(){ try { localStorage.setItem(RD_FURN_KEY, JSON.stringify(rdFurn)); } catch(e){} }
 
+/* ---------- per-segment type: every lane holds BOTH a talk payload (cards) and an interview payload (guest block) ---------- */
+const LANE_TIMES = { s1:'3:05', s2:'3:20', s3:'3:40', s4:'4:00', s5:'4:20', s6:'4:40' };
+const TALK_TITLES = { s1:'The List', s2:'Talk Segment', s3:'Lifestyle Chat', s4:'Trending Today', s5:'Talk Segment', s6:'Kicker / Goodbyes' };
+const TALK_TITLES_UC = { s1:'THE LIST', s2:'TALK SEGMENT', s3:'LIFESTYLE CHAT', s4:'TRENDING TODAY', s5:'TALK SEGMENT', s6:'KICKER/GOODBYES' };
+const DEFAULT_SEGTYPE = { s1:'talk', s2:'interview', s3:'talk', s4:'talk', s5:'interview', s6:'talk' };
+function laneTypeOf(lane){ return (lane && lane.dataset.segtype) || 'talk'; }
+function clearGuestBlock(block){
+  block.querySelectorAll('input[type="text"], textarea').forEach(el => { el.value = ''; });
+  const fmt = block.querySelector('.guest-format'); if (fmt) fmt.selectedIndex = 0;
+  const pull = block.querySelector('.guest-pull'); if (pull) pull.selectedIndex = 0;
+}
+function setLaneTitle(lane){
+  const h3 = lane.querySelector('.lane-title'); if (!h3) return;
+  const tag = h3.querySelector('.lane-locked-tag');
+  const txt = laneTypeOf(lane) === 'interview' ? 'Guest' : (TALK_TITLES[lane.dataset.lane] || 'Talk Segment');
+  h3.innerHTML = escapeHtml(txt) + (tag ? tag.outerHTML : '');
+}
+function syncSegTypeBtns(lane){
+  const t = laneTypeOf(lane);
+  lane.querySelectorAll('.segtype-btn').forEach(b => b.classList.toggle('active', b.dataset.t === t));
+}
+function setLaneType(lane, type, skipUndo){
+  if (!lane) return;
+  if (laneTypeOf(lane) === type) { syncSegTypeBtns(lane); return; }
+  if (laneLocked(lane)) return;
+  if (!skipUndo) pushUndo();
+  lane.dataset.segtype = type;
+  syncSegTypeBtns(lane);
+  setLaneTitle(lane);
+  renumberTopics();
+  rdRefreshShow();
+}
+const boundEls = new WeakSet();
+function alreadyBound(el){ if (boundEls.has(el)) return true; boundEls.add(el); return false; }
+function bindSegType(btn){
+  if (alreadyBound(btn)) return;
+  btn.addEventListener('click', () => {
+    const lane = btn.closest('.lane');
+    setLaneType(lane, btn.dataset.t);
+  });
+}
+(function laneDualPayload(){
+  const template = document.querySelector('.guest-block');
+  $$('#lanes .lane').forEach(lane => {
+    const id = lane.dataset.lane;
+    const actions = lane.querySelector('.lane-actions');
+    if (actions && !actions.querySelector('.segtype')) {
+      const st = document.createElement('div');
+      st.className = 'segtype'; st.setAttribute('role', 'group'); st.setAttribute('aria-label', 'Segment type');
+      st.innerHTML = '<button type="button" class="segtype-btn" data-t="talk">Talk</button><button type="button" class="segtype-btn" data-t="interview">Interview</button>';
+      actions.insertBefore(st, actions.firstChild);
+    }
+    let cards = lane.querySelector(':scope > .cards');
+    if (!cards) { cards = document.createElement('div'); cards.className = 'cards'; lane.appendChild(cards); }
+    let pane = lane.querySelector(':scope > .guest-pane');
+    if (!pane) { pane = document.createElement('div'); pane.className = 'guest-pane'; lane.appendChild(pane); }
+    const guest = lane.querySelector('.guest-block');
+    if (guest && guest.parentNode !== pane) pane.appendChild(guest);
+    if (!pane.querySelector('.guest-block') && template) {
+      const clone = template.cloneNode(true);
+      clearGuestBlock(clone);
+      pane.appendChild(clone);
+    }
+    lane.dataset.segtype = DEFAULT_SEGTYPE[id] || 'talk';
+  });
+  $$('#lanes .lane').forEach(lane => { setLaneTitle(lane); syncSegTypeBtns(lane); });
+  $$('.segtype-btn').forEach(bindSegType);
+})();
+
 (function rdBuildFurniture(){
   const lanes = document.getElementById('lanes');
   if (!lanes || document.getElementById('rdHeader')) return;
@@ -1521,24 +1608,29 @@ function rdSaveFurn(){ try { localStorage.setItem(RD_FURN_KEY, JSON.stringify(rd
   '</div>';
   lanes.insertAdjacentHTML('afterend', footerHtml);
 
-  // per-lane: SEGMENT N: INFO label + TEASE row (story lanes only)
+  // per-lane: SEGMENT N: INFO label + TEASE row (shared across both segment types)
   $$('#lanes .lane').forEach(lane => {
     const id = lane.dataset.lane;
     const n = id.replace('s', '');
     const box = lane.querySelector('.cards');
     if (!box) return;
-    if (lane.querySelector('.guest-block')) return; // guest lanes handled below
-    const info = document.createElement('div');
-    info.className = 'rd-infolabel';
-    info.innerHTML = '<span class="rd-label">Segment ' + n + ': Info</span>';
-    box.parentNode.insertBefore(info, box);
-    const tease = document.createElement('div');
-    tease.className = 'rd-row rd-tease';
-    let ph = 'Tease into the break';
-    if (id === 's3') ph = 'Tease into the break (hard out at 3:57)';
-    if (id === 's6') ph = 'End-of-show tease (hard out at 4:57)';
-    tease.innerHTML = '<span class="rd-label">Tease</span><div class="rd-content"><input type="text" class="rd-input rd-tease-input" data-seg="' + id + '" placeholder="' + escapeHtml(ph) + '" spellcheck="true"></div>';
-    box.parentNode.insertBefore(tease, box.nextSibling);
+    if (!lane.querySelector(':scope > .rd-infolabel')) {
+      const info = document.createElement('div');
+      info.className = 'rd-infolabel';
+      info.innerHTML = '<span class="rd-label">Segment ' + n + ': Info</span>';
+      box.parentNode.insertBefore(info, box);
+    }
+    if (!lane.querySelector(':scope > .rd-tease')) {
+      const tease = document.createElement('div');
+      tease.className = 'rd-row rd-tease';
+      let ph = 'Tease into the break';
+      if (id === 's3') ph = 'Tease into the break (hard out at 3:57)';
+      if (id === 's6') ph = 'End-of-show tease (hard out at 4:57)';
+      tease.innerHTML = '<span class="rd-label">Tease</span><div class="rd-content"><input type="text" class="rd-input rd-tease-input" data-seg="' + id + '" placeholder="' + escapeHtml(ph) + '" spellcheck="true"></div>';
+      const pane = lane.querySelector(':scope > .guest-pane');
+      const after = pane || box;
+      after.parentNode.insertBefore(tease, after.nextSibling);
+    }
   });
 
   // HOUR 2 divider between segment 3 and 4
@@ -1612,12 +1704,16 @@ function rdGuestInfo(laneId) {
 
 function rdAutoTotsLines(rows) {
   if (!rows) {
-    const g1 = rdGuestInfo('s2'), g2 = rdGuestInfo('s5');
-    const gline = (n, g) => 'GUEST ' + n + (g.name ? ' (' + g.name + (g.topic ? ' - ' + g.topic : '') + ')' : '');
-    rows = [
-      ['3:05', 'THE LIST'], ['3:20', gline(1, g1)], ['3:40', 'LIFESTYLE CHAT'],
-      ['4:00', 'TRENDING TODAY'], ['4:20', gline(2, g2)], ['4:40', 'KICKER/GOODBYES']
-    ];
+    let gnum = 0;
+    rows = ['s1', 's2', 's3', 's4', 's5', 's6'].map(id => {
+      const lane = document.querySelector('.lane[data-lane="' + id + '"]');
+      if (lane && laneTypeOf(lane) === 'interview') {
+        gnum += 1;
+        const g = rdGuestInfo(id);
+        return [LANE_TIMES[id], 'GUEST ' + gnum + (g.name ? ' (' + g.name + (g.topic ? ' - ' + g.topic : '') + ')' : '')];
+      }
+      return [LANE_TIMES[id], TALK_TITLES_UC[id] || id];
+    });
   }
   return rows.map(r => (r[0] + ' ' + r[1]).trim());
 }
@@ -1637,27 +1733,25 @@ function rdRenderZoom() {
   if (pw) pw.textContent = zs.zoomPass || 'Not set';
 }
 function rdRefreshShow() {
-  const g1 = rdGuestInfo('s2'), g2 = rdGuestInfo('s5');
-  const gline = (n, g) => 'GUEST ' + n + (g.name ? ' (' + g.name + (g.topic ? ' - ' + g.topic : '') + ')' : '');
-  const rows = [
-    ['3:05', 'THE LIST'], ['3:20', gline(1, g1)], ['3:40', 'LIFESTYLE CHAT'],
-    ['4:00', 'TRENDING TODAY'], ['4:20', gline(2, g2)], ['4:40', 'KICKER/GOODBYES']
-  ];
   const tots = document.getElementById('rdTots');
-  if (tots && tots.dataset.manual !== '1') tots.value = rdAutoTotsLines(rows).join('\n');
+  if (tots && tots.dataset.manual !== '1') tots.value = rdAutoTotsLines().join('\n');
+  const guests = [];
+  $$('#lanes .lane').forEach(lane => {
+    if (laneTypeOf(lane) !== 'interview') return;
+    const g = rdGuestInfo(lane.dataset.lane);
+    if (g.name) guests.push(g);
+  });
   const ig = document.getElementById('rdIntroGuests');
   if (ig) {
-    const gl = [g1, g2].filter(g => g.name);
-    ig.innerHTML = gl.length
-      ? gl.map(g => '<div><span class="t">' + escapeHtml(g.slot) + '</span>' + escapeHtml(g.name + (g.topic ? ' - ' + g.topic : '')) + '</div>').join('')
+    ig.innerHTML = guests.length
+      ? guests.map(g => '<div><span class="t">' + escapeHtml(g.slot) + '</span>' + escapeHtml(g.name + (g.topic ? ' - ' + g.topic : '')) + '</div>').join('')
       : '<div class="hint" style="margin:0">No guests booked yet.</div>';
   }
-  const sumFor = { s2: g1, s5: g2 };
-  Object.keys(sumFor).forEach(id => {
-    const lane = document.querySelector('.lane[data-lane="' + id + '"]');
-    const sum = lane ? lane.querySelector('.rd-guest-summary') : null;
-    const g = sumFor[id];
-    if (sum) sum.textContent = (g.slot ? g.slot + ' - ' : '') + (g.name || 'TBD') + (g.topic ? ' - ' + g.topic : '');
+  $$('#lanes .lane').forEach(lane => {
+    const sum = lane.querySelector('.rd-guest-summary');
+    if (!sum) return;
+    const g = rdGuestInfo(lane.dataset.lane);
+    sum.textContent = (g.slot ? g.slot + ' - ' : '') + (g.name || 'TBD') + (g.topic ? ' - ' + g.topic : '');
   });
 }
 
@@ -1671,7 +1765,7 @@ function rdBindFurniture() {
   set('rdPush', rdFurn.push != null ? rdFurn.push : 'TheDailyGoods@siriusxm.ca');
   $$('.rd-chat').forEach(inp => { const v = rdFurn.chats[+inp.dataset.chat]; if (v) inp.value = v; });
   $$('.rd-tease-input').forEach(inp => { const v = rdFurn.teases[inp.dataset.seg]; if (v != null) inp.value = v; });
-  ['s2', 's5'].forEach(id => {
+  ['s1', 's2', 's3', 's4', 's5', 's6'].forEach(id => {
     const g = rdFurn.guests[id]; if (!g) return;
     const lane = document.querySelector('.lane[data-lane="' + id + '"]');
     const block = lane && lane.querySelector('.guest-block'); if (!block) return;
@@ -1680,58 +1774,69 @@ function rdBindFurniture() {
     setG('.guest-intro-input', g.intro); setG('.guest-seginfo', g.seginfo);
     setG('.guest-tapeout', g.tapeout); setG('.guest-tease', g.tease);
   });
-  const save = () => {
-    const gv = id => { const el = document.getElementById(id); return el ? el.value : ''; };
-    rdFurn.date = gv('rdDate'); rdFurn.studio = gv('rdStudio');
-    rdFurn.outro = gv('rdOutro'); rdFurn.push = gv('rdPush');
-    rdFurn.chats = $$('.rd-chat').map(inp => inp.value);
-    rdFurn.teases = {};
-    $$('.rd-tease-input').forEach(inp => { rdFurn.teases[inp.dataset.seg] = inp.value; });
-    rdFurn.guests = {};
-    ['s2', 's5'].forEach(id => {
-      const lane = document.querySelector('.lane[data-lane="' + id + '"]');
-      const block = lane && lane.querySelector('.guest-block'); if (!block) return;
-      const bv = s => { const el = block.querySelector(s); return el ? el.value : ''; };
-      rdFurn.guests[id] = { name: bv('.guest-name-input'), slot: bv('.guest-slot'), format: bv('.guest-format'), intro: bv('.guest-intro-input'), seginfo: bv('.guest-seginfo'), tapeout: bv('.guest-tapeout'), tease: bv('.guest-tease') };
-    });
-    rdSaveFurn();
-  };
   rdRenderZoom();
-  rdInitTots();
-  const totsTa = document.getElementById('rdTots');
-  if (totsTa) totsTa.addEventListener('input', () => {
-    totsTa.dataset.manual = '1';
-    rdFurn.totsByDate[rdDateKey()] = totsTa.value;
-    rdSaveFurn();
-  });
-  const totsReset = document.getElementById('rdTotsReset');
-  if (totsReset) totsReset.addEventListener('click', () => {
-    const ta = document.getElementById('rdTots'); if (!ta) return;
-    if (!confirm('Replace your lineup with the auto-built lineup from the current lanes?')) return;
-    ta.value = rdAutoTotsLines().join('\n');
-    ta.dataset.manual = '';
-    delete rdFurn.totsByDate[rdDateKey()];
-    rdSaveFurn();
-    toast('Lineup reset to auto');
-  });
-  const dateEl = document.getElementById('rdDate');
-  if (dateEl) dateEl.addEventListener('change', rdInitTots);
-  const header = document.getElementById('rdHeader');
-  const footer = document.getElementById('rdFooter');
-  if (header) header.addEventListener('input', save);
-  if (footer) footer.addEventListener('input', save);
+  bindFurnitureEls();
   document.getElementById('panel-builder').addEventListener('input', e => {
-    if (e.target.closest('.rd-tease') || e.target.closest('.guest-block')) { save(); rdRefreshShow(); }
+    if (e.target.closest('.rd-tease') || e.target.closest('.guest-block')) { rdSaveFurnitureFields(); rdRefreshShow(); }
   });
   document.getElementById('panel-builder').addEventListener('change', e => {
-    if (e.target.closest('.guest-block')) { save(); rdRefreshShow(); }
+    if (e.target.closest('.guest-block')) { rdSaveFurnitureFields(); rdRefreshShow(); }
   });
+}
+
+/* furniture field persistence (top-level so undo restore can rebind) */
+function rdSaveFurnitureFields(){
+  const gv = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+  rdFurn.date = gv('rdDate'); rdFurn.studio = gv('rdStudio');
+  rdFurn.outro = gv('rdOutro'); rdFurn.push = gv('rdPush');
+  rdFurn.chats = $$('.rd-chat').map(inp => inp.value);
+  rdFurn.teases = {};
+  $$('.rd-tease-input').forEach(inp => { rdFurn.teases[inp.dataset.seg] = inp.value; });
+  rdFurn.guests = {};
+  ['s1', 's2', 's3', 's4', 's5', 's6'].forEach(id => {
+    const lane = document.querySelector('.lane[data-lane="' + id + '"]');
+    const block = lane && lane.querySelector('.guest-block'); if (!block) return;
+    const bv = s => { const el = block.querySelector(s); return el ? el.value : ''; };
+    rdFurn.guests[id] = { name: bv('.guest-name-input'), slot: bv('.guest-slot'), format: bv('.guest-format'), intro: bv('.guest-intro-input'), seginfo: bv('.guest-seginfo'), tapeout: bv('.guest-tapeout'), tease: bv('.guest-tease') };
+  });
+  rdSaveFurn();
+}
+function bindFurnitureEls(){
+  rdInitTots();
+  const totsTa = document.getElementById('rdTots');
+  if (totsTa && !alreadyBound(totsTa)) {
+    totsTa.addEventListener('input', () => {
+      totsTa.dataset.manual = '1';
+      rdFurn.totsByDate[rdDateKey()] = totsTa.value;
+      rdSaveFurn();
+    });
+  }
+  const totsReset = document.getElementById('rdTotsReset');
+  if (totsReset && !alreadyBound(totsReset)) {
+    totsReset.addEventListener('click', () => {
+      const ta = document.getElementById('rdTots'); if (!ta) return;
+      if (!confirm('Replace your lineup with the auto-built lineup from the current lanes?')) return;
+      discardTypeSnap();
+      pushUndo();
+      ta.value = rdAutoTotsLines().join('\n');
+      ta.dataset.manual = '';
+      delete rdFurn.totsByDate[rdDateKey()];
+      rdSaveFurn();
+      toast('Lineup reset to auto');
+    });
+  }
+  const dateEl = document.getElementById('rdDate');
+  if (dateEl && !alreadyBound(dateEl)) { dateEl.addEventListener('change', rdInitTots); }
+  const header = document.getElementById('rdHeader');
+  const footer = document.getElementById('rdFooter');
+  if (header && !alreadyBound(header)) { header.addEventListener('input', rdSaveFurnitureFields); }
+  if (footer && !alreadyBound(footer)) { footer.addEventListener('input', rdSaveFurnitureFields); }
 }
 
 /* topic numbering: collapsed cards read as TOPIC 1/2/3, backups as BACK UP TOPIC */
 function renumberTopics() {
   $$('#lanes .lane').forEach(lane => {
-    if (lane.querySelector('.guest-block')) return;
+    if (laneTypeOf(lane) === 'interview') return;
     let n = 0;
     lane.querySelectorAll('.cards > .card').forEach(card => {
       let lab = null;
@@ -1865,12 +1970,13 @@ function buildPreviewHtml(){
 
   const lanes = Array.from(document.querySelectorAll('#lanes .lane'));
   const times = { s1: '3:05', s2: '3:20', s3: '3:40', s4: '4:00', s5: '4:20', s6: '4:40' };
-  const titles = { s1: 'THE LIST', s2: 'GUEST', s3: 'LIFESTYLE CHAT', s4: 'TRENDING TODAY', s5: 'GUEST', s6: 'KICKER/GOODBYES' };
+  const titles = { s1: 'THE LIST', s2: 'TALK SEGMENT', s3: 'LIFESTYLE CHAT', s4: 'TRENDING TODAY', s5: 'TALK SEGMENT', s6: 'KICKER/GOODBYES' };
   lanes.forEach(lane => {
     const id = lane.dataset.lane;
     const n = id.replace('s', '');
-    s += '<div class="ppv-seg">' + (times[id] || '') + ' - ' + (titles[id] || id) + '</div>';
-    const guest = lane.querySelector('.guest-block');
+    const isIv = laneTypeOf(lane) === 'interview';
+    s += '<div class="ppv-seg">' + (times[id] || '') + ' - ' + (isIv ? 'GUEST' : (titles[id] || id)) + '</div>';
+    const guest = isIv ? lane.querySelector('.guest-block') : null;
     if (guest) {
       const gval = sel => { const el = guest.querySelector(sel); return el ? el.value.trim() : ''; };
       const name = gval('.guest-name-input'), slot = gval('.guest-slot'), intro = gval('.guest-intro-input'),
@@ -1947,8 +2053,10 @@ function laneLocked(cardOrLane) {
 /* ---------- sortable: drag and drop with the motion recipe ---------- */
 let justDragged = false;
 const laneSortables = {};
-if (window.Sortable) {
-$$('.lane .cards').forEach(list => {
+function initLaneSortables(){
+  Object.keys(laneSortables).forEach(k => { try { laneSortables[k].destroy(); } catch(e){} delete laneSortables[k]; });
+  if (!window.Sortable) { console.warn('SortableJS failed to load; drag and drop disabled.'); return; }
+  $$('.lane .cards').forEach(list => {
   const lane = list.closest('.lane');
   laneSortables[lane.dataset.lane] = new Sortable(list, {
     group: 'cards',
@@ -1961,6 +2069,7 @@ $$('.lane .cards').forEach(list => {
     handle: '.card',
     filter: '.guest-block',
     onStart(evt) {
+      pushUndo();
       justDragged = true;
       evt.item.classList.add('is-dragging');
     },
@@ -1980,10 +2089,141 @@ $$('.lane .cards').forEach(list => {
       setTimeout(() => { justDragged = false; }, 120);
     }
   });
-});
-} else {
-  console.warn('SortableJS failed to load; drag and drop disabled.');
+  if (lane.classList.contains('locked')) laneSortables[lane.dataset.lane].option('disabled', true);
+  });
 }
+initLaneSortables();
+
+/* ---------- undo / redo (per session, snapshot stack of the builder day state) ---------- */
+const undoStack = [], redoStack = [];
+let suppressUndo = false;
+function syncFormState(root){
+  if (!root) return;
+  root.querySelectorAll('input').forEach(el => {
+    if (el.type === 'checkbox' || el.type === 'radio') { el.checked ? el.setAttribute('checked','') : el.removeAttribute('checked'); }
+    else el.setAttribute('value', el.value);
+  });
+  root.querySelectorAll('textarea').forEach(el => { el.textContent = el.value; });
+  root.querySelectorAll('select').forEach(el => {
+    Array.from(el.options).forEach(o => { o.selected ? o.setAttribute('selected','') : o.removeAttribute('selected'); });
+  });
+}
+function builderSnapshot(){
+  syncFormState(document.getElementById('lanes'));
+  syncFormState(document.getElementById('rdHeader'));
+  syncFormState(document.getElementById('rdFooter'));
+  return {
+    lanes: document.getElementById('lanes').innerHTML,
+    header: document.getElementById('rdHeader').innerHTML,
+    footer: document.getElementById('rdFooter').innerHTML,
+    furn: JSON.stringify(rdFurn)
+  };
+}
+function pushUndo(){
+  if (suppressUndo) return;
+  undoStack.push(builderSnapshot());
+  if (undoStack.length > 50) undoStack.shift();
+  redoStack.length = 0;
+  syncUndoButtons();
+}
+function applySnapshot(s){
+  suppressUndo = true;
+  try {
+    document.getElementById('lanes').innerHTML = s.lanes;
+    document.getElementById('rdHeader').innerHTML = s.header;
+    document.getElementById('rdFooter').innerHTML = s.footer;
+    rdFurn = JSON.parse(s.furn);
+    rdSaveFurn();
+    rebindLaneControls();
+    initLaneSortables();
+    renumberTopics();
+    rdRenderZoom();
+    rdRefreshShow();
+    updateShowLock();
+  } finally { suppressUndo = false; }
+  syncUndoButtons();
+}
+function doUndo(){
+  if (!undoStack.length) return;
+  redoStack.push(builderSnapshot());
+  applySnapshot(undoStack.pop());
+  toast('Undone');
+}
+function doRedo(){
+  if (!redoStack.length) return;
+  undoStack.push(builderSnapshot());
+  applySnapshot(redoStack.pop());
+  toast('Redone');
+}
+function syncUndoButtons(){
+  const u = document.getElementById('undoBtn'), r = document.getElementById('redoBtn');
+  if (u) u.disabled = !undoStack.length;
+  if (r) r.disabled = !redoStack.length;
+}
+function rebindLaneControls(){
+  $$('.lane-lock').forEach(bindLaneLock);
+  $$('.lane-add').forEach(bindLaneAdd);
+  $$('.segtype-btn').forEach(bindSegType);
+  $$('.guest-pull').forEach(bindGuestPull);
+  $$('.guest-block textarea').forEach(bindGuestTa);
+  $$('.card').forEach(enhanceCard);
+  bindFurnitureEls();
+  $$('#lanes .lane').forEach(lane => {
+    const add = lane.querySelector('.lane-add');
+    if (add) add.disabled = lane.classList.contains('locked');
+  });
+}
+document.getElementById('undoBtn').addEventListener('click', doUndo);
+document.getElementById('redoBtn').addEventListener('click', doRedo);
+document.addEventListener('keydown', e => {
+  const mod = e.metaKey || e.ctrlKey;
+  if (!mod || suppressUndo) return;
+  const t = e.target;
+  const inField = t && t.closest && t.closest('input, textarea, select, [contenteditable="true"]');
+  if (inField) return;
+  const k = (e.key || '').toLowerCase();
+  if (k === 'z' && !e.shiftKey) { e.preventDefault(); doUndo(); }
+  else if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); doRedo(); }
+});
+/* debounced undo for text edits: one entry per typing burst / field session */
+let typeSnap = null, typeTimer = null, typeDirty = false;
+function discardTypeSnap(){
+  if (typeTimer) { clearTimeout(typeTimer); typeTimer = null; }
+  typeSnap = null; typeDirty = false;
+}
+function flushTypeSnap(){
+  if (typeTimer) { clearTimeout(typeTimer); typeTimer = null; }
+  if (typeDirty && typeSnap) {
+    undoStack.push(typeSnap);
+    if (undoStack.length > 50) undoStack.shift();
+    redoStack.length = 0;
+    syncUndoButtons();
+  }
+  typeSnap = null; typeDirty = false;
+}
+(function bindTypeUndo(){
+  const pb = document.getElementById('panel-builder');
+  if (!pb) return;
+  pb.addEventListener('focusin', e => {
+    if (suppressUndo) return;
+    const t = e.target;
+    if (t && (t.matches('input[type="text"], textarea, select') || (t.closest && t.closest('[contenteditable="true"]')))) {
+      if (!typeSnap) { typeSnap = builderSnapshot(); typeDirty = false; }
+    }
+  });
+  pb.addEventListener('input', e => {
+    if (suppressUndo || !typeSnap) return;
+    typeDirty = true;
+    if (typeTimer) clearTimeout(typeTimer);
+    typeTimer = setTimeout(flushTypeSnap, 1000);
+  });
+  pb.addEventListener('change', e => {
+    if (suppressUndo || !typeSnap) return;
+    const t = e.target;
+    if (t && t.matches('select')) { typeDirty = true; flushTypeSnap(); }
+  });
+  pb.addEventListener('focusout', () => { if (!suppressUndo) flushTypeSnap(); });
+})();
 
 /* ---------- copy card for Google Sheets ---------- */
 function cardCopyText(card) {
@@ -2111,6 +2351,7 @@ document.addEventListener('click', e => {
   if (sw) {
     const card = sw.closest('.card');
     if (!card || laneLocked(card)) return;
+    pushUndo();
     const on = sw.getAttribute('aria-checked') === 'true';
     sw.setAttribute('aria-checked', on ? 'false' : 'true');
     const headline = card.querySelector('.card-headline');
@@ -2152,6 +2393,17 @@ document.addEventListener('click', e => {
     addBulletRow(card.querySelector('.bullet-edit'), true);
     return;
   }
+  const cdel = e.target.closest('.card-del, .card-del-big');
+  if (cdel) {
+    const card = cdel.closest('.card');
+    if (!card || laneLocked(card)) return;
+    if (!confirm('Delete this card?')) return;
+    pushUndo();
+    card.remove();
+    renumberTopics();
+    toast('Card deleted');
+    return;
+  }
   const card = e.target.closest('.card');
   if (card && !laneLocked(card)) {
     if (justDragged) return;
@@ -2184,18 +2436,7 @@ document.addEventListener('keydown', e => {
     card.focus();
   } else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && !inField) {
     e.preventDefault();
-    const sib = e.key === 'ArrowUp' ? card.previousElementSibling : card.nextElementSibling;
-    if (sib && sib.classList.contains('card')) {
-      if (e.key === 'ArrowUp') card.parentNode.insertBefore(card, sib);
-      else card.parentNode.insertBefore(sib, card);
-      card.focus();
-      renumberTopics();
-      const lane = card.closest('.lane');
-      if (lane) {
-        lane.classList.add('lane-flash');
-        setTimeout(() => lane.classList.remove('lane-flash'), 450);
-      }
-    }
+    moveCard(card, e.key === 'ArrowUp' ? -1 : 1);
   }
 });
 
@@ -2508,6 +2749,7 @@ function cardTemplate(headline, url) {
     ? `<div class="url-row"><a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a></div>`
     : '';
   return `<span class="grip" aria-hidden="true">⠿</span>
+    <button type="button" class="card-del" aria-label="Delete card" title="Delete card">×</button>
     <span class="mini-arrows"><button type="button" class="mv-up" aria-label="Move card up" title="Move up">▲</button><button type="button" class="mv-dn" aria-label="Move card down" title="Move down">▼</button></span>
     <p class="card-headline">${safeH}</p>
     <div class="card-meta"><span class="src">Manual</span><span class="tag">Story</span><button type="button" class="btn btn-sm copy-btn" title="Copy for Google Sheets">Copy</button></div>
@@ -2527,6 +2769,7 @@ function cardTemplate(headline, url) {
       <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
       <div class="toggle-row"><button class="switch print-switch" role="switch" aria-checked="false" aria-label="Include producer note in print"></button><span class="switch-label">Include in print</span></div>
       <div class="card-move"><span class="mv-label">Move</span><button type="button" class="mv-btn mv-up-big" aria-label="Move card up">▲ Up</button><button type="button" class="mv-btn mv-dn-big" aria-label="Move card down">▼ Down</button></div>
+      <button type="button" class="btn btn-sm card-del-big">Delete card</button>
     </div>`;
 }
 
@@ -2551,6 +2794,8 @@ function openComposer(lane) {
     const h = hInput.value.trim();
     const u = uInput.value.trim();
     if (!h && !u) { form.remove(); return; }
+    discardTypeSnap();
+    pushUndo();
     const el = document.createElement('article');
     el.className = 'card';
     el.setAttribute('tabindex', '0');
@@ -2579,9 +2824,11 @@ function openComposer(lane) {
   });
 }
 
-$$('.lane-add').forEach(btn => {
+function bindLaneAdd(btn) {
+  if (alreadyBound(btn)) return;
   btn.addEventListener('click', () => openComposer(btn.closest('.lane')));
-});
+}
+$$('.lane-add').forEach(bindLaneAdd);
 
 /* ---------- segment lock ---------- */
 function updateShowLock() {
@@ -2606,20 +2853,25 @@ function setLaneLocked(lane, locked) {
   updateShowLock();
 }
 
-$$('.lane-lock').forEach(btn => {
+function bindLaneLock(btn) {
+  if (alreadyBound(btn)) return;
   btn.addEventListener('click', () => {
     const lane = btn.closest('.lane');
     const locked = !lane.classList.contains('locked');
+    pushUndo();
     setLaneLocked(lane, locked);
     toast(locked ? 'Segment locked' : 'Segment unlocked');
   });
-});
+}
+$$('.lane-lock').forEach(bindLaneLock);
 
 document.getElementById('lockAll').addEventListener('click', () => {
+  pushUndo();
   $$('.lane').forEach(lane => setLaneLocked(lane, true));
   toast('All segments locked');
 });
 document.getElementById('unlockAll').addEventListener('click', () => {
+  pushUndo();
   $$('.lane').forEach(lane => setLaneLocked(lane, false));
   toast('All segments unlocked');
 });
@@ -2630,6 +2882,7 @@ document.getElementById('printBtn').addEventListener('click', () => window.print
 /* ---------- card arrows: collapsed = small arrows, expanded = prominent arrows, never drag while expanded ---------- */
 function moveCard(card, dir) {
   if (!card || laneLocked(card)) return;
+  pushUndo();
   const sib = dir < 0 ? card.previousElementSibling : card.nextElementSibling;
   if (!sib || !sib.classList.contains('card')) return;
   if (dir < 0) card.parentNode.insertBefore(card, sib);
@@ -2642,13 +2895,20 @@ function moveCard(card, dir) {
   }
   renumberTopics();
 }
-$$('.card').forEach(card => {
+function enhanceCard(card) {
   if (!card.querySelector('.mini-arrows')) {
     const g = card.querySelector('.grip');
     const wrap = document.createElement('span');
     wrap.className = 'mini-arrows';
     wrap.innerHTML = '<button type="button" class="mv-up" aria-label="Move card up" title="Move up">▲</button><button type="button" class="mv-dn" aria-label="Move card down" title="Move down">▼</button>';
     card.insertBefore(wrap, g);
+  }
+  if (!card.querySelector('.card-del')) {
+    const del = document.createElement('button');
+    del.type = 'button'; del.className = 'card-del';
+    del.setAttribute('aria-label', 'Delete card'); del.title = 'Delete card';
+    del.textContent = '×';
+    card.insertBefore(del, card.firstChild);
   }
   const det = card.querySelector('.card-details');
   if (det && !det.querySelector('.card-move')) {
@@ -2657,7 +2917,13 @@ $$('.card').forEach(card => {
     row.innerHTML = '<span class="mv-label">Move</span><button type="button" class="mv-btn mv-up-big" aria-label="Move card up">▲ Up</button><button type="button" class="mv-btn mv-dn-big" aria-label="Move card down">▼ Down</button>';
     det.appendChild(row);
   }
-});
+  if (det && !det.querySelector('.card-del-big')) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn btn-sm card-del-big'; b.textContent = 'Delete card';
+    det.appendChild(b);
+  }
+}
+$$('.card').forEach(enhanceCard);
 document.addEventListener('click', e => {
   const mv = e.target.closest('.mv-up, .mv-dn, .mv-up-big, .mv-dn-big');
   if (mv) {
@@ -2668,23 +2934,28 @@ document.addEventListener('click', e => {
 }, true);
 
 /* ---------- guest lanes: editable fields, autogrow, pull from interviews ---------- */
-$$('.guest-block textarea').forEach(ta => {
+function bindGuestTa(ta) {
+  if (alreadyBound(ta)) return;
   const grow = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; };
   ta.addEventListener('input', grow);
   grow();
-});
+}
+$$('.guest-block textarea').forEach(bindGuestTa);
 const INTERVIEWS = [
   { name: 'General Wayne Eyre', desc: 'memoir Into the Breach', slot: '3:20', format: 'In-studio' },
   { name: 'Cam Maitland', desc: 'Shocktober streaming picks', slot: '4:20', format: 'Zoom' },
   { name: 'Dolph Lundgren', desc: 'new action slate', slot: '3:20', format: 'Pre-tape' }
 ];
-$$('.guest-pull').forEach(sel => {
-  INTERVIEWS.forEach((iv, i) => {
-    const o = document.createElement('option');
-    o.value = String(i);
-    o.textContent = iv.name + ' (' + iv.slot + ')';
-    sel.appendChild(o);
-  });
+function bindGuestPull(sel) {
+  if (alreadyBound(sel)) return;
+  if (!sel.querySelector('option[value="0"]')) {
+    INTERVIEWS.forEach((iv, i) => {
+      const o = document.createElement('option');
+      o.value = String(i);
+      o.textContent = iv.name + ' (' + iv.slot + ')';
+      sel.appendChild(o);
+    });
+  }
   sel.addEventListener('change', () => {
     if (sel.value === '') return;
     const iv = INTERVIEWS[+sel.value];
@@ -2696,7 +2967,8 @@ $$('.guest-pull').forEach(sel => {
     if (!seg.value.trim()) { seg.value = iv.desc; seg.dispatchEvent(new Event('input')); }
     toast('Pulled in ' + iv.name);
   });
-});
+}
+$$('.guest-pull').forEach(bindGuestPull);
 
 
 /* ---------- The Keep: notes, checklists, labels, pin, archive, trash ---------- */
@@ -3405,6 +3677,7 @@ function npSendToBuilder(it) {
   card.className = 'card';
   card.setAttribute('tabindex', '0');
   card.innerHTML = cardTemplate(it.headline, it.url);
+  pushUndo();
   const src = card.querySelector('.card-meta .src');
   if (src) src.textContent = it.source || 'Manual';
   if (it.bullets && it.bullets.length) {
@@ -3432,6 +3705,7 @@ function npSendToBuilder(it) {
 document.getElementById('npSendAll').addEventListener('click', () => {
   const pending = npState.filter(i => !i.sent);
   if (!pending.length) { toast('Nothing to send'); return; }
+  pushUndo();
   let n = 0;
   pending.forEach(it => {
     if (!it.segment) it.segment = 's4';
@@ -3894,6 +4168,7 @@ function feedSendToBuilder(story, seg) {
   card.className = 'card';
   card.setAttribute('tabindex', '0');
   card.innerHTML = cardTemplate(story.headline, story.url);
+  pushUndo();
   const src = card.querySelector('.card-meta .src');
   if (src) src.textContent = story.source || 'Scout';
   if (story.bullets && story.bullets.length) {
