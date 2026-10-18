@@ -3839,14 +3839,16 @@ function feedLatestDay() {
   return FEED_DATA.reduce((a, b) => (b.day > a.day ? b : a), FEED_DATA[0]);
 }
 
-/* ---------- 5-day feed history + Saturday wipe (America/Toronto) ---------- */
-var feedTestToday = null;
+/* ---------- 5-day feed history + Sunday noon wipe (America/Toronto) ---------- */
+var feedTestToday = null, feedTestTime = null;
 try {
   var _tq = new URLSearchParams(location.search).get('torontodate');
   if (_tq && /^\d{4}-\d{2}-\d{2}$/.test(_tq)) feedTestToday = _tq;
+  var _tt = new URLSearchParams(location.search).get('torontotime');
+  if (_tt && /^\d{2}:\d{2}$/.test(_tt)) feedTestTime = _tt;
 } catch (e) {}
 function feedTorontoNow() {
-  if (feedTestToday) return new Date(feedTestToday + 'T12:00:00');
+  if (feedTestToday) return new Date(feedTestToday + 'T' + (feedTestTime || '12:00') + ':00');
   try { return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Toronto' })); }
   catch (e) { return new Date(); }
 }
@@ -3854,13 +3856,22 @@ function feedTorontoStr(d) {
   var m = d.getMonth() + 1, day = d.getDate();
   return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
 }
-function feedLastSaturdayStr() {
-  var d = new Date(feedTorontoNow().getTime());
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - ((d.getDay() + 1) % 7)); /* most recent Saturday 00:00 */
-  return feedTorontoStr(d);
+function feedWipePointStr() {
+  /* most recent Sunday at 12:00 Toronto; before Sunday noon, the previous week's point */
+  var now = feedTorontoNow();
+  var d = new Date(now.getTime());
+  d.setDate(d.getDate() - d.getDay()); /* this week's Sunday */
+  d.setHours(12, 0, 0, 0);
+  if (now < d) d.setDate(d.getDate() - 7);
+  return feedTorontoStr(d) + 'T12:00';
 }
-function feedIsWeekend() { var d = feedTorontoNow().getDay(); return d === 0 || d === 6; }
+function feedIsPostWipeQuiet() {
+  /* Sunday at/after 12:00: the wipe has run, the store is empty, stay quiet until Monday */
+  var now = feedTorontoNow();
+  if (now.getDay() !== 0) return false;
+  var noon = new Date(now.getTime()); noon.setHours(12, 0, 0, 0);
+  return now >= noon;
+}
 function feedDayLabel(iso) {
   try {
     return new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', weekday: 'long', month: 'short', day: 'numeric' })
@@ -3877,19 +3888,19 @@ function feedHistLoad() {
     for (const k in days) {
       if (/^\d{4}-\d{2}-\d{2}$/.test(k) && Array.isArray(days[k])) clean[k] = days[k];
     }
-    return { days: clean, lastClearedSaturday: (pd && pd.lastClearedSaturday) || null };
-  } catch (e) { return { days: {}, lastClearedSaturday: null }; }
+    return { days: clean, lastClearedSunday: (pd && pd.lastClearedSunday) || null };
+  } catch (e) { return { days: {}, lastClearedSunday: null }; }
 }
 let feedHist = feedHistLoad();
 function feedHistSave() {
   try { localStorage.setItem(FEED_HIST_KEY, JSON.stringify(feedHist)); } catch (e) {}
 }
-/* Saturday wipe, runs on every load: clears history, saved stories and tombstones once per weekend */
-function feedWeekendWipe() {
-  const sat = feedLastSaturdayStr();
-  if (feedHist.lastClearedSaturday === sat) return false;
+/* Sunday noon wipe, runs on every load: clears history, saved stories and tombstones once per week */
+function feedSundayWipe() {
+  const pt = feedWipePointStr();
+  if (feedHist.lastClearedSunday === pt) return false;
   feedHist.days = {};
-  feedHist.lastClearedSaturday = sat;
+  feedHist.lastClearedSunday = pt;
   feedHistSave();
   feedState.saved = [];
   feedState.tombstones = [];
@@ -3936,7 +3947,7 @@ function feedRenderLoading() {
   feedDeleted.hidden = true;
 }
 async function feedBoot(isRefresh) {
-  if (feedIsWeekend()) { feedBooted = true; feedDemoNote = ''; feedDemoMode = false; renderFeeds(); return; }
+  if (feedIsPostWipeQuiet()) { feedBooted = true; feedDemoNote = ''; feedDemoMode = false; renderFeeds(); return; }
   if (feedBooted && !isRefresh) { renderFeeds(); return; }
   feedRenderLoading();
   let note = '';
@@ -4027,7 +4038,7 @@ let feedState = feedLoadState();
 function feedSaveState() {
   try { localStorage.setItem(FEED_STORE_KEY, JSON.stringify(feedState)); } catch (e) {}
 }
-feedWeekendWipe(); /* Saturday wipe check on every load */
+feedSundayWipe(); /* Sunday noon wipe check on every load */
 
 /* the real pipeline: latest day, dedupe, minus tombstones, minus saved */
 function feedExcluded(st) {
@@ -4089,11 +4100,11 @@ function feedFindStory(key) {
 }
 
 function renderFeeds() {
-  /* weekend wipe state: friendly empty state, no fetching, no demo fallback */
-  if (feedIsWeekend()) {
-    feedRunLine.textContent = 'Paused for the weekend';
+  /* post-wipe Sunday quiet state: friendly empty state, no fetching, no demo fallback */
+  if (feedIsPostWipeQuiet() && Object.keys(feedHist.days).length === 0) {
+    feedRunLine.textContent = 'Paused until Monday';
     feedNote.hidden = true;
-    feedList.innerHTML = '<div class="panel-card feed-weekend"><h3>Feed cleared for the weekend</h3><p>Fresh stories start Monday.</p></div>';
+    feedList.innerHTML = '<div class="panel-card feed-weekend"><h3>Feed cleared Sunday afternoon</h3><p>Fresh stories start Monday.</p></div>';
     feedEmpty.hidden = true;
     feedSavedWrap.innerHTML = '';
     feedSavedCard.hidden = true;
