@@ -716,6 +716,11 @@ textarea.rd-input{resize:vertical;min-height:54px;line-height:1.5}
 html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 .rd-infolabel{align-items:center;margin:2px 0 12px;padding:9px 12px;background:rgba(94,106,210,.10);border-radius:8px}
 .rd-infolabel .rd-label{flex:none;padding-top:0;font-weight:700;color:var(--ink)}
+.rd-tease-block{width:100%}
+.rd-tease-lock{font-family:'Space Mono',monospace;font-size:11.5px;font-weight:700;letter-spacing:.05em;color:var(--muted);padding:4px 0;user-select:none}
+.rd-tease-line{display:flex;gap:8px;align-items:flex-start;margin:3px 0}
+.rd-tease-prefix{font-family:'Space Mono',monospace;font-size:11.5px;font-weight:700;letter-spacing:.05em;color:var(--ink);padding-top:9px;white-space:nowrap}
+.rd-tease-line textarea{flex:1;min-width:0}
 .rd-hour2{text-align:center;font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.35em;color:var(--muted);padding:4px 0 2px}
 .rd-guest-summary{font-weight:600;font-size:14.5px}
 #panel-builder[data-layout="standard"] .guest-block .rd-row .field-label{display:none}
@@ -749,6 +754,10 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 .ppv-note b{font-style:normal}
 .ppv-hour2{text-align:center;font-family:'Space Mono',monospace;letter-spacing:.35em;font-size:12px;color:#555;margin:18px 0 6px}
 .ppv-empty{color:#555;font-style:italic}
+.ppv-tease-lock{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;letter-spacing:.04em;margin:3px 0}
+.ppv-sheet .ppv-tease-lock{color:#6a1b9a}
+.ppv-tease-line{margin:3px 0;line-height:1.5}
+.ppv-tease-prefix{font-family:'Space Mono',monospace;font-size:12px;font-weight:700}
 @media(max-width:700px){.ppv-row{flex-direction:column;gap:4px}.ppv-lab{flex:none}}
 
 @media print{
@@ -1637,18 +1646,8 @@ function bindSegType(btn){
       info.innerHTML = '<span class="rd-label">Segment ' + n + ': Info</span>';
       box.parentNode.insertBefore(info, box);
     }
-    if (!lane.querySelector(':scope > .rd-tease')) {
-      const tease = document.createElement('div');
-      tease.className = 'rd-row rd-tease';
-      let ph = 'Tease into the break';
-      if (id === 's3') ph = 'Tease into the break (hard out at 3:57)';
-      if (id === 's6') ph = 'End-of-show tease (hard out at 4:57)';
-      tease.innerHTML = '<span class="rd-label">Tease</span><div class="rd-content"><input type="text" class="rd-input rd-tease-input" data-seg="' + id + '" placeholder="' + escapeHtml(ph) + '" spellcheck="true"></div>';
-      const pane = lane.querySelector(':scope > .guest-pane');
-      const after = pane || box;
-      after.parentNode.insertBefore(tease, after.nextSibling);
-    }
   });
+  rdBuildTeaseRows();
 
   // HOUR 2 divider between segment 3 and 4
   const s3 = document.querySelector('.lane[data-lane="s3"]');
@@ -1855,6 +1854,45 @@ function bindFurnitureEls(){
   if (footer && !alreadyBound(footer)) { footer.addEventListener('input', rdSaveFurnitureFields); }
 }
 
+/* per-segment tease row: locked scaffolding + one editable field (sheet anatomy).
+   Segments 1,2,4,5: [HOST TEASE / THROW TO BREAK] / UP NEXT -- <editable> / **BACK IN 2 MINUTES // 120 SECONDS**.
+   Segment 3: same but **HARD OUT AT 3:57**. Segment 6: [HOST TEASE TO TOMORROW / GOODBYES] /
+   TOMORROW -- <editable> / UP NEXT -- THE WRAP UP! (locked) / **HARD OUT AT 4:57** (locked). */
+function rdTeaseRowHtml(id){
+  let block;
+  if (id === 's6') {
+    block =
+      '<div class="rd-tease-lock">[HOST TEASE TO TOMORROW / GOODBYES]</div>' +
+      '<div class="rd-tease-line"><span class="rd-tease-prefix">TOMORROW -- </span><textarea class="rd-input rd-tease-input" data-seg="s6" rows="2" placeholder="Tomorrow show tease" spellcheck="true"></textarea></div>' +
+      '<div class="rd-tease-lock">UP NEXT -- THE WRAP UP!</div>' +
+      '<div class="rd-tease-lock">**HARD OUT AT 4:57**</div>';
+  } else {
+    const tail = id === 's3' ? '**HARD OUT AT 3:57**' : '**BACK IN 2 MINUTES // 120 SECONDS**';
+    block =
+      '<div class="rd-tease-lock">[HOST TEASE / THROW TO BREAK]</div>' +
+      '<div class="rd-tease-line"><span class="rd-tease-prefix">UP NEXT -- </span><textarea class="rd-input rd-tease-input" data-seg="' + id + '" rows="2" placeholder="Tease copy" spellcheck="true"></textarea></div>' +
+      '<div class="rd-tease-lock">' + tail + '</div>';
+  }
+  return '<span class="rd-label">Tease</span><div class="rd-content"><div class="rd-tease-block">' + block + '</div></div>';
+}
+function rdBuildTeaseRows(){
+  $$('#lanes .lane').forEach(lane => {
+    const id = lane.dataset.lane;
+    const box = lane.querySelector('.cards');
+    if (!box) return;
+    const old = lane.querySelector(':scope > .rd-tease');
+    if (old && !old.querySelector('.rd-tease-block')) old.remove(); // drop legacy v33 single-input rows
+    if (!lane.querySelector(':scope > .rd-tease')) {
+      const tease = document.createElement('div');
+      tease.className = 'rd-row rd-tease';
+      tease.innerHTML = rdTeaseRowHtml(id);
+      const pane = lane.querySelector(':scope > .guest-pane');
+      const after = pane || box;
+      after.parentNode.insertBefore(tease, after.nextSibling);
+    }
+  });
+}
+
 /* topic numbering: collapsed cards read as TOPIC 1/2/3, backups as BACK UP TOPIC */
 function renumberTopics() {
   $$('#lanes .lane').forEach(lane => {
@@ -1934,6 +1972,19 @@ function closePrintPreview(){
 }
 function ppvEsc(s){ return escapeHtml(s == null ? '' : String(s)); }
 function ppvRow(lab, html){ return '<div class="ppv-row"><span class="ppv-lab">' + ppvEsc(lab) + '</span><div class="ppv-con">' + html + '</div></div>'; }
+function ppvTeaseBlock(id, tv){
+  const L = s => '<div class="ppv-tease-lock">' + ppvEsc(s) + '</div>';
+  const body = tv ? ppvEsc(tv).replace(/\n/g, '<br>') : '<span class="ppv-empty">--</span>';
+  if (id === 's6') {
+    return L('[HOST TEASE TO TOMORROW / GOODBYES]') +
+      '<div class="ppv-tease-line"><span class="ppv-tease-prefix">TOMORROW -- </span>' + body + '</div>' +
+      L('UP NEXT -- THE WRAP UP!') + L('**HARD OUT AT 4:57**');
+  }
+  const tail = id === 's3' ? '**HARD OUT AT 3:57**' : '**BACK IN 2 MINUTES // 120 SECONDS**';
+  return L('[HOST TEASE / THROW TO BREAK]') +
+    '<div class="ppv-tease-line"><span class="ppv-tease-prefix">UP NEXT -- </span>' + body + '</div>' +
+    L(tail);
+}
 function ppvCardBullets(card){
   const out = [];
   card.querySelectorAll('.bullet-edit li span').forEach(sp => { const t = sp.textContent.trim(); if (t) out.push(t); });
@@ -2024,10 +2075,11 @@ function buildPreviewHtml(){
         if (!isB && tnum === 1) s += ppvRow('Segment ' + n + ': Info', ch);
         else s += ch;
       });
-      const ti = lane.querySelector('.rd-tease-input');
-      const tv = ti ? ti.value.trim() : '';
-      s += ppvRow('Tease', tv ? ppvEsc(tv) : '');
     }
+    // segment tease row is shared across Talk and Interview modes: always render the full block
+    const ti = lane.querySelector('.rd-tease-input');
+    const tv = ti ? ti.value.trim() : '';
+    s += ppvRow('Tease', ppvTeaseBlock(id, tv));
     if (id === 's3') s += '<div class="ppv-hour2">HOUR 2</div>';
   });
 
@@ -2272,6 +2324,7 @@ function setFurnitureFieldValues(){
   });
 }
 function renderDayView(){
+  rdBuildTeaseRows();
   rebindLaneControls();
   initLaneSortables();
   renumberTopics();
