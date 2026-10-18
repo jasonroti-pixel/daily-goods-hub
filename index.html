@@ -1469,6 +1469,49 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
    no key entry UI is needed in the prototype. */
 const GEMINI_API_KEY=""; /* key is managed in Settings, stored only in this browser (dg_gemini_key_v1) */ // pre-installed; no user entry needed
 /* =============== END CONFIG =============== */
+/* Boot-error banner: if anything throws during startup, show the message on the page
+   instead of dying silently. The saved work in localStorage is never touched by this. */
+(function bootTrap(){
+  var box = null;
+  function show(msg, src){
+    try {
+      if (!document.body) { setTimeout(function(){ show(msg, src); }, 300); return; }
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'bootError';
+        box.setAttribute('role', 'alert');
+        box.style.cssText = 'position:fixed;left:12px;right:12px;top:12px;z-index:99999;background:#3a0d0d;color:#ffd9d9;border:1px solid #a33;padding:10px 14px;border-radius:10px;font:13px/1.45 system-ui,-apple-system,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.35)';
+        var close = document.createElement('button');
+        close.textContent = 'Dismiss';
+        close.style.cssText = 'float:right;margin-left:12px;background:#5c1414;color:#fff;border:1px solid #a33;border-radius:6px;padding:2px 10px;cursor:pointer';
+        close.onclick = function(){ if (box) box.remove(); box = null; };
+        box.appendChild(close);
+        var t = document.createElement('div');
+        t.innerHTML = '<b>Something failed while the hub was loading.</b><br>Copy the text below and send it to Muse:';
+        box.appendChild(t);
+        var pre = document.createElement('pre');
+        pre.id = 'bootErrorMsg';
+        pre.style.cssText = 'white-space:pre-wrap;word-break:break-word;margin:6px 0 0;font-size:12px;max-height:160px;overflow:auto';
+        box.appendChild(pre);
+        document.body.appendChild(box);
+      }
+      var pre2 = document.getElementById('bootErrorMsg');
+      if (pre2) pre2.textContent += (pre2.textContent ? '\n---\n' : '') + (src ? '[' + src + '] ' : '') + msg;
+    } catch (e) { /* never let the reporter itself throw */ }
+  }
+  window.__bootError = show;
+  window.addEventListener('error', function(ev){
+    var msg = String((ev && ev.message) || 'unknown error');
+    if ((msg === 'Script error.' || msg === 'Script error') && ev && ev.error && ev.error.stack) {
+      msg = String(ev.error.stack).split('\n').slice(0, 3).join('\n');
+    }
+    show(msg + (ev && ev.lineno ? ' (line ' + ev.lineno + ')' : ''));
+  });
+  window.addEventListener('unhandledrejection', function(ev){
+    var r = ev && ev.reason;
+    show('unhandled: ' + String((r && r.message) || r || 'unknown'));
+  });
+})();
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = (sel, el) => (el || document).querySelector(sel);
 const $$ = (sel, el) => Array.from((el || document).querySelectorAll(sel));
@@ -1666,6 +1709,7 @@ function bindSegType(btn){
   });
 }
 (function laneDualPayload(){
+  try {
   const template = document.querySelector('.guest-block');
   $$('#lanes .lane').forEach(lane => {
     const id = lane.dataset.lane;
@@ -1691,9 +1735,11 @@ function bindSegType(btn){
   });
   $$('#lanes .lane').forEach(lane => { setLaneTitle(lane); syncSegTypeBtns(lane); });
   $$('.segtype-btn').forEach(bindSegType);
+  } catch (e) { if (window.__bootError) window.__bootError('lanes: ' + (e && e.message), 'init'); }
 })();
 
 (function rdBuildFurniture(){
+  try {
   const lanes = document.getElementById('lanes');
   if (!lanes || document.getElementById('rdHeader')) return;
   const headerHtml =
@@ -1766,6 +1812,7 @@ function bindSegType(btn){
   rdBindFurniture();
   renumberTopics();
   rdRefreshShow();
+  } catch (e) { if (window.__bootError) window.__bootError('furniture: ' + (e && e.message), 'init'); }
 })();
 
 function rdWrapGuestField(block, sel, labelText) {
@@ -2349,6 +2396,7 @@ document.addEventListener('keydown', e => {
 const DAY_STORE_KEY = 'dg_builder_days_v1';
 let viewedDate = null;
 let daySavePaused = false;
+let bootDayFailed = false; /* true when the saved day failed to load: stay read-only so autosave never overwrites it */
 let lastSavedSnap = '';
 let EMPTY_LANES_HTML = '';
 function torontoWall(){ try { return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Toronto' })); } catch (e) { return new Date(); } }
@@ -2528,7 +2576,11 @@ function pushCardToTomorrow(card){
       rdFurn = normalizeFurn(rec.furn, viewedDate);
       rdSaveFurn();
       renderDayView();
-    } finally { daySavePaused = false; }
+    } catch (e) {
+      if (window.__bootError) window.__bootError('Could not load the saved rundown for ' + viewedDate + ': ' + (e && e.message) + '. Your saved work is untouched.', 'init');
+      try { document.getElementById('lanes').innerHTML = EMPTY_LANES_HTML; } catch (e2) {}
+      bootDayFailed = true;
+    } finally { if (!bootDayFailed) daySavePaused = false; }
   } else {
     syncFormState(document.getElementById('lanes'));
     days[viewedDate] = { lanes: document.getElementById('lanes').innerHTML, furn: JSON.parse(JSON.stringify(rdFurn)) };
