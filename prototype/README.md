@@ -31,10 +31,14 @@
 - `prototype-v28-feed-refresh.html`: functional reference. Weekly feed
   refresh moved to Sunday 12:00 PM Toronto (was Saturday midnight); Saturday is
   now a normal fetch day.
-- `prototype-v29-linkfix.html`: latest functional reference. URLs pasted without
+- `prototype-v29-linkfix.html`: functional reference. URLs pasted without
   a scheme are normalized to https:// at save and render time (builder, feeds,
   newspaper, tools, Zoom link); newspaper Nico fetch runs the full fallback chain
   including the search-grounded summary.
+- `prototype-v30-np-autofetch.html`: latest functional reference. Newspaper
+  manual add auto-fetches the Nico summary when a link is pasted; visible Fetch
+  with Nico button on every newspaper card; headline-only cards can fetch via
+  the search-grounded fallback.
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
