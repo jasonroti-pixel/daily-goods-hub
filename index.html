@@ -258,6 +258,10 @@ h1,h2,.lane-title,.brand,.guest-name{font-family:'Fraunces',Georgia,serif}
 #panel-builder[data-layout="standard"] .guest-block{padding:20px 22px}
 #panel-builder[data-layout="standard"] .composer{padding:18px}
 .copy-btn{margin-left:auto;flex:none}
+.push-tomorrow-btn{margin-left:8px;flex:none;white-space:nowrap}
+.lane.locked .push-tomorrow-btn{display:none}
+body.viewing-tomorrow .push-tomorrow-btn{display:none !important}
+.day-switch{margin-left:4px}
 .lane{
   background:linear-gradient(180deg,#2E2E7A 0%,#1E1E5C 100%);
   border:1px solid #4A4AA8;
@@ -748,7 +752,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 @media(max-width:700px){.ppv-row{flex-direction:column;gap:4px}.ppv-lab{flex:none}}
 
 @media print{
-  .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast,.copy-btn,.card-del,.card-del-big,#rdTotsReset{display:none !important}
+  .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast,.copy-btn,.card-del,.card-del-big,.push-tomorrow-btn,#rdTotsReset{display:none !important}
   .tab-panel{display:none}
   .tab-panel.active{display:block}
   html[data-theme="dark"]{--ink:#000;--muted:#444;--surface:#fff;--surface-2:#fff;--border:#999;--accent-strong:#000;--card-border:#999;--backup-bg:#fff}
@@ -955,7 +959,11 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 <section class="tab-panel active" id="panel-builder" role="tabpanel">
   <p class="hint">Drag cards between segments or reorder inside them. <span class="kbd">Up</span><span class="kbd">Down</span> move the focused card, <span class="kbd">Enter</span> opens or closes it, <span class="kbd">Esc</span> closes.</p>
   <div class="builder-toolbar">
-    <h2 class="day-title">Today's <em>rundown</em></h2>
+    <h2 class="day-title" id="builderDayTitle">Today's <em>rundown</em></h2>
+      <div class="seg-control day-switch" role="group" aria-label="Rundown day">
+        <button type="button" data-day="today" class="active">Today</button>
+        <button type="button" data-day="tomorrow">Tomorrow</button>
+      </div>
     <div class="lock-controls">
       <button class="icon-btn" id="undoBtn" aria-label="Undo" title="Undo (Ctrl+Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
       <button class="icon-btn" id="redoBtn" aria-label="Redo" title="Redo (Ctrl+Shift+Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
@@ -2198,6 +2206,200 @@ document.addEventListener('keydown', e => {
   if (k === 'z' && !e.shiftKey) { e.preventDefault(); doUndo(); }
   else if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); doRedo(); }
 });
+
+/* ---------- builder day switching: Today | Tomorrow (per-day rundown state) ---------- */
+const DAY_STORE_KEY = 'dg_builder_days_v1';
+let viewedDate = null;
+let daySavePaused = false;
+let lastSavedSnap = '';
+let EMPTY_LANES_HTML = '';
+function torontoWall(){ try { return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Toronto' })); } catch (e) { return new Date(); } }
+function torontoKey(d){ const m = d.getMonth() + 1, day = d.getDate(); return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day; }
+function torontoLong(d){ try { return new Intl.DateTimeFormat('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(d).toUpperCase(); } catch (e) { return d.toDateString().toUpperCase(); } }
+function parseKeyToDate(key){ const p = String(key).split('-'); return new Date(+p[0], (+p[1] || 1) - 1, +p[2] || 1); }
+function todayKey(){ return torontoKey(torontoWall()); }
+function tomorrowKey(){ const d = torontoWall(); d.setDate(d.getDate() + 1); return torontoKey(d); }
+function dayStoreLoad(){ try { const r = localStorage.getItem(DAY_STORE_KEY); const o = r ? JSON.parse(r) : {}; return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
+function dayStoreSave(days){ try { localStorage.setItem(DAY_STORE_KEY, JSON.stringify(days)); } catch (e) {} }
+function freshFurn(key){
+  return { date: torontoLong(parseKeyToDate(key)), teases: {}, chats: ['', '', ''], guests: {},
+           outro: '', push: 'TheDailyGoods@siriusxm.ca', totsByDate: {} };
+}
+function normalizeFurn(f, key){
+  const o = (f && typeof f === 'object') ? f : {};
+  o.teases = (o.teases && typeof o.teases === 'object') ? o.teases : {};
+  o.chats = Array.isArray(o.chats) ? o.chats : ['', '', ''];
+  o.guests = (o.guests && typeof o.guests === 'object') ? o.guests : {};
+  o.totsByDate = (o.totsByDate && typeof o.totsByDate === 'object') ? o.totsByDate : {};
+  if (o.date == null) o.date = torontoLong(parseKeyToDate(key));
+  if (o.push == null) o.push = 'TheDailyGoods@siriusxm.ca';
+  if (o.outro == null) o.outro = '';
+  return o;
+}
+function captureEmptyLanes(){
+  const lanes = document.getElementById('lanes');
+  const tmp = document.createElement('div');
+  tmp.innerHTML = lanes.innerHTML;
+  tmp.querySelectorAll('.card').forEach(c => c.remove());
+  tmp.querySelectorAll('.lane').forEach(lane => {
+    lane.classList.remove('locked');
+    lane.dataset.segtype = DEFAULT_SEGTYPE[lane.dataset.lane] || 'talk';
+    lane.querySelectorAll('.segtype-btn').forEach(b => b.classList.toggle('active', b.dataset.t === lane.dataset.segtype));
+    const h3 = lane.querySelector('.lane-title');
+    if (h3) { const tag = h3.querySelector('.lane-locked-tag'); const txt = lane.dataset.segtype === 'interview' ? 'Guest' : (TALK_TITLES[lane.dataset.lane] || 'Talk Segment'); h3.innerHTML = escapeHtml(txt) + (tag ? tag.outerHTML : ''); }
+    const tag2 = lane.querySelector('.lane-locked-tag'); if (tag2) tag2.hidden = true;
+    const gb = lane.querySelector('.guest-block');
+    if (gb) gb.querySelectorAll('input, textarea, select').forEach(el => { el.value = ''; });
+  });
+  tmp.querySelectorAll('.rd-tease-input').forEach(el => { el.value = ''; });
+  EMPTY_LANES_HTML = tmp.innerHTML;
+}
+function setFurnitureFieldValues(){
+  const set = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
+  set('rdDate', rdFurn.date);
+  set('rdOutro', rdFurn.outro || '');
+  set('rdPush', rdFurn.push);
+  $$('.rd-chat').forEach(inp => { inp.value = rdFurn.chats[+inp.dataset.chat] || ''; });
+  $$('.rd-tease-input').forEach(inp => { const v = rdFurn.teases[inp.dataset.seg]; inp.value = v != null ? v : ''; });
+  ['s1', 's2', 's3', 's4', 's5', 's6'].forEach(id => {
+    const g = rdFurn.guests[id] || {};
+    const lane = document.querySelector('.lane[data-lane="' + id + '"]');
+    const block = lane && lane.querySelector('.guest-block'); if (!block) return;
+    const setG = (sel, v) => { const el = block.querySelector(sel); if (el) el.value = v || ''; };
+    setG('.guest-name-input', g.name); setG('.guest-slot', g.slot); setG('.guest-format', g.format);
+    setG('.guest-intro-input', g.intro); setG('.guest-seginfo', g.seginfo);
+    setG('.guest-tapeout', g.tapeout); setG('.guest-tease', g.tease);
+  });
+}
+function renderDayView(){
+  rebindLaneControls();
+  initLaneSortables();
+  renumberTopics();
+  rdRenderZoom();
+  rdRenderStudio();
+  setFurnitureFieldValues();
+  bindFurnitureEls();
+  rdInitTots();
+  rdRefreshShow();
+  updateShowLock();
+  syncUndoButtons();
+  syncDaySwitcherUI();
+}
+function saveCurrentDay(){
+  if (daySavePaused || !viewedDate) return;
+  const lanesEl = document.getElementById('lanes');
+  syncFormState(lanesEl);
+  const snap = lanesEl.innerHTML + '||' + JSON.stringify(rdFurn);
+  if (snap === lastSavedSnap) return;
+  lastSavedSnap = snap;
+  const days = dayStoreLoad();
+  days[viewedDate] = { lanes: lanesEl.innerHTML, furn: JSON.parse(JSON.stringify(rdFurn)) };
+  dayStoreSave(days);
+}
+let daySaveT = null;
+function armDayAutosave(){
+  const pb = document.getElementById('panel-builder');
+  if (!pb || pb.dataset.daySaveArmed) return;
+  pb.dataset.daySaveArmed = '1';
+  new MutationObserver(() => {
+    if (daySavePaused || !viewedDate) return;
+    clearTimeout(daySaveT);
+    daySaveT = setTimeout(saveCurrentDay, 400);
+  }).observe(pb, { childList: true, subtree: true, characterData: true });
+  window.addEventListener('pagehide', saveCurrentDay);
+}
+function syncDaySwitcherUI(){
+  const tk = todayKey();
+  const isToday = viewedDate === tk;
+  document.querySelectorAll('.day-switch [data-day]').forEach(b => {
+    b.classList.toggle('active', (b.dataset.day === 'today') === isToday);
+  });
+  document.body.classList.toggle('viewing-tomorrow', !isToday);
+  const h = document.getElementById('builderDayTitle');
+  if (h) h.innerHTML = (isToday ? "Today's" : "Tomorrow's") + ' <em>rundown</em>';
+}
+function switchBuilderDay(key){
+  if (!key || key === viewedDate) return;
+  saveCurrentDay();
+  viewedDate = key;
+  undoStack.length = 0; redoStack.length = 0; discardTypeSnap(); syncUndoButtons();
+  daySavePaused = true;
+  try {
+    const days = dayStoreLoad();
+    const rec = days[key];
+    if (rec && rec.lanes) {
+      document.getElementById('lanes').innerHTML = rec.lanes;
+      rdFurn = normalizeFurn(rec.furn, key);
+    } else {
+      document.getElementById('lanes').innerHTML = EMPTY_LANES_HTML;
+      rdFurn = freshFurn(key);
+    }
+    rdSaveFurn();
+    renderDayView();
+  } finally { daySavePaused = false; }
+  lastSavedSnap = '';
+  saveCurrentDay();
+  toast(key === todayKey() ? "Viewing today's rundown" : "Viewing tomorrow's rundown");
+}
+function laneLabelForToast(lane){
+  const t = lane.querySelector('.lane-time');
+  const h3 = lane.querySelector('.lane-title');
+  let title = '';
+  if (h3) { const c = h3.cloneNode(true); const tag = c.querySelector('.lane-locked-tag'); if (tag) tag.remove(); title = c.textContent.trim(); }
+  return ((t ? t.textContent.trim() : '') + ' ' + title).trim();
+}
+function pushCardToTomorrow(card){
+  const lane = card.closest('.lane');
+  if (!lane || laneLocked(lane)) return;
+  if (viewedDate !== todayKey()) return;
+  const laneId = lane.dataset.lane;
+  const label = laneLabelForToast(lane);
+  pushUndo();
+  syncFormState(card);
+  const html = card.outerHTML;
+  card.remove();
+  renumberTopics();
+  const tKey = tomorrowKey();
+  const days = dayStoreLoad();
+  let rec = days[tKey];
+  if (!rec || !rec.lanes) rec = { lanes: EMPTY_LANES_HTML, furn: freshFurn(tKey) };
+  const tmp = document.createElement('div');
+  tmp.innerHTML = rec.lanes;
+  const box = tmp.querySelector('.lane[data-lane="' + laneId + '"] .cards');
+  if (box) box.insertAdjacentHTML('beforeend', html);
+  rec.lanes = tmp.innerHTML;
+  days[tKey] = rec;
+  dayStoreSave(days);
+  lastSavedSnap = '';
+  saveCurrentDay();
+  toast("Pushed to tomorrow's " + label);
+}
+(function initDaySystem(){
+  captureEmptyLanes();
+  armDayAutosave();
+  viewedDate = todayKey();
+  const days = dayStoreLoad();
+  const rec = days[viewedDate];
+  if (rec && rec.lanes) {
+    daySavePaused = true;
+    try {
+      document.getElementById('lanes').innerHTML = rec.lanes;
+      rdFurn = normalizeFurn(rec.furn, viewedDate);
+      rdSaveFurn();
+      renderDayView();
+    } finally { daySavePaused = false; }
+  } else {
+    syncFormState(document.getElementById('lanes'));
+    days[viewedDate] = { lanes: document.getElementById('lanes').innerHTML, furn: JSON.parse(JSON.stringify(rdFurn)) };
+    dayStoreSave(days);
+  }
+  document.querySelectorAll('.day-switch [data-day]').forEach(b => {
+    b.addEventListener('click', () => switchBuilderDay(b.dataset.day === 'today' ? todayKey() : tomorrowKey()));
+  });
+  syncDaySwitcherUI();
+  lastSavedSnap = '';
+  saveCurrentDay();
+})();
 /* debounced undo for text edits: one entry per typing burst / field session */
 let typeSnap = null, typeTimer = null, typeDirty = false;
 function discardTypeSnap(){
@@ -2392,6 +2594,13 @@ document.addEventListener('click', e => {
     const card = addB.closest('.card');
     if (laneLocked(card)) return;
     addBulletRow(card.querySelector('.bullet-edit'), true);
+    return;
+  }
+  const psh = e.target.closest('.push-tomorrow-btn');
+  if (psh) {
+    const pcard = psh.closest('.card');
+    if (!pcard || !pcard.closest('#lanes') || laneLocked(pcard)) return;
+    pushCardToTomorrow(pcard);
     return;
   }
   const cdel = e.target.closest('.card-del, .card-del-big');
@@ -2768,7 +2977,7 @@ function cardTemplate(headline, url) {
     <button type="button" class="card-del" aria-label="Delete card" title="Delete card">×</button>
     <span class="mini-arrows"><button type="button" class="mv-up" aria-label="Move card up" title="Move up">▲</button><button type="button" class="mv-dn" aria-label="Move card down" title="Move down">▼</button></span>
     <p class="card-headline">${safeH}</p>
-    <div class="card-meta"><span class="src">Manual</span><span class="tag">Story</span><button type="button" class="btn btn-sm copy-btn" title="Copy for Google Sheets">Copy</button></div>
+    <div class="card-meta"><span class="src">Manual</span><span class="tag">Story</span><button type="button" class="btn btn-sm copy-btn" title="Copy for Google Sheets">Copy</button><button type="button" class="btn btn-sm push-tomorrow-btn" title="Push to tomorrow's rundown">→ Tomorrow</button></div>
     <ul class="card-bullets"><li class="empty-note" style="list-style:none;color:var(--muted);font-style:italic">No summary yet. Try Fetch with Nico below.</li></ul>
     <div class="card-details">
       <div class="field-label">Links</div>
@@ -2785,6 +2994,7 @@ function cardTemplate(headline, url) {
       <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
       <div class="card-move"><span class="mv-label">Move</span><button type="button" class="mv-btn mv-up-big" aria-label="Move card up">▲ Up</button><button type="button" class="mv-btn mv-dn-big" aria-label="Move card down">▼ Down</button></div>
       <button type="button" class="btn btn-sm card-del-big">Delete card</button>
+      <button type="button" class="btn btn-sm push-tomorrow-btn" style="margin-top:8px">Push to Tomorrow</button>
     </div>`;
 }
 
@@ -2925,6 +3135,16 @@ function enhanceCard(card) {
     del.textContent = '×';
     card.insertBefore(del, card.firstChild);
   }
+  const inLanes = !!card.closest('#lanes');
+  if (inLanes) {
+    const cmeta = card.querySelector('.card-meta');
+    if (cmeta && !cmeta.querySelector('.push-tomorrow-btn')) {
+      const cpb = document.createElement('button');
+      cpb.type = 'button'; cpb.className = 'btn btn-sm push-tomorrow-btn';
+      cpb.title = "Push to tomorrow's rundown"; cpb.textContent = '→ Tomorrow';
+      cmeta.appendChild(cpb);
+    }
+  }
   const det = card.querySelector('.card-details');
   if (det && !det.querySelector('.card-move')) {
     const row = document.createElement('div');
@@ -2936,6 +3156,12 @@ function enhanceCard(card) {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'btn btn-sm card-del-big'; b.textContent = 'Delete card';
     det.appendChild(b);
+  }
+  if (inLanes && det && !det.querySelector('.push-tomorrow-btn')) {
+    const cpb2 = document.createElement('button');
+    cpb2.type = 'button'; cpb2.className = 'btn btn-sm push-tomorrow-btn';
+    cpb2.style.marginTop = '8px'; cpb2.textContent = 'Push to Tomorrow';
+    det.appendChild(cpb2);
   }
 }
 $$('.card').forEach(enhanceCard);
@@ -3509,6 +3735,7 @@ function npBuildItemEl(it) {
   const meta = el.querySelector('.card-meta');
   const storyTag = meta.querySelector('.tag');
   if (storyTag) storyTag.remove();
+  el.querySelectorAll('.push-tomorrow-btn').forEach(b => b.remove());
   const badge = document.createElement('span');
   badge.className = 'feed-badge';
   badge.textContent = it.feed || 'MANUAL';
