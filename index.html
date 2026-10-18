@@ -380,9 +380,9 @@ html[data-theme="dark"] .spinner{border-color:rgba(236,232,250,.35);border-top-c
 .nico-error a{color:var(--accent-strong);font-weight:600}
 .card .print-note{display:none}
 @media print{
-  .card.print-notes .print-note{display:block;font-style:italic;margin-top:10px;padding:8px 12px;border-left:3px solid #000;font-size:12.5px;line-height:1.5}
-  .card.print-notes .print-note::before{content:"PRODUCER NOTE: ";font-style:normal;font-weight:700}
-  .card.print-notes .print-note:empty{display:none}
+  .card .print-note{display:block;font-style:italic;margin-top:10px;padding:8px 12px;border-left:3px solid #000;font-size:12.5px;line-height:1.5}
+  .card .print-note::before{content:"PRODUCER NOTE: ";font-style:normal;font-weight:700}
+  .card .print-note:empty{display:none}
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 .toggle-row{display:flex;gap:10px;align-items:center;margin-top:6px}
@@ -965,7 +965,6 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
       </div>
       <button class="btn btn-sm" id="lockAll">Lock all</button>
       <button class="btn btn-sm" id="unlockAll">Unlock all</button>
-      <span class="toggle-row" style="margin:0"><button class="switch" id="printNotesAll" role="switch" aria-checked="false" aria-label="Include all producer notes in print"></button><span class="switch-label">Include all producer notes</span></span>
     </div>
   </div>
   <div class="locked-banner" id="lockedBanner" hidden>
@@ -1007,7 +1006,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
             <div class="field-label">Nico fetch</div>
             <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
             <div class="field-label">Producer notes</div>
-            <textarea placeholder="Private notes, not printed"></textarea>
+            <textarea placeholder="Producer notes, printed on the rundown"></textarea>
             <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
           </div>
         </article>
@@ -1032,7 +1031,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
             <div class="field-label">Nico fetch</div>
             <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
             <div class="field-label">Producer notes</div>
-            <textarea placeholder="Private notes, not printed"></textarea>
+            <textarea placeholder="Producer notes, printed on the rundown"></textarea>
             <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
           </div>
         </article>
@@ -1057,7 +1056,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
             <div class="field-label">Nico fetch</div>
             <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
             <div class="field-label">Producer notes</div>
-            <textarea placeholder="Private notes, not printed"></textarea>
+            <textarea placeholder="Producer notes, printed on the rundown"></textarea>
             <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
           </div>
         </article>
@@ -1082,7 +1081,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
             <div class="field-label">Nico fetch</div>
             <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
             <div class="field-label">Producer notes</div>
-            <textarea placeholder="Private notes, not printed"></textarea>
+            <textarea placeholder="Producer notes, printed on the rundown"></textarea>
             <div class="toggle-row"><button class="switch" role="switch" aria-checked="true" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
           </div>
         </article>
@@ -1152,7 +1151,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
             <div class="field-label">Nico fetch</div>
             <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
             <div class="field-label">Producer notes</div>
-            <textarea placeholder="Private notes, not printed"></textarea>
+            <textarea placeholder="Producer notes, printed on the rundown"></textarea>
             <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
           </div>
         </article>
@@ -1177,7 +1176,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
             <div class="field-label">Nico fetch</div>
             <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
             <div class="field-label">Producer notes</div>
-            <textarea placeholder="Private notes, not printed"></textarea>
+            <textarea placeholder="Producer notes, printed on the rundown"></textarea>
             <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
           </div>
         </article>
@@ -1202,7 +1201,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
             <div class="field-label">Nico fetch</div>
             <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
             <div class="field-label">Producer notes</div>
-            <textarea placeholder="Private notes, not printed"></textarea>
+            <textarea placeholder="Producer notes, printed on the rundown"></textarea>
             <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
           </div>
         </article>
@@ -1239,7 +1238,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
             <div class="field-label">Nico fetch</div>
             <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
             <div class="field-label">Producer notes</div>
-            <textarea placeholder="Private notes, not printed"></textarea>
+            <textarea placeholder="Producer notes, printed on the rundown"></textarea>
             <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
           </div>
         </article>
@@ -1264,7 +1263,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
             <div class="field-label">Nico fetch</div>
             <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
             <div class="field-label">Producer notes</div>
-            <textarea placeholder="Private notes, not printed"></textarea>
+            <textarea placeholder="Producer notes, printed on the rundown"></textarea>
             <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
           </div>
         </article>
@@ -1289,7 +1288,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
             <div class="field-label">Nico fetch</div>
             <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
             <div class="field-label">Producer notes</div>
-            <textarea placeholder="Private notes, not printed"></textarea>
+            <textarea placeholder="Producer notes, printed on the rundown"></textarea>
             <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
           </div>
         </article>
@@ -1314,7 +1313,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
             <div class="field-label">Nico fetch</div>
             <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
             <div class="field-label">Producer notes</div>
-            <textarea placeholder="Private notes, not printed"></textarea>
+            <textarea placeholder="Producer notes, printed on the rundown"></textarea>
             <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
           </div>
         </article>
@@ -1380,7 +1379,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
             <div class="field-label">Nico fetch</div>
             <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
             <div class="field-label">Producer notes</div>
-            <textarea placeholder="Private notes, not printed"></textarea>
+            <textarea placeholder="Producer notes, printed on the rundown"></textarea>
             <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
           </div>
         </article>
@@ -1405,7 +1404,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
             <div class="field-label">Nico fetch</div>
             <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
             <div class="field-label">Producer notes</div>
-            <textarea placeholder="Private notes, not printed"></textarea>
+            <textarea placeholder="Producer notes, printed on the rundown"></textarea>
             <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
           </div>
         </article>
@@ -1431,7 +1430,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
             <div class="field-label">Nico fetch</div>
             <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
             <div class="field-label">Producer notes</div>
-            <textarea placeholder="Private notes, not printed"></textarea>
+            <textarea placeholder="Producer notes, printed on the rundown"></textarea>
             <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
           </div>
         </article>
@@ -1498,15 +1497,17 @@ $$('[data-blayout]').forEach(b => b.addEventListener('click', () => {
 
 /* ---------- settings: studio (Zoom link + password, locked in builder) ---------- */
 const ZOOM_STORE_KEY = 'dg_settings_v1';
-const ZOOM_DEFAULTS = { zoomLink: 'https://siriusxm.zoom.us/j/98162919731?pwd=j9KSSuXQSfUx9DbI6kWjcPFfXuGDwB.1', zoomPass: '501471' };
+const ZOOM_DEFAULTS = { zoomLink: 'https://siriusxm.zoom.us/j/98162919731?pwd=j9KSSuXQSfUx9DbI6kWjcPFfXuGDwB.1', zoomPass: '501471', listenerLine: '1-855-958-8255', guestLine: '416-869-4536' };
 function zoomSettings() {
   try {
     const r = JSON.parse(localStorage.getItem(ZOOM_STORE_KEY) || '{}') || {};
     return {
       zoomLink: r.zoomLink != null ? r.zoomLink : ZOOM_DEFAULTS.zoomLink,
-      zoomPass: r.zoomPass != null ? r.zoomPass : ZOOM_DEFAULTS.zoomPass
+      zoomPass: r.zoomPass != null ? r.zoomPass : ZOOM_DEFAULTS.zoomPass,
+      listenerLine: r.listenerLine != null ? r.listenerLine : ZOOM_DEFAULTS.listenerLine,
+      guestLine: r.guestLine != null ? r.guestLine : ZOOM_DEFAULTS.guestLine
     };
-  } catch (e) { return { zoomLink: ZOOM_DEFAULTS.zoomLink, zoomPass: ZOOM_DEFAULTS.zoomPass }; }
+  } catch (e) { return { zoomLink: ZOOM_DEFAULTS.zoomLink, zoomPass: ZOOM_DEFAULTS.zoomPass, listenerLine: ZOOM_DEFAULTS.listenerLine, guestLine: ZOOM_DEFAULTS.guestLine }; }
 }
 function zoomSaveSettings(s) { try { localStorage.setItem(ZOOM_STORE_KEY, JSON.stringify(s)); } catch (e) {} }
 
@@ -1598,7 +1599,7 @@ function bindSegType(btn){
     '<div class="rd-row"><span class="rd-label">Show date</span><div class="rd-content"><input type="text" id="rdDate" class="rd-input" spellcheck="false"></div></div>' +
     '<div class="rd-row"><span class="rd-label">Zoom Link</span><div class="rd-content"><span class="rd-lock" title="Locked: edit in Settings"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span> <a id="rdZoomLink" class="rd-zoomlink" href="#" target="_blank" rel="noopener"></a></div></div>' +
     '<div class="rd-row"><span class="rd-label">Password</span><div class="rd-content"><span class="rd-lock" title="Locked: edit in Settings"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span> <span id="rdZoomPass" class="rd-zoompass"></span></div></div>' +
-    '<div class="rd-row"><span class="rd-label">Studio #</span><div class="rd-content"><input type="text" id="rdStudio" class="rd-input" placeholder="Listener line / guest line" spellcheck="false"></div></div>' +
+    '<div class="rd-row"><span class="rd-label">Studio #</span><div class="rd-content"><span class="rd-lock" title="Locked: edit in Settings"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span> <span id="rdStudioLine"></span></div></div>' +
     '<div class="rd-row"><span class="rd-label">Today on the show</span><div class="rd-content"><textarea id="rdTots" class="rd-input rd-tots rd-tots-edit" rows="6" spellcheck="true" aria-label="Today on the show"></textarea><button type="button" class="btn btn-sm" id="rdTotsReset" style="margin-top:6px">Reset to auto lineup</button></div></div>' +
     '<div class="rd-row"><span class="rd-label">Show intro</span><div class="rd-content">' +
       '<div class="field-label" style="margin-top:0">Guests</div><div id="rdIntroGuests"></div>' +
@@ -1740,6 +1741,11 @@ function rdRenderZoom() {
   const pw = document.getElementById('rdZoomPass');
   if (pw) pw.textContent = zs.zoomPass || 'Not set';
 }
+function rdRenderStudio() {
+  const zs = zoomSettings();
+  const el = document.getElementById('rdStudioLine');
+  if (el) el.textContent = 'STUDIO #: ' + (zs.listenerLine || 'Not set') + ' (LISTENER LINE) / ' + (zs.guestLine || 'Not set') + ' (GUEST LINE)';
+}
 function rdRefreshShow() {
   const tots = document.getElementById('rdTots');
   if (tots && tots.dataset.manual !== '1') tots.value = rdAutoTotsLines().join('\n');
@@ -1768,7 +1774,6 @@ function rdBindFurniture() {
   let todayStr = '';
   try { todayStr = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(new Date()).toUpperCase(); } catch (e) { todayStr = new Date().toDateString().toUpperCase(); }
   set('rdDate', rdFurn.date != null ? rdFurn.date : todayStr);
-  set('rdStudio', rdFurn.studio || '');
   set('rdOutro', rdFurn.outro || '');
   set('rdPush', rdFurn.push != null ? rdFurn.push : 'TheDailyGoods@siriusxm.ca');
   $$('.rd-chat').forEach(inp => { const v = rdFurn.chats[+inp.dataset.chat]; if (v) inp.value = v; });
@@ -1783,6 +1788,7 @@ function rdBindFurniture() {
     setG('.guest-tapeout', g.tapeout); setG('.guest-tease', g.tease);
   });
   rdRenderZoom();
+  rdRenderStudio();
   bindFurnitureEls();
   document.getElementById('panel-builder').addEventListener('input', e => {
     if (e.target.closest('.rd-tease') || e.target.closest('.guest-block')) { rdSaveFurnitureFields(); rdRefreshShow(); }
@@ -1795,7 +1801,7 @@ function rdBindFurniture() {
 /* furniture field persistence (top-level so undo restore can rebind) */
 function rdSaveFurnitureFields(){
   const gv = id => { const el = document.getElementById(id); return el ? el.value : ''; };
-  rdFurn.date = gv('rdDate'); rdFurn.studio = gv('rdStudio');
+  rdFurn.date = gv('rdDate');
   rdFurn.outro = gv('rdOutro'); rdFurn.push = gv('rdPush');
   rdFurn.chats = $$('.rd-chat').map(inp => inp.value);
   rdFurn.teases = {};
@@ -1937,9 +1943,6 @@ function ppvCardCue(card){
   return cue;
 }
 function ppvCardNote(card){
-  const psw = card.querySelector('.print-switch');
-  const on = card.classList.contains('print-notes') || (psw && psw.getAttribute('aria-checked') === 'true');
-  if (!on) return '';
   const ta = card.querySelector('.prod-notes');
   return ta ? ta.value.trim() : '';
 }
@@ -1955,8 +1958,9 @@ function buildPreviewHtml(){
   const gv = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
   let s = '';
   s += '<div class="ppv-brand">THE DAILY GOODS</div>';
-  const date = gv('rdDate'), studio = gv('rdStudio');
+  const date = gv('rdDate');
   const zs = zoomSettings();
+  const studio = 'STUDIO #: ' + (zs.listenerLine || '') + ' (LISTENER LINE) / ' + (zs.guestLine || '') + ' (GUEST LINE)';
   if (date) s += ppvRow('', '<b>' + ppvEsc(date) + '</b>');
   if (zs.zoomLink) s += ppvRow('Zoom Link', ppvEsc(zs.zoomLink));
   if (zs.zoomPass) s += ppvRow('Password', ppvEsc(zs.zoomPass));
@@ -2146,6 +2150,7 @@ function applySnapshot(s){
     initLaneSortables();
     renumberTopics();
     rdRenderZoom();
+    rdRenderStudio();
     rdRefreshShow();
     updateShowLock();
   } finally { suppressUndo = false; }
@@ -2269,13 +2274,9 @@ function cardCopyText(card) {
     if (ca && ca.textContent.trim()) cue = ca.textContent.trim();
   }
   if (cue) lines.push('AUDIO CUE: ' + cue);
-  const printSw = card.querySelector('.print-switch');
-  const printOn = card.classList.contains('print-notes') || (printSw && printSw.getAttribute('aria-checked') === 'true');
-  if (printOn) {
-    const ta = card.querySelector('.prod-notes') || card.querySelector('textarea[placeholder="Private notes, not printed"]');
-    const note = ta ? ta.value.trim() : '';
-    if (note) lines.push('PRODUCER NOTE: ' + note);
-  }
+  const ta = card.querySelector('.prod-notes') || card.querySelector('textarea[placeholder="Producer notes, printed on the rundown"]');
+  const note = ta ? ta.value.trim() : '';
+  if (note) lines.push('PRODUCER NOTE: ' + note);
   return lines.join('\n');
 }
 
@@ -2355,7 +2356,7 @@ document.addEventListener('click', e => {
     syncBulletPreview(card);
     return;
   }
-  const sw = e.target.closest('.switch:not(.print-switch)');
+  const sw = e.target.closest('.switch');
   if (sw) {
     const card = sw.closest('.card');
     if (!card || laneLocked(card)) return;
@@ -2377,14 +2378,6 @@ document.addEventListener('click', e => {
       }
     }
     renumberTopics();
-    return;
-  }
-  const psw = e.target.closest('.print-switch');
-  if (psw) {
-    const card = psw.closest('.card');
-    if (!card || laneLocked(card)) return;
-    const on = psw.getAttribute('aria-checked') === 'true';
-    setCardPrintNote(card, !on);
     return;
   }
   const nico = e.target.closest('.nico-btn');
@@ -2788,9 +2781,8 @@ function cardTemplate(headline, url) {
       <div class="field-label">Nico fetch</div>
       <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
       <div class="field-label">Producer notes</div>
-      <textarea class="prod-notes" placeholder="Private notes, not printed"></textarea>
+      <textarea class="prod-notes" placeholder="Producer notes, printed on the rundown"></textarea>
       <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
-      <div class="toggle-row"><button class="switch print-switch" role="switch" aria-checked="false" aria-label="Include producer note in print"></button><span class="switch-label">Include in print</span></div>
       <div class="card-move"><span class="mv-label">Move</span><button type="button" class="mv-btn mv-up-big" aria-label="Move card up">▲ Up</button><button type="button" class="mv-btn mv-dn-big" aria-label="Move card down">▼ Down</button></div>
       <button type="button" class="btn btn-sm card-del-big">Delete card</button>
     </div>`;
@@ -3291,12 +3283,6 @@ function syncPrintNote(card) {
   const slot = card.querySelector('.print-note');
   if (ta && slot) slot.textContent = ta.value.trim();
 }
-function setCardPrintNote(card, on) {
-  const sw = card.querySelector('.print-switch');
-  if (sw) sw.setAttribute('aria-checked', on ? 'true' : 'false');
-  card.classList.toggle('print-notes', on);
-  syncPrintNote(card);
-}
 document.addEventListener('input', e => {
   if (e.target.classList && e.target.classList.contains('prod-notes')) {
     const card = e.target.closest('.card');
@@ -3315,16 +3301,9 @@ $$('.card').forEach(card => {
     else card.insertBefore(btn, card.firstChild);
   }
   const det = card.querySelector('.card-details');
-  if (det && !det.querySelector('.print-switch')) {
-    const ta = det.querySelector('textarea[placeholder="Private notes, not printed"]');
+  if (det) {
+    const ta = det.querySelector('textarea[placeholder="Producer notes, printed on the rundown"]');
     if (ta) ta.classList.add('prod-notes');
-    const anchor = det.querySelector('.toggle-row');
-    if (anchor) {
-      const row = document.createElement('div');
-      row.className = 'toggle-row';
-      row.innerHTML = '<button class="switch print-switch" role="switch" aria-checked="false" aria-label="Include producer note in print"></button><span class="switch-label">Include in print</span>';
-      anchor.parentNode.insertBefore(row, anchor.nextSibling);
-    }
   }
   if (!card.querySelector('.print-note')) {
     const slot = document.createElement('div');
@@ -3333,13 +3312,6 @@ $$('.card').forEach(card => {
     card.appendChild(slot);
   }
 });
-document.getElementById('printNotesAll').addEventListener('click', function () {
-  const on = this.getAttribute('aria-checked') !== 'true';
-  this.setAttribute('aria-checked', on ? 'true' : 'false');
-  $$('.card').forEach(card => setCardPrintNote(card, on));
-  toast(on ? 'All producer notes will print' : 'Producer notes excluded from print');
-});
-
 /* copy buttons on guest blocks */
 $$('[data-guest]').forEach(g => {
   if (g.querySelector('.copy-btn')) return;
@@ -4420,9 +4392,11 @@ function setInit() {
     '</div>' +
     '<p class="set-result" id="setResult" role="status"></p>' +
     '<h3>Show / Studio</h3>' +
-    '<p class="hint">The Zoom link and password shown at the top of the builder. They stay locked in the builder; edit them here.</p>' +
+    '<p class="hint">The Zoom link, password, and studio lines shown at the top of the builder. They stay locked in the builder; edit them here.</p>' +
     '<div class="set-field"><label for="setZoomLink">Zoom link</label><input type="text" id="setZoomLink" spellcheck="false" autocomplete="off" aria-label="Zoom link"></div>' +
     '<div class="set-field"><label for="setZoomPass">Zoom password</label><input type="text" id="setZoomPass" spellcheck="false" autocomplete="off" aria-label="Zoom password"></div>' +
+    '<div class="set-field"><label for="setListenerLine">Listener line</label><input type="text" id="setListenerLine" spellcheck="false" autocomplete="off" aria-label="Listener line"></div>' +
+    '<div class="set-field"><label for="setGuestLine">Guest line</label><input type="text" id="setGuestLine" spellcheck="false" autocomplete="off" aria-label="Guest line"></div>' +
     '</div></div>';
   document.body.appendChild(ov);
   document.getElementById('setCloseX').addEventListener('click', closeSettings);
@@ -4478,11 +4452,14 @@ function setInit() {
     }
   });
   const zl = document.getElementById('setZoomLink'), zp = document.getElementById('setZoomPass');
+  const sl = document.getElementById('setListenerLine'), sg = document.getElementById('setGuestLine');
   const zs0 = zoomSettings();
-  zl.value = zs0.zoomLink; zp.value = zs0.zoomPass;
-  const saveZoom = () => { zoomSaveSettings({ zoomLink: zl.value.trim(), zoomPass: zp.value.trim() }); rdRenderZoom(); };
+  zl.value = zs0.zoomLink; zp.value = zs0.zoomPass; sl.value = zs0.listenerLine; sg.value = zs0.guestLine;
+  const saveZoom = () => { zoomSaveSettings(Object.assign(zoomSettings(), { zoomLink: zl.value.trim(), zoomPass: zp.value.trim(), listenerLine: sl.value.trim(), guestLine: sg.value.trim() })); rdRenderZoom(); rdRenderStudio(); };
   zl.addEventListener('input', saveZoom);
   zp.addEventListener('input', saveZoom);
+  sl.addEventListener('input', saveZoom);
+  sg.addEventListener('input', saveZoom);
 }
 document.getElementById('settingsBtn').addEventListener('click', openSettings);
 
