@@ -261,6 +261,21 @@ h1,h2,.lane-title,.brand,.guest-name{font-family:'Fraunces',Georgia,serif}
 .push-tomorrow-btn{margin-left:8px;flex:none;white-space:nowrap}
 .lane.locked .push-tomorrow-btn{display:none}
 body.viewing-tomorrow .push-tomorrow-btn{display:none !important}
+body.viewing-tomorrow #wrapUpBtn{display:none}
+.wrap-body{padding:4px 16px 16px;max-height:62vh;overflow-y:auto;background:#fff;color:#111}
+.wrap-seg{margin:14px 0 6px;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;letter-spacing:.08em;color:#3b3bd4;text-transform:uppercase}
+.wrap-seg:first-child{margin-top:6px}
+.wrap-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #e2e2e8;border-radius:8px;margin-bottom:6px;background:#fafafc}
+.wrap-row input[type=checkbox]{width:16px;height:16px;flex:none;accent-color:#3b3bd4}
+.wrap-row .wh{flex:1;font-size:13.5px;color:#111}
+.wrap-row.lockedrow{opacity:.55}
+.wrap-tag{font-size:10.5px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:.06em;flex:none}
+.wrap-empty{color:#888;font-style:italic;font-size:13px;padding:2px 2px 8px}
+.wrap-foot{display:flex;justify-content:flex-end;gap:10px;padding:12px 16px;border-top:1px solid #ddd;background:#f4f4f7}
+.wrap-triage{flex:none}
+.wrap-triage button{padding:5px 10px;font-size:12px}
+.wrap-triage button[data-w="tomorrow"].active{background:#3b3bd4}
+.wrap-triage button[data-w="delete"].active{background:#b3261e;box-shadow:0 2px 6px rgba(179,38,30,.35)}
 .day-switch{margin-left:4px}
 .lane{
   background:linear-gradient(180deg,#2E2E7A 0%,#1E1E5C 100%);
@@ -364,6 +379,9 @@ html[data-theme="dark"] .tag.alt{background:rgba(232,184,75,.14);color:#F0C35A}
 .url-row a{color:var(--accent-strong);text-decoration:none;word-break:break-all}
 .url-row a:hover{text-decoration:underline}
 .bullet-edit{list-style:none;margin:0;padding:0}
+.bullets-edit{width:100%;min-height:110px;resize:vertical;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;line-height:1.55;font-family:inherit;color:var(--ink)}
+.bullets-edit:focus{outline:none;background:var(--surface);box-shadow:0 0 0 2px var(--marker)}
+.bullets-edit::placeholder{color:var(--muted);font-style:italic}
 .bullet-edit li{display:flex;gap:8px;align-items:flex-start;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;margin-bottom:6px;font-size:13px}
 .bullet-edit li span{flex:1}
 .bullet-del{border:none;background:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:2px}
@@ -389,7 +407,7 @@ html[data-theme="dark"] .spinner{border-color:rgba(236,232,250,.35);border-top-c
 .nico-error a{color:var(--accent-strong);font-weight:600}
 .card .print-note{display:none}
 @media print{
-  .card .print-note{display:block;font-style:italic;margin-top:10px;padding:8px 12px;border-left:3px solid #000;font-size:12.5px;line-height:1.5}
+  .card .print-note{display:block;font-style:italic;margin:10px 0;padding:8px 12px;border-left:3px solid #000;font-size:12.5px;line-height:1.5}
   .card .print-note::before{content:"PRODUCER NOTE: ";font-style:normal;font-weight:700}
   .card .print-note:empty{display:none}
 }
@@ -531,6 +549,10 @@ html[data-theme="dark"] .note-actions button{background:rgba(255,255,255,.14);co
 .set-keyrow{display:flex;gap:8px}
 .set-keyrow input{flex:1;min-width:0;font-family:'Geist',sans-serif;font-size:13.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
 .set-status{margin:0;font-size:12.5px;color:var(--muted)}
+.set-keypill{display:flex;align-items:center;gap:8px;margin:10px 0;padding:8px 14px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border);font-size:13px;font-weight:700;width:fit-content;max-width:100%}
+.set-keypill .dot{width:10px;height:10px;border-radius:50%;background:#d97706;flex:none}
+.set-keypill.loaded .dot{background:#16a34a}
+.set-keypill .tail{font-weight:400;color:var(--muted);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
 .set-btns{display:flex;gap:8px;flex-wrap:wrap}
 .set-danger{color:#B3261E}
 .set-danger:hover{background:rgba(179,38,30,.08)}
@@ -987,6 +1009,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
       </div>
       <button class="btn btn-sm" id="lockAll">Lock all</button>
       <button class="btn btn-sm" id="unlockAll">Unlock all</button>
+      <button class="btn btn-sm" id="wrapUpBtn" type="button">Wrap up</button>
     </div>
   </div>
   <div class="locked-banner" id="lockedBanner" hidden>
@@ -2119,8 +2142,7 @@ function ppvTeaseBlock(id, tv){
     L(tail);
 }
 function ppvCardBullets(card){
-  const out = [];
-  card.querySelectorAll('.bullet-edit li span').forEach(sp => { const t = sp.textContent.trim(); if (t) out.push(t); });
+  const out = bulletLines(card);
   if (!out.length) card.querySelectorAll('.card-bullets li').forEach(li => {
     if (li.classList.contains('empty-note')) return;
     const t = li.textContent.trim(); if (t) out.push(t);
@@ -2198,12 +2220,12 @@ function buildPreviewHtml(){
         const isB = card.classList.contains('backup');
         const lab = isB ? 'BACK UP TOPIC:' : ('TOPIC ' + (++tnum) + ':');
         let ch = '<div class="ppv-topic"><div class="tt">' + lab + '</div><div class="th">' + ppvEsc(ppvCardHeadline(card)) + '</div>';
+        const note = ppvCardNote(card);
+        if (note) ch += '<div class="ppv-note"><b>PRODUCER NOTE:</b> ' + ppvEsc(note).replace(/\n/g, '<br>') + '</div>';
         const bl = ppvCardBullets(card);
         if (bl.length) ch += '<ul>' + bl.map(b => '<li>' + ppvEsc(b) + '</li>').join('') + '</ul>';
         const cue = ppvCardCue(card);
         if (cue) ch += '<div class="ppv-cue">AUDIO CUE: ' + ppvEsc(cue) + '</div>';
-        const note = ppvCardNote(card);
-        if (note) ch += '<div class="ppv-note"><b>PRODUCER NOTE:</b> ' + ppvEsc(note).replace(/\n/g, '<br>') + '</div>';
         ch += '</div>';
         if (!isB && tnum === 1) s += ppvRow('Segment ' + n + ': Info', ch);
         else s += ch;
@@ -2459,6 +2481,7 @@ function setFurnitureFieldValues(){
   });
 }
 function renderDayView(){
+  migrateCardDetails(document.getElementById('lanes'));
   rdBuildTeaseRows();
   refreshLaneTitles();
   rebindLaneControls();
@@ -2537,17 +2560,14 @@ function laneLabelForToast(lane){
   if (h3) { const c = h3.cloneNode(true); const tag = c.querySelector('.lane-locked-tag'); if (tag) tag.remove(); title = c.textContent.trim(); }
   return ((t ? t.textContent.trim() : '') + ' ' + title).trim();
 }
-function pushCardToTomorrow(card){
+function moveCardToTomorrowSilent(card){
   const lane = card.closest('.lane');
-  if (!lane || laneLocked(lane)) return;
-  if (viewedDate !== todayKey()) return;
+  if (!lane || laneLocked(lane)) return false;
+  if (viewedDate !== todayKey()) return false;
   const laneId = lane.dataset.lane;
-  const label = laneLabelForToast(lane);
-  pushUndo();
   syncFormState(card);
   const html = card.outerHTML;
   card.remove();
-  renumberTopics();
   const tKey = tomorrowKey();
   const days = dayStoreLoad();
   let rec = days[tKey];
@@ -2559,10 +2579,135 @@ function pushCardToTomorrow(card){
   rec.lanes = tmp.innerHTML;
   days[tKey] = rec;
   dayStoreSave(days);
+  return true;
+}
+function pushCardToTomorrow(card){
+  const lane = card.closest('.lane');
+  if (!lane || laneLocked(lane)) return;
+  if (viewedDate !== todayKey()) return;
+  const label = laneLabelForToast(lane);
+  pushUndo();
+  if (moveCardToTomorrowSilent(card)) {
+    renumberTopics();
+    lastSavedSnap = '';
+    saveCurrentDay();
+    toast("Pushed to tomorrow's " + label);
+  }
+}
+/* ---------- post-show wrap: mark what aired, push the rest to tomorrow ---------- */
+let wrapItems = [];
+function wrapInit(){
+  if (document.getElementById('wrapOverlay')) return;
+  const ov = document.createElement('div');
+  ov.id = 'wrapOverlay';
+  ov.className = 'ppv-overlay';
+  ov.hidden = true;
+  ov.innerHTML =
+    '<div class="ppv-dialog" role="dialog" aria-modal="true" aria-label="Post-show wrap">' +
+      '<div class="ppv-bar"><span class="ppv-title" id="wrapTitle">Post-show wrap</span>' +
+      '<span class="ppv-actions"><button class="ppv-x" id="wrapCloseX" aria-label="Close wrap">&times;</button></span></div>' +
+      '<div class="wrap-body" id="wrapBody"></div>' +
+      '<div class="wrap-foot"><button class="btn btn-primary" id="wrapPushBtn" type="button">Apply wrap-up</button></div>' +
+    '</div>';
+  document.body.appendChild(ov);
+  document.getElementById('wrapCloseX').addEventListener('click', closeWrap);
+  ov.addEventListener('click', e => { if (e.target === ov) closeWrap(); });
+  document.addEventListener('keydown', e => {
+    const o = document.getElementById('wrapOverlay');
+    if (o && !o.hidden && e.key === 'Escape') closeWrap();
+  });
+  document.getElementById('wrapPushBtn').addEventListener('click', wrapApply);
+  document.getElementById('wrapBody').addEventListener('click', e => {
+    const b = e.target.closest('.wrap-triage button');
+    if (!b) return;
+    const g = b.closest('.wrap-triage');
+    g.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+  });
+  const wbtn = document.getElementById('wrapUpBtn');
+  if (wbtn) wbtn.addEventListener('click', openWrap);
+}
+function wrapSegLabel(id){
+  return (LANE_TIMES[id] || '') + ' - ' + segNameUC(id, safeViewKey());
+}
+function openWrap(){
+  if (viewedDate !== todayKey()) return;
+  wrapInit();
+  wrapItems = [];
+  const body = document.getElementById('wrapBody');
+  let s = '';
+  document.querySelectorAll('#lanes .lane').forEach(lane => {
+    const id = lane.dataset.lane;
+    const locked = laneLocked(lane);
+    s += '<div class="wrap-seg">' + escapeHtml(wrapSegLabel(id)) + (locked ? ' <span class="wrap-tag">locked</span>' : '') + '</div>';
+    if (laneTypeOf(lane) === 'interview') {
+      const guest = lane.querySelector('.guest-block');
+      const nameEl = guest && guest.querySelector('.guest-name-input');
+      const nm = (nameEl && nameEl.value.trim()) || 'Guest';
+      s += '<div class="wrap-row lockedrow"><span class="wh">' + escapeHtml(nm) + '</span>' +
+           '<span class="wrap-tag">Aired</span><span class="wrap-tag">Guest</span></div>';
+    } else {
+      const cards = lane.querySelectorAll('.cards > .card');
+      if (!cards.length) s += '<div class="wrap-empty">No topics in this segment.</div>';
+      cards.forEach(card => {
+        const i = wrapItems.length;
+        wrapItems.push({ card });
+        const hl = ppvCardHeadline(card);
+        const tri = locked
+          ? '<span class="wrap-tag">Aired</span><span class="wrap-tag">Locked</span>'
+          : '<div class="seg-control wrap-triage" role="group" aria-label="Triage: ' + escapeHtml(hl) + '">' +
+            '<button type="button" data-w="aired" class="active">Aired</button>' +
+            '<button type="button" data-w="tomorrow">Tomorrow</button>' +
+            '<button type="button" data-w="delete">Delete</button></div>';
+        s += '<div class="wrap-row' + (locked ? ' lockedrow' : '') + '" data-wrap-idx="' + i + '">' +
+             '<span class="wh">' + escapeHtml(hl) + '</span>' + tri + '</div>';
+      });
+    }
+  });
+  body.innerHTML = s;
+  const t = document.getElementById('wrapTitle');
+  if (t) t.textContent = 'Post-show wrap ' + torontoLong(parseKeyToDate(viewedDate));
+  const ov = document.getElementById('wrapOverlay');
+  ov.hidden = false;
+  document.body.style.overflow = 'hidden';
+  const x = document.getElementById('wrapCloseX');
+  if (x) x.focus();
+}
+function closeWrap(){
+  const ov = document.getElementById('wrapOverlay');
+  if (ov) ov.hidden = true;
+  document.body.style.overflow = '';
+  wrapItems = [];
+}
+function wrapApply(){
+  const moves = [], dels = [];
+  wrapItems.forEach((it, i) => {
+    const row = document.querySelector('.wrap-row[data-wrap-idx="' + i + '"]');
+    if (!row || row.classList.contains('lockedrow')) return;
+    const act = row.querySelector('.wrap-triage button.active');
+    const v = act ? act.dataset.w : 'aired';
+    if (v === 'tomorrow') moves.push(it);
+    else if (v === 'delete') dels.push(it);
+  });
+  if (!moves.length && !dels.length) {
+    closeWrap();
+    toast('Everything aired. Nothing to change.');
+    return;
+  }
+  pushUndo();
+  let n = 0, d = 0;
+  moves.forEach(it => { if (moveCardToTomorrowSilent(it.card)) n++; });
+  dels.forEach(it => { it.card.remove(); d++; });
+  renumberTopics();
   lastSavedSnap = '';
   saveCurrentDay();
-  toast("Pushed to tomorrow's " + label);
+  closeWrap();
+  const parts = [];
+  if (n) parts.push(n + ' pushed to tomorrow');
+  if (d) parts.push(d + ' deleted');
+  toast(parts.join(', ') + '.');
 }
+wrapInit();
 (function initDaySystem(){
   captureEmptyLanes();
   armDayAutosave();
@@ -2648,10 +2793,10 @@ function cardCopyText(card) {
   const backupSw = card.querySelector('.switch[aria-label="Mark as backup"]');
   const isBackup = card.classList.contains('backup') || (backupSw && backupSw.getAttribute('aria-checked') === 'true');
   lines.push((isBackup ? '[BACKUP] ' : '') + headline);
-  card.querySelectorAll('.bullet-edit li span').forEach(sp => {
-    const t = sp.textContent.trim();
-    if (t) lines.push('\u2022 ' + t);
-  });
+  const ta0 = card.querySelector('.prod-notes');
+  const note0 = ta0 ? ta0.value.trim() : '';
+  if (note0) lines.push('PRODUCER NOTE: ' + note0);
+  bulletLines(card).forEach(t => lines.push('\u2022 ' + t));
   const srcEl = card.querySelector('.card-meta .src');
   const src = srcEl ? srcEl.textContent.trim() : '';
   if (src) lines.push('Source: ' + src);
@@ -2669,9 +2814,6 @@ function cardCopyText(card) {
     if (ca && ca.textContent.trim()) cue = ca.textContent.trim();
   }
   if (cue) lines.push('AUDIO CUE: ' + cue);
-  const ta = card.querySelector('.prod-notes') || card.querySelector('textarea[placeholder="Producer notes, printed on the rundown"]');
-  const note = ta ? ta.value.trim() : '';
-  if (note) lines.push('PRODUCER NOTE: ' + note);
   return lines.join('\n');
 }
 
@@ -2735,22 +2877,6 @@ document.addEventListener('click', e => {
     });
     return;
   }
-  const del = e.target.closest('.bullet-del');
-  if (del) {
-    const card = del.closest('.card');
-    if (laneLocked(card)) return;
-    const li = del.closest('li');
-    const editList = li.parentNode;
-    if (editList.children.length <= 1) {
-      const sp = li.querySelector('span');
-      sp.textContent = '';
-      sp.focus();
-    } else {
-      li.remove();
-    }
-    syncBulletPreview(card);
-    return;
-  }
   const sw = e.target.closest('.switch');
   if (sw) {
     const card = sw.closest('.card');
@@ -2786,7 +2912,13 @@ document.addEventListener('click', e => {
   if (addB) {
     const card = addB.closest('.card');
     if (laneLocked(card)) return;
-    addBulletRow(card.querySelector('.bullet-edit'), true);
+    const ta = card && card.querySelector('.bullets-edit');
+    if (ta) {
+      ta.value = ta.value.replace(/\s+$/, '');
+      if (ta.value) ta.value += '\n';
+      ta.focus();
+      syncBulletPreview(card);
+    }
     return;
   }
   const psh = e.target.closest('.push-tomorrow-btn');
@@ -2819,18 +2951,6 @@ document.addEventListener('keydown', e => {
   const card = e.target.closest('.card');
   if (!card || laneLocked(card)) return;
   const inField = e.target.closest('input, textarea, select, [contenteditable="true"]');
-  const bSpan = e.target.closest && e.target.closest('.bullet-edit li span[contenteditable="true"]');
-  if (bSpan && e.key === 'Enter') {
-    e.preventDefault();
-    const li = bSpan.closest('li');
-    const ul = li.parentNode;
-    if (li.nextElementSibling) {
-      li.nextElementSibling.querySelector('span').focus();
-    } else {
-      addBulletRow(ul, true);
-    }
-    return;
-  }
   if (e.key === 'Enter' && !inField) {
     e.preventDefault();
     card.classList.toggle('expanded');
@@ -2859,7 +2979,7 @@ function nicoRank(name) {
 }
 async function nicoDiscoverModels(key) {
   try {
-    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=' + encodeURIComponent(key));
+    const res = await fetchWithTimeout('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=' + encodeURIComponent(key), undefined, 20000);
     if (!res.ok) return null;
     const data = await res.json();
     const ranked = (data.models || [])
@@ -2883,11 +3003,11 @@ async function nicoGetChain(key) {
 }
 async function nicoRaw(key, model, body) {
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent';
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
     body: JSON.stringify(body)
-  });
+  }, 60000);
   if (!res.ok) {
     let msg = 'HTTP ' + res.status;
     try { const e = await res.json(); if (e.error && e.error.message) msg = e.error.message; } catch (x) {}
@@ -2983,10 +3103,18 @@ function nicoTweetId(url) {
   const m = String(url).match(/^(?:https?:\/\/)?(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]{1,15})\/status\/(\d+)/i);
   return m ? { user: m[1], id: m[2] } : null;
 }
+/* fetch with a hard timeout: a hanging call throws like any fetch failure,
+   so the Nico fallback chain moves to the next step instead of stalling. */
+function fetchWithTimeout(url, options, ms) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  const opts = Object.assign({}, options, { signal: ctrl.signal });
+  return fetch(url, opts).finally(() => clearTimeout(t));
+}
 async function nicoFetchTweetText(url) {
   const t = nicoTweetId(url);
   if (!t) throw new Error('not a tweet URL');
-  const res = await fetch('https://api.fxtwitter.com/' + t.user + '/status/' + t.id);
+  const res = await fetchWithTimeout('https://api.fxtwitter.com/' + t.user + '/status/' + t.id, undefined, 20000);
   if (!res.ok) throw new Error('fxtwitter HTTP ' + res.status);
   const data = await res.json();
   const tw = data && data.tweet;
@@ -2996,7 +3124,7 @@ async function nicoFetchTweetText(url) {
 }
 /* Jina Reader: fetch readable article text for any URL. */
 async function nicoJinaText(url) {
-  const res = await fetch('https://r.jina.ai/' + url);
+  const res = await fetchWithTimeout('https://r.jina.ai/' + url, undefined, 30000);
   if (!res.ok) throw new Error('Jina HTTP ' + res.status);
   const raw = await res.text();
   const m = raw.match(/Markdown Content:\s*([\s\S]*)$/);
@@ -3103,26 +3231,16 @@ function applyNicoResult(card, headline, bullets) {
     hEl.textContent = headline;
     if (tag) hEl.appendChild(tag);
   }
-  const editList = card.querySelector('.bullet-edit');
+  const ta = card.querySelector('.bullets-edit');
+  if (ta) ta.value = bullets.join('\n');
   const preview = card.querySelector('.card-bullets');
-  editList.innerHTML = '';
   preview.innerHTML = '';
   bullets.forEach(text => {
-    const li = document.createElement('li');
-    const span = document.createElement('span');
-    span.textContent = text;
-    span.setAttribute('contenteditable', 'true');
-    span.setAttribute('spellcheck', 'true');
-    const del = document.createElement('button');
-    del.className = 'bullet-del';
-    del.setAttribute('aria-label', 'Delete bullet');
-    del.textContent = '\u00d7';
-    li.appendChild(span); li.appendChild(del);
-    editList.appendChild(li);
     const pli = document.createElement('li');
     pli.textContent = text;
     preview.appendChild(pli);
   });
+  syncBulletPreview(card);
 }
 async function nicoFetch(card, nico) {
   const key = nicoKey();
@@ -3175,15 +3293,15 @@ function cardTemplate(headline, url) {
     <div class="card-details">
       <div class="field-label">Links</div>
       ${linkRow}
+      <div class="field-label">Producer notes</div>
+      <textarea class="prod-notes" placeholder="Producer notes, printed on the rundown"></textarea>
       <div class="field-label">Talking points</div>
-      <ul class="bullet-edit"><li><span contenteditable="true" spellcheck="true"></span><button class="bullet-del" aria-label="Delete bullet">×</button></li></ul>
+      <textarea class="bullets-edit" rows="6" placeholder="One talking point per line" spellcheck="true"></textarea>
       <button type="button" class="btn btn-sm add-bullet">+ Add talking point</button>
       <div class="field-label">Audio cue</div>
       <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
       <div class="field-label">Nico fetch</div>
       <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
-      <div class="field-label">Producer notes</div>
-      <textarea class="prod-notes" placeholder="Producer notes, printed on the rundown"></textarea>
       <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
       <div class="card-move"><span class="mv-label">Move</span><button type="button" class="mv-btn mv-up-big" aria-label="Move card up">▲ Up</button><button type="button" class="mv-btn mv-dn-big" aria-label="Move card down">▼ Down</button></div>
       <button type="button" class="btn btn-sm card-del-big">Delete card</button>
@@ -3349,6 +3467,15 @@ function enhanceCard(card) {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'btn btn-sm card-del-big'; b.textContent = 'Delete card';
     det.appendChild(b);
+  }
+  if (!card.querySelector('.print-note')) {
+    const slot = document.createElement('div');
+    slot.className = 'print-note';
+    slot.setAttribute('aria-hidden', 'true');
+    const bl = card.querySelector('.card-bullets');
+    if (bl) card.insertBefore(slot, bl);
+    else card.appendChild(slot);
+    syncPrintNote(card);
   }
   if (inLanes && det && !det.querySelector('.push-tomorrow-btn')) {
     const cpb2 = document.createElement('button');
@@ -3728,7 +3855,9 @@ $$('.card').forEach(card => {
     const slot = document.createElement('div');
     slot.className = 'print-note';
     slot.setAttribute('aria-hidden', 'true');
-    card.appendChild(slot);
+    const bl = card.querySelector('.card-bullets');
+    if (bl) card.insertBefore(slot, bl);
+    else card.appendChild(slot);
   }
 });
 /* copy buttons on guest blocks */
@@ -3745,28 +3874,57 @@ $$('[data-guest]').forEach(g => {
 });
 
 
-/* ---------- talking points: add, remove, edit, preview sync ---------- */
-function addBulletRow(ul, focusIt) {
-  if (!ul) return null;
-  const li = document.createElement('li');
-  const sp = document.createElement('span');
-  sp.setAttribute('contenteditable', 'true');
-  sp.setAttribute('spellcheck', 'true');
-  const del = document.createElement('button');
-  del.className = 'bullet-del';
-  del.setAttribute('aria-label', 'Delete bullet');
-  del.textContent = '\u00d7';
-  li.appendChild(sp); li.appendChild(del);
-  ul.appendChild(li);
-  if (focusIt) sp.focus();
-  return li;
+/* ---------- talking points: one textarea, one bullet per line ---------- */
+function bulletLines(card) {
+  const ta = card && card.querySelector('.bullets-edit');
+  if (!ta) return [];
+  return ta.value.split('\n').map(s => s.trim()).filter(Boolean);
 }
+/* Migrate legacy cards: .bullet-edit lists become one textarea; producer notes move above talking points. */
+function migrateCardDetails(root) {
+  (root || document).querySelectorAll('.bullet-edit').forEach(ul => {
+    const lines = [];
+    ul.querySelectorAll('li').forEach(li => {
+      const sp = li.querySelector('span');
+      const t = (sp ? sp.textContent : li.textContent).trim();
+      if (t) lines.push(t);
+    });
+    const ta = document.createElement('textarea');
+    ta.className = 'bullets-edit';
+    ta.rows = 6;
+    ta.placeholder = 'One talking point per line';
+    ta.spellcheck = true;
+    ta.value = lines.join('\n');
+    ul.replaceWith(ta);
+    if (!ta.nextElementSibling || !ta.nextElementSibling.classList.contains('add-bullet')) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn btn-sm add-bullet';
+      b.textContent = '+ Add talking point';
+      ta.parentNode.insertBefore(b, ta.nextSibling);
+    }
+  });
+  (root || document).querySelectorAll('.card').forEach(card => {
+    const det = card.querySelector('.card-details');
+    if (!det) return;
+    const ta = det.querySelector('.prod-notes');
+    if (!ta) return;
+    const labels = Array.from(det.querySelectorAll('.field-label'));
+    const tpLabel = labels.find(l => /talking points/i.test(l.textContent));
+    const pnLabel = labels.find(l => /producer notes/i.test(l.textContent));
+    if (!tpLabel || !pnLabel) return;
+    if (pnLabel.compareDocumentPosition(tpLabel) & Node.DOCUMENT_POSITION_FOLLOWING) return;
+    det.insertBefore(pnLabel, tpLabel);
+    det.insertBefore(ta, tpLabel);
+  });
+}
+/* ---------- talking points: add, remove, edit, preview sync ---------- */
 function syncBulletPreview(card) {
   if (!card) return;
-  const editList = card.querySelector('.bullet-edit');
+  const ta = card.querySelector('.bullets-edit');
   const preview = card.querySelector('.card-bullets');
-  if (!editList || !preview) return;
-  const texts = Array.from(editList.querySelectorAll('li span')).map(s => s.textContent.trim()).filter(Boolean);
+  if (!ta || !preview) return;
+  const texts = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
   preview.innerHTML = '';
   if (!texts.length) {
     const em = document.createElement('li');
@@ -3778,29 +3936,9 @@ function syncBulletPreview(card) {
     texts.forEach(t => { const li = document.createElement('li'); li.textContent = t; preview.appendChild(li); });
   }
 }
-$$('.card .bullet-edit').forEach(ul => {
-  ul.querySelectorAll('li span').forEach(sp => {
-    sp.setAttribute('contenteditable', 'true');
-    sp.setAttribute('spellcheck', 'true');
-  });
-  if (!ul.nextElementSibling || !ul.nextElementSibling.classList.contains('add-bullet')) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'btn btn-sm add-bullet';
-    b.textContent = '+ Add talking point';
-    ul.parentNode.insertBefore(b, ul.nextSibling);
-  }
-});
+migrateCardDetails(document);
 document.addEventListener('input', e => {
-  const sp = e.target.closest && e.target.closest('.bullet-edit li span[contenteditable="true"]');
-  if (sp) syncBulletPreview(sp.closest('.card'));
-});
-document.addEventListener('paste', e => {
-  const sp = e.target.closest && e.target.closest('.bullet-edit li span[contenteditable="true"]');
-  if (!sp) return;
-  e.preventDefault();
-  const text = ((e.clipboardData || window.clipboardData).getData('text/plain') || '').replace(/\s+/g, ' ');
-  document.execCommand('insertText', false, text);
+  if (e.target.classList && e.target.classList.contains('bullets-edit')) syncBulletPreview(e.target.closest('.card'));
 });
 
 /* ---------- demo hooks (screenshot states only, not used in normal load) ---------- */
@@ -4104,8 +4242,8 @@ function npSendToBuilder(it) {
   if (it.bullets && it.bullets.length) {
     const ul = card.querySelector('.card-bullets');
     ul.innerHTML = it.bullets.map(b => '<li>' + escapeHtml(b) + '</li>').join('');
-    const eb = card.querySelector('.bullet-edit');
-    if (eb) eb.innerHTML = it.bullets.map(b => '<li><span contenteditable="true" spellcheck="true">' + escapeHtml(b) + '</span><button class="bullet-del" aria-label="Delete bullet">×</button></li>').join('');
+    const eb = card.querySelector('.bullets-edit');
+    if (eb) { eb.value = it.bullets.join('\n'); syncBulletPreview(card); }
   }
   box.appendChild(card);
   renumberTopics();
@@ -4761,8 +4899,15 @@ function nicoNoKey(card, nico) {
   nico.parentNode.insertBefore(d, nico.nextSibling);
 }
 function setKeyStatus() {
+  const k = nicoKey();
+  const pill = document.getElementById('setKeyPill');
   const el = document.getElementById('setStatus');
-  if (el) el.textContent = nicoKey() ? 'Key saved in this browser.' : 'No key saved yet.';
+  const tail = document.getElementById('setKeyTail');
+  const inp = document.getElementById('setKey');
+  if (pill) pill.classList.toggle('loaded', !!k);
+  if (el) el.textContent = k ? 'API key loaded' : 'No API key saved';
+  if (tail) tail.textContent = k ? 'Ends with ...' + k.slice(-4) : '';
+  if (inp) inp.placeholder = k ? 'Paste a new key to replace the saved one' : 'Paste your Gemini API key';
 }
 function setKeyResult(msg, ok) {
   const el = document.getElementById('setResult');
@@ -4803,7 +4948,8 @@ function setInit() {
     '<p class="hint">Your Gemini API key lives only in this browser. It is never written into any file, and never included in exports or archives.</p>' +
     '<div class="set-keyrow"><input type="password" id="setKey" placeholder="Paste your Gemini API key" autocomplete="off" spellcheck="false" aria-label="Gemini API key">' +
     '<button class="btn btn-sm" id="setShow" type="button">Show</button></div>' +
-    '<p class="set-status" id="setStatus"></p>' +
+    '<div class="set-keypill" id="setKeyPill"><span class="dot" aria-hidden="true"></span>' +
+    '<span id="setStatus">No API key saved</span><span class="tail" id="setKeyTail"></span></div>' +
     '<div class="set-btns">' +
     '<button class="btn btn-primary btn-sm" id="setSave" type="button">Save key</button>' +
     '<button class="btn btn-sm" id="setTest" type="button">Test key</button>' +
