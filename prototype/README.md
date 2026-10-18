@@ -39,9 +39,12 @@
   manual add auto-fetches the Nico summary when a link is pasted; visible Fetch
   with Nico button on every newspaper card; headline-only cards can fetch via
   the search-grounded fallback.
-- `prototype-v31-nico-errors.html`: latest functional reference. Nico failure
+- `prototype-v31-nico-errors.html`: functional reference. Nico failure
   mode fixed: raw model/API errors never reach the card; calm messages + Retry
   instead, technical detail to console only.
+- `prototype-v32-producer-notes.html`: latest functional reference. Producer
+  notes always print when present (both print toggles removed); studio lines
+  locked read-only in the builder, editable in Settings like the Zoom link.
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
