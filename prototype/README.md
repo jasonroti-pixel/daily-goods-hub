@@ -42,9 +42,12 @@
 - `prototype-v31-nico-errors.html`: functional reference. Nico failure
   mode fixed: raw model/API errors never reach the card; calm messages + Retry
   instead, technical detail to console only.
-- `prototype-v32-producer-notes.html`: latest functional reference. Producer
+- `prototype-v32-producer-notes.html`: functional reference. Producer
   notes always print when present (both print toggles removed); studio lines
   locked read-only in the builder, editable in Settings like the Zoom link.
+- `prototype-v33-tomorrow.html`: latest functional reference. Today | Tomorrow
+  day switcher in the builder (per-day rundown state); Push to Tomorrow on
+  every story card moves it into the same segment in tomorrow's rundown.
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
