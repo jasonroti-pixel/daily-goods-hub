@@ -25,9 +25,12 @@
 - `prototype-v26-framextv.html`: functional reference. Adds frameXTV
   (free movie/TV/anime streaming, clip and audio hunting) as a sixth default
   tool card.
-- `prototype-v27-review2.html`: latest functional reference. Per-lane
+- `prototype-v27-review2.html`: functional reference. Per-lane
   Interview/Talk type switch (both payloads preserved), delete on every card,
   undo/redo with header buttons and keyboard shortcuts.
+- `prototype-v28-feed-refresh.html`: latest functional reference. Weekly feed
+  refresh moved to Sunday 12:00 PM Toronto (was Saturday midnight); Saturday is
+  now a normal fetch day.
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
