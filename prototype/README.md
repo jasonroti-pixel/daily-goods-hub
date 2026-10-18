@@ -53,10 +53,14 @@
   UP NEXT editable, Back in 2 Minutes locked; segment 3: Hard Out at 3:57;
   segment 6: Tomorrow field editable, Wrap Up + Hard Out at 4:57 locked);
   fixed teases missing from print preview on interview segments.
-- `prototype-v35-seg-names.html`: latest functional reference. 3:05 The List
+- `prototype-v35-seg-names.html`: functional reference. 3:05 The List
   and 4:00 Trending Today are fixed anchors; 4:40 auto-names by weekday
   (What the Friday on Fridays); 3:20, 3:40, 4:20 lanes are click-to-rename
   per day, flowing into the lineup, print, and preview.
+- `prototype-v36-boot-guard.html`: latest functional reference. No behavior
+  changes; startup hardened (a failure loading the saved day can no longer
+  kill the app) and a visible boot-error banner reports the message instead
+  of dying silently.
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
