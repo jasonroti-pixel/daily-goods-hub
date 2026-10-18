@@ -35,10 +35,13 @@
   a scheme are normalized to https:// at save and render time (builder, feeds,
   newspaper, tools, Zoom link); newspaper Nico fetch runs the full fallback chain
   including the search-grounded summary.
-- `prototype-v30-np-autofetch.html`: latest functional reference. Newspaper
+- `prototype-v30-np-autofetch.html`: functional reference. Newspaper
   manual add auto-fetches the Nico summary when a link is pasted; visible Fetch
   with Nico button on every newspaper card; headline-only cards can fetch via
   the search-grounded fallback.
+- `prototype-v31-nico-errors.html`: latest functional reference. Nico failure
+  mode fixed: raw model/API errors never reach the card; calm messages + Retry
+  instead, technical detail to console only.
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
