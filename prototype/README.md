@@ -28,9 +28,13 @@
 - `prototype-v27-review2.html`: functional reference. Per-lane
   Interview/Talk type switch (both payloads preserved), delete on every card,
   undo/redo with header buttons and keyboard shortcuts.
-- `prototype-v28-feed-refresh.html`: latest functional reference. Weekly feed
+- `prototype-v28-feed-refresh.html`: functional reference. Weekly feed
   refresh moved to Sunday 12:00 PM Toronto (was Saturday midnight); Saturday is
   now a normal fetch day.
+- `prototype-v29-linkfix.html`: latest functional reference. URLs pasted without
+  a scheme are normalized to https:// at save and render time (builder, feeds,
+  newspaper, tools, Zoom link); newspaper Nico fetch runs the full fallback chain
+  including the search-grounded summary.
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
