@@ -1456,6 +1456,14 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+/* Normalize a pasted/typed URL so schemeless links never render as relative hrefs. */
+function normUrl(u) {
+  u = (u || '').trim();
+  if (!u) return '';
+  if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return u;
+  return 'https://' + u;
+}
+
 /* ---------- tabs ---------- */
 $$('.tab').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -1728,7 +1736,7 @@ function rdInitTots() {
 function rdRenderZoom() {
   const zs = zoomSettings();
   const a = document.getElementById('rdZoomLink');
-  if (a) { a.href = zs.zoomLink || '#'; a.textContent = zs.zoomLink || 'Not set'; }
+  if (a) { a.href = normUrl(zs.zoomLink) || '#'; a.textContent = zs.zoomLink || 'Not set'; }
   const pw = document.getElementById('rdZoomPass');
   if (pw) pw.textContent = zs.zoomPass || 'Not set';
 }
@@ -2746,7 +2754,7 @@ async function nicoFetch(card, nico) {
 function cardTemplate(headline, url) {
   const safeH = escapeHtml(headline || 'Untitled story');
   const linkRow = url
-    ? `<div class="url-row"><a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a></div>`
+    ? `<div class="url-row"><a href="${escapeHtml(normUrl(url))}" target="_blank" rel="noopener">${escapeHtml(url)}</a></div>`
     : '';
   return `<span class="grip" aria-hidden="true">⠿</span>
     <button type="button" class="card-del" aria-label="Delete card" title="Delete card">×</button>
@@ -2792,7 +2800,7 @@ function openComposer(lane) {
   hInput.focus();
   const commit = () => {
     const h = hInput.value.trim();
-    const u = uInput.value.trim();
+    const u = normUrl(uInput.value.trim());
     if (!h && !u) { form.remove(); return; }
     discardTypeSnap();
     pushUndo();
@@ -3593,7 +3601,7 @@ const npHeadlineInput = document.getElementById('npHeadline');
 const npUrlInput = document.getElementById('npUrl');
 function npCommitManual() {
   const h = npHeadlineInput.value.trim();
-  const u = npUrlInput.value.trim();
+  const u = normUrl(npUrlInput.value.trim());
   if (!h && !u) return;
   npAddItem({ headline: h, url: u, source: 'Manual', feed: 'MANUAL' });
   npHeadlineInput.value = '';
@@ -4066,7 +4074,7 @@ function feedCardHtml(st, savedMode) {
     ? '<ul class="feed-bullets">' + st.bullets.map(b => '<li>' + escapeHtml(b) + '</li>').join('') + '</ul>'
     : '';
   const link = st.url
-    ? '<div class="url-row"><a href="' + escapeHtml(st.url) + '" target="_blank" rel="noopener">' + escapeHtml(st.url) + '</a></div>'
+    ? '<div class="url-row"><a href="' + escapeHtml(normUrl(st.url)) + '" target="_blank" rel="noopener">' + escapeHtml(st.url) + '</a></div>'
     : '';
   const saveBtn = savedMode
     ? '<button class="btn btn-sm feed-unsave">Unsave</button>'
@@ -4515,7 +4523,7 @@ function toolCardHtml(t) {
     '</div></div>' +
     '<span class="badge">' + escapeHtml(toolTag(t)) + '</span>' +
     '<p>' + escapeHtml(t.desc || '') + '</p>' +
-    '<div class="tool-foot"><a class="btn btn-primary btn-sm" href="' + escapeHtml(t.url) + '" target="_blank" rel="noopener">Open</a></div>' +
+    '<div class="tool-foot"><a class="btn btn-primary btn-sm" href="' + escapeHtml(normUrl(t.url)) + '" target="_blank" rel="noopener">Open</a></div>' +
     '</article>';
 }
 function renderTools() {
@@ -4543,9 +4551,7 @@ function toolHideComposer() {
   toolEditingId = null;
 }
 function toolNormUrl(u) {
-  u = (u || '').trim();
-  if (u && !/^[a-z][a-z0-9+.-]*:\/\//i.test(u)) u = 'https://' + u;
-  return u;
+  return normUrl(u);
 }
 document.getElementById('toolAddBtn').addEventListener('click', () => toolShowComposer(null));
 document.getElementById('toolCancel').addEventListener('click', toolHideComposer);
