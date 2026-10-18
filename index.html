@@ -286,6 +286,11 @@ body.viewing-tomorrow .push-tomorrow-btn{display:none !important}
   color:var(--accent-glow);margin-left:8px;vertical-align:2px;
 }
 .lane-locked-tag[hidden]{display:none}
+.lane-title.renamable{cursor:text}
+.lane-title.renamable:hover .seg-rename{opacity:.85}
+.seg-rename{opacity:.32;font-size:12px;margin-left:7px;vertical-align:1px;cursor:pointer;font-family:'Geist',sans-serif;font-weight:400}
+.lane.locked .seg-rename{display:none}
+.seg-rename-input{font:inherit;color:inherit;background:var(--surface-2);border:1px solid var(--accent);border-radius:6px;padding:2px 8px;width:230px;max-width:100%}
 .lane-actions{display:flex;gap:8px;align-items:center;flex:none}
 .lane .cards{display:flex;flex-direction:column;gap:12px;min-height:120px}
 .lane.locked .card{opacity:.78;cursor:default}
@@ -761,7 +766,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 @media(max-width:700px){.ppv-row{flex-direction:column;gap:4px}.ppv-lab{flex:none}}
 
 @media print{
-  .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast,.copy-btn,.card-del,.card-del-big,.push-tomorrow-btn,#rdTotsReset{display:none !important}
+  .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast,.copy-btn,.card-del,.card-del-big,.push-tomorrow-btn,#rdTotsReset,.seg-rename{display:none !important}
   .tab-panel{display:none}
   .tab-panel.active{display:block}
   html[data-theme="dark"]{--ink:#000;--muted:#444;--surface:#fff;--surface-2:#fff;--border:#999;--accent-strong:#000;--card-border:#999;--backup-bg:#fff}
@@ -1532,6 +1537,7 @@ function zoomSaveSettings(s) { try { localStorage.setItem(ZOOM_STORE_KEY, JSON.s
 const RD_FURN_KEY = 'dg_rundown_furniture_v1';
 let rdFurn = (function(){ try { const r = localStorage.getItem(RD_FURN_KEY); return r ? JSON.parse(r) : {}; } catch(e){ return {}; } })();
 rdFurn.teases = rdFurn.teases || {};
+rdFurn.segNames = (rdFurn.segNames && typeof rdFurn.segNames === 'object') ? rdFurn.segNames : {};
 rdFurn.chats = Array.isArray(rdFurn.chats) ? rdFurn.chats : ['', '', ''];
 rdFurn.totsByDate = (rdFurn.totsByDate && typeof rdFurn.totsByDate === 'object') ? rdFurn.totsByDate : {};
 delete rdFurn.zoom;
@@ -1540,21 +1546,101 @@ function rdSaveFurn(){ try { localStorage.setItem(RD_FURN_KEY, JSON.stringify(rd
 
 /* ---------- per-segment type: every lane holds BOTH a talk payload (cards) and an interview payload (guest block) ---------- */
 const LANE_TIMES = { s1:'3:05', s2:'3:20', s3:'3:40', s4:'4:00', s5:'4:20', s6:'4:40' };
-const TALK_TITLES = { s1:'The List', s2:'Talk Segment', s3:'Lifestyle Chat', s4:'Trending Today', s5:'Talk Segment', s6:'Kicker / Goodbyes' };
-const TALK_TITLES_UC = { s1:'THE LIST', s2:'TALK SEGMENT', s3:'LIFESTYLE CHAT', s4:'TRENDING TODAY', s5:'TALK SEGMENT', s6:'KICKER/GOODBYES' };
 const DEFAULT_SEGTYPE = { s1:'talk', s2:'interview', s3:'talk', s4:'talk', s5:'interview', s6:'talk' };
 function laneTypeOf(lane){ return (lane && lane.dataset.segtype) || 'talk'; }
+/* ---------- segment names: fixed anchors (3:05, 4:00), renamable lanes (3:20, 3:40, 4:20), auto 4:40 by weekday ---------- */
+const RENAMABLE_LANES = new Set(['s2', 's3', 's5']);
+const SEGNAMES_DEFAULT_TITLE = { s2:'Guest', s3:'Lifestyle Chat', s5:'Guest' };
+function safeViewKey(){
+  try { if (viewedDate) return viewedDate; } catch (e) {}
+  try { return todayKey(); } catch (e2) { return null; }
+}
+function weekdayOfKey(key){
+  try { const d = parseKeyToDate(key); return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12).getDay(); }
+  catch (e) { return -1; }
+}
+function segCustomName(id){
+  const v = (typeof rdFurn !== 'undefined' && rdFurn.segNames) ? rdFurn.segNames[id] : null;
+  const t = v != null ? String(v).trim() : '';
+  return t || SEGNAMES_DEFAULT_TITLE[id] || '';
+}
+function segTitleDefault(id){
+  if (id === 's1') return 'The List';
+  if (id === 's4') return 'Trending Today';
+  if (id === 's6') return 'Kicker / Goodbyes';
+  return SEGNAMES_DEFAULT_TITLE[id] || 'Talk Segment';
+}
+function segNameTitle(id, key){
+  if (id === 's1') return 'The List';
+  if (id === 's4') return 'Trending Today';
+  if (id === 's6') return weekdayOfKey(key == null ? safeViewKey() : key) === 5 ? 'What the Friday' : 'Kicker / Goodbyes';
+  return segCustomName(id) || 'Talk Segment';
+}
+function segNameUC(id, key){
+  if (id === 's1') return 'THE LIST';
+  if (id === 's4') return 'TRENDING TODAY';
+  if (id === 's6') return weekdayOfKey(key == null ? safeViewKey() : key) === 5 ? 'WHAT THE FRIDAY' : 'KICKER/GOODBYES';
+  return (segCustomName(id) || 'Talk Segment').toUpperCase();
+}
+function refreshLaneTitles(){
+  $$('#lanes .lane').forEach(lane => setLaneTitle(lane));
+}
 function clearGuestBlock(block){
   block.querySelectorAll('input[type="text"], textarea').forEach(el => { el.value = ''; });
   const fmt = block.querySelector('.guest-format'); if (fmt) fmt.selectedIndex = 0;
   const pull = block.querySelector('.guest-pull'); if (pull) pull.selectedIndex = 0;
 }
-function setLaneTitle(lane){
+function setLaneTitle(lane, defaultsOnly){
   const h3 = lane.querySelector('.lane-title'); if (!h3) return;
+  const id = lane.dataset.lane;
   const tag = h3.querySelector('.lane-locked-tag');
-  const txt = laneTypeOf(lane) === 'interview' ? 'Guest' : (TALK_TITLES[lane.dataset.lane] || 'Talk Segment');
-  h3.innerHTML = escapeHtml(txt) + (tag ? tag.outerHTML : '');
+  const txt = defaultsOnly ? segTitleDefault(id) : segNameTitle(id, safeViewKey());
+  let html = escapeHtml(txt);
+  if (tag) html += tag.outerHTML;
+  if (RENAMABLE_LANES.has(id)) html += '<span class="seg-rename" title="Rename segment">&#9998;</span>';
+  h3.innerHTML = html;
+  h3.classList.toggle('renamable', RENAMABLE_LANES.has(id));
 }
+function startLaneRename(lane){
+  const id = lane.dataset.lane;
+  if (!RENAMABLE_LANES.has(id) || laneLocked(lane)) return;
+  const h3 = lane.querySelector('.lane-title');
+  if (!h3 || h3.querySelector('.seg-rename-input')) return;
+  const cur = segCustomName(id);
+  const old = h3.innerHTML;
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.className = 'seg-rename-input'; inp.value = cur;
+  inp.maxLength = 48; inp.setAttribute('aria-label', 'Segment name'); inp.spellcheck = false;
+  h3.innerHTML = ''; h3.appendChild(inp);
+  inp.focus(); inp.select();
+  let done = false;
+  const commit = () => {
+    if (done) return; done = true;
+    const v = inp.value.trim();
+    h3.innerHTML = old;
+    if (v === cur) return;
+    pushUndo();
+    if (!rdFurn.segNames || typeof rdFurn.segNames !== 'object') rdFurn.segNames = {};
+    if (v) rdFurn.segNames[id] = v; else delete rdFurn.segNames[id];
+    setLaneTitle(lane);
+    rdRefreshShow();
+    saveCurrentDay();
+  };
+  const cancel = () => { if (done) return; done = true; h3.innerHTML = old; };
+  inp.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+  inp.addEventListener('blur', commit);
+}
+document.addEventListener('click', e => {
+  if (e.target.closest('.seg-rename-input')) return;
+  const h3 = e.target.closest('.lane-title');
+  if (!h3) return;
+  const lane = h3.closest('.lane');
+  if (lane && RENAMABLE_LANES.has(lane.dataset.lane) && !laneLocked(lane)) startLaneRename(lane);
+});
 function syncSegTypeBtns(lane){
   const t = laneTypeOf(lane);
   lane.querySelectorAll('.segtype-btn').forEach(b => b.classList.toggle('active', b.dataset.t === t));
@@ -1728,7 +1814,7 @@ function rdAutoTotsLines(rows) {
         const g = rdGuestInfo(id);
         return [LANE_TIMES[id], 'GUEST ' + gnum + (g.name ? ' (' + g.name + (g.topic ? ' - ' + g.topic : '') + ')' : '')];
       }
-      return [LANE_TIMES[id], TALK_TITLES_UC[id] || id];
+      return [LANE_TIMES[id], segNameUC(id, safeViewKey())];
     });
   }
   return rows.map(r => (r[0] + ' ' + r[1]).trim());
@@ -2041,12 +2127,12 @@ function buildPreviewHtml(){
 
   const lanes = Array.from(document.querySelectorAll('#lanes .lane'));
   const times = { s1: '3:05', s2: '3:20', s3: '3:40', s4: '4:00', s5: '4:20', s6: '4:40' };
-  const titles = { s1: 'THE LIST', s2: 'TALK SEGMENT', s3: 'LIFESTYLE CHAT', s4: 'TRENDING TODAY', s5: 'TALK SEGMENT', s6: 'KICKER/GOODBYES' };
+  const pvKey = safeViewKey();
   lanes.forEach(lane => {
     const id = lane.dataset.lane;
     const n = id.replace('s', '');
     const isIv = laneTypeOf(lane) === 'interview';
-    s += '<div class="ppv-seg">' + (times[id] || '') + ' - ' + (isIv ? 'GUEST' : (titles[id] || id)) + '</div>';
+    s += '<div class="ppv-seg">' + (times[id] || '') + ' - ' + segNameUC(id, pvKey) + '</div>';
     const guest = isIv ? lane.querySelector('.guest-block') : null;
     if (guest) {
       const gval = sel => { const el = guest.querySelector(sel); return el ? el.value.trim() : ''; };
@@ -2274,12 +2360,13 @@ function tomorrowKey(){ const d = torontoWall(); d.setDate(d.getDate() + 1); ret
 function dayStoreLoad(){ try { const r = localStorage.getItem(DAY_STORE_KEY); const o = r ? JSON.parse(r) : {}; return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
 function dayStoreSave(days){ try { localStorage.setItem(DAY_STORE_KEY, JSON.stringify(days)); } catch (e) {} }
 function freshFurn(key){
-  return { date: torontoLong(parseKeyToDate(key)), teases: {}, chats: ['', '', ''], guests: {},
+  return { date: torontoLong(parseKeyToDate(key)), teases: {}, segNames: {}, chats: ['', '', ''], guests: {},
            outro: '', push: 'TheDailyGoods@siriusxm.ca', totsByDate: {} };
 }
 function normalizeFurn(f, key){
   const o = (f && typeof f === 'object') ? f : {};
   o.teases = (o.teases && typeof o.teases === 'object') ? o.teases : {};
+  o.segNames = (o.segNames && typeof o.segNames === 'object') ? o.segNames : {};
   o.chats = Array.isArray(o.chats) ? o.chats : ['', '', ''];
   o.guests = (o.guests && typeof o.guests === 'object') ? o.guests : {};
   o.totsByDate = (o.totsByDate && typeof o.totsByDate === 'object') ? o.totsByDate : {};
@@ -2298,7 +2385,7 @@ function captureEmptyLanes(){
     lane.dataset.segtype = DEFAULT_SEGTYPE[lane.dataset.lane] || 'talk';
     lane.querySelectorAll('.segtype-btn').forEach(b => b.classList.toggle('active', b.dataset.t === lane.dataset.segtype));
     const h3 = lane.querySelector('.lane-title');
-    if (h3) { const tag = h3.querySelector('.lane-locked-tag'); const txt = lane.dataset.segtype === 'interview' ? 'Guest' : (TALK_TITLES[lane.dataset.lane] || 'Talk Segment'); h3.innerHTML = escapeHtml(txt) + (tag ? tag.outerHTML : ''); }
+    if (h3) setLaneTitle(lane, true);
     const tag2 = lane.querySelector('.lane-locked-tag'); if (tag2) tag2.hidden = true;
     const gb = lane.querySelector('.guest-block');
     if (gb) gb.querySelectorAll('input, textarea, select').forEach(el => { el.value = ''; });
@@ -2325,6 +2412,7 @@ function setFurnitureFieldValues(){
 }
 function renderDayView(){
   rdBuildTeaseRows();
+  refreshLaneTitles();
   rebindLaneControls();
   initLaneSortables();
   renumberTopics();
