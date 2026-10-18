@@ -2506,24 +2506,31 @@ async function nicoRaw(key, model, body) {
 }
 async function nicoCall(key, body) {
   const chain = await nicoGetChain(key);
-  let lastErr = null;
+  let sawAny = false;
+  let sawNonAvailability = false;
   for (const model of chain) {
     try {
       const r = await nicoRaw(key, model, body);
       return { text: r.text, cand: r.cand, model };
     } catch (e) {
-      if (/API key not valid|API_KEY_INVALID/i.test(e.message)) throw e;
+      if (nicoIsKeyError(e)) throw new Error('API_KEY_INVALID');
       if (/invalid.?argument/i.test(e.message) && body.generationConfig && body.generationConfig.thinkingConfig) {
         const b2 = JSON.parse(JSON.stringify(body));
         delete b2.generationConfig.thinkingConfig;
         try {
           const r = await nicoRaw(key, model, b2);
           return { text: r.text, cand: r.cand, model };
-        } catch (e2) { lastErr = e2; }
-      } else lastErr = e;
+        } catch (e2) {
+          sawAny = true;
+          if (!nicoIsAvailabilityError(e2.message)) sawNonAvailability = true;
+        }
+      } else {
+        sawAny = true;
+        if (!nicoIsAvailabilityError(e.message)) sawNonAvailability = true;
+      }
     }
   }
-  throw lastErr || new Error('every model failed');
+  throw new Error(sawAny && !sawNonAvailability ? 'NICO_MODELS_UNAVAILABLE' : 'NICO_FAILED');
 }
 function nicoParseBullets(out) {
   return out.split(/\n+/)
@@ -2622,6 +2629,9 @@ async function geminiSummarizeSearch(key, headline) {
 function nicoIsKeyError(e) {
   return /API key not valid|API_KEY_INVALID/i.test((e && e.message) || '');
 }
+function nicoIsAvailabilityError(msg) {
+  return /404|NOT_FOUND|not found|no longer available|does not exist|is not available/i.test(msg || '');
+}
 /* Full chain: url_context -> tweet text -> Jina -> Google Search. Each step only if the previous failed. */
 async function nicoFetchChain(key, card) {
   const url = nicoPrimaryUrl(card);
@@ -2673,7 +2683,7 @@ function nicoError(card, nico, msg, retry) {
   const err = document.createElement('div');
   err.className = 'nico-error';
   const span = document.createElement('span');
-  span.textContent = 'Nico could not fetch this: ' + msg + (retry ? ' ' : '');
+  span.textContent = msg + (retry ? ' ' : '');
   err.appendChild(span);
   if (retry) {
     const a = document.createElement('a');
@@ -2724,7 +2734,7 @@ async function nicoFetch(card, nico) {
   if (!key) { nicoNoKey(card, nico); return; }
   const url = nicoPrimaryUrl(card);
   const headline = cardHeadlineText(card);
-  if (!url && (!headline || /^untitled story$/i.test(headline))) { nicoError(card, nico, 'no link on this card yet. Add a URL first.', false); return; }
+  if (!url && (!headline || /^untitled story$/i.test(headline))) { nicoError(card, nico, 'Nico could not fetch this: no link on this card yet. Add a URL first.', false); return; }
   nico.classList.add('loading');
   nico.querySelector('.nico-label').textContent = 'Fetching';
   nicoClearState(card);
@@ -2744,7 +2754,11 @@ async function nicoFetch(card, nico) {
     }
     toast('Nico fetched it (' + model + (via === 'search' ? ', via Google search' : '') + ')');
   } catch (err) {
-    nicoError(card, nico, (err && err.message) || 'fetch failed', true);
+    const m = (err && err.message) || '';
+    console.warn('Nico fetch failed:', err);
+    if (m === 'API_KEY_INVALID') { nicoNoKey(card, nico); }
+    else if (m === 'NICO_MODELS_UNAVAILABLE') { nicoError(card, nico, "Nico couldn't reach the AI models just now.", true); }
+    else { nicoError(card, nico, "Nico couldn't summarize this story.", true); }
   } finally {
     nico.classList.remove('loading');
     nico.querySelector('.nico-label').textContent = 'Fetch with Nico';
