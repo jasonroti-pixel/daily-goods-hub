@@ -2723,7 +2723,8 @@ async function nicoFetch(card, nico) {
   const key = nicoKey();
   if (!key) { nicoNoKey(card, nico); return; }
   const url = nicoPrimaryUrl(card);
-  if (!url) { nicoError(card, nico, 'no link on this card yet. Add a URL first.', false); return; }
+  const headline = cardHeadlineText(card);
+  if (!url && (!headline || /^untitled story$/i.test(headline))) { nicoError(card, nico, 'no link on this card yet. Add a URL first.', false); return; }
   nico.classList.add('loading');
   nico.querySelector('.nico-label').textContent = 'Fetching';
   nicoClearState(card);
@@ -3545,6 +3546,7 @@ function npBuildItemEl(it) {
   bar.className = 'np-bar';
   const opts = NP_SEGMENTS.map(([v, l]) => '<option value="' + v + '"' + (it.segment === v ? ' selected' : '') + '>' + escapeHtml(l) + '</option>').join('');
   bar.innerHTML = '<select class="np-seg" aria-label="Segment for this story"><option value="">Pick a segment</option>' + opts + '</select>' +
+    '<button type="button" class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>' +
     '<button type="button" class="btn btn-primary btn-sm np-send">Send to builder</button>' +
     '<button type="button" class="btn btn-sm np-del">Delete</button>';
   el.appendChild(bar);
@@ -3603,11 +3605,16 @@ function npCommitManual() {
   const h = npHeadlineInput.value.trim();
   const u = normUrl(npUrlInput.value.trim());
   if (!h && !u) return;
-  npAddItem({ headline: h, url: u, source: 'Manual', feed: 'MANUAL' });
+  const it = npAddItem({ headline: h, url: u, source: 'Manual', feed: 'MANUAL' });
   npHeadlineInput.value = '';
   npUrlInput.value = '';
   npHeadlineInput.focus();
   toast('Story added');
+  if (u && it) {
+    const el = npList.querySelector('[data-np-id="' + it.id + '"]');
+    const btn = el && el.querySelector('.np-bar .nico-btn');
+    if (el && btn) nicoFetch(el, btn);
+  }
 }
 document.getElementById('npAdd').addEventListener('click', npCommitManual);
 [npHeadlineInput, npUrlInput].forEach(inp => inp.addEventListener('keydown', e => {
