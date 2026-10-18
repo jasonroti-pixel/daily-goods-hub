@@ -57,10 +57,16 @@
   and 4:00 Trending Today are fixed anchors; 4:40 auto-names by weekday
   (What the Friday on Fridays); 3:20, 3:40, 4:20 lanes are click-to-rename
   per day, flowing into the lineup, print, and preview.
-- `prototype-v36-boot-guard.html`: latest functional reference. No behavior
+- `prototype-v36-boot-guard.html`: functional reference. No behavior
   changes; startup hardened (a failure loading the saved day can no longer
   kill the app) and a visible boot-error banner reports the message instead
   of dying silently.
+- `prototype-v37-review5.html`: latest functional reference. Settings key
+  status pill (loaded/not loaded + masked tail); fetch timeouts on all Nico
+  call sites (fxtwitter 20s, Jina 30s, Gemini 60s, model discovery 20s);
+  single-form talking points (one textarea, add-point stays); producer notes
+  above talking points in editor, print, preview, and Copy; post-show wrap
+  modal with per-topic Aired/Tomorrow/Delete triage and one-tap apply.
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
