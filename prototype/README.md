@@ -48,11 +48,15 @@
 - `prototype-v33-tomorrow.html`: functional reference. Today | Tomorrow
   day switcher in the builder (per-day rundown state); Push to Tomorrow on
   every story card moves it into the same segment in tomorrow's rundown.
-- `prototype-v34-teases.html`: latest functional reference. Tease rows rebuilt
+- `prototype-v34-teases.html`: functional reference. Tease rows rebuilt
   as locked scaffolding with one editable field per the sheet (segments 1/2/4/5:
   UP NEXT editable, Back in 2 Minutes locked; segment 3: Hard Out at 3:57;
   segment 6: Tomorrow field editable, Wrap Up + Hard Out at 4:57 locked);
   fixed teases missing from print preview on interview segments.
+- `prototype-v35-seg-names.html`: latest functional reference. 3:05 The List
+  and 4:00 Trending Today are fixed anchors; 4:40 auto-names by weekday
+  (What the Friday on Fridays); 3:20, 3:40, 4:20 lanes are click-to-rename
+  per day, flowing into the lineup, print, and preview.
 
 These are behavior/look references. The real build is the multi-module app
 described in the cloud prompt; where the prompt and a prototype disagree,
