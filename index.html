@@ -3333,6 +3333,77 @@ async function nicoJinaText(url) {
   const tm = raw.match(/^Title:\s*(.+)$/m);
   return { text: body, title: tm ? tm[1].trim() : '' };
 }
+/* CORS proxy + Readability: for sites that block Jina (NY Post and other bot-protected sites).
+   Ported from the standalone Nico Fetcher: allorigins first (no key, returns the page verbatim),
+   corsproxy.io as the backup. Both share one 30s budget, Readability load included. */
+const NICO_PROXIES = [
+  { name: 'allorigins', make: u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u) },
+  { name: 'corsproxy', make: u => 'https://corsproxy.io/?url=' + encodeURIComponent(u) }
+];
+const NICO_READABILITY_SRC = 'https://cdn.jsdelivr.net/npm/@mozilla/readability@0.5.0/Readability.js';
+let nicoReadabilityP = null;
+/* Load Mozilla Readability on first use. Resolves false (never rejects) if the CDN is unreachable,
+   so extraction falls back to joining paragraph text. */
+function nicoLoadReadability(ms) {
+  if (window.Readability) return Promise.resolve(true);
+  if (!nicoReadabilityP) {
+    nicoReadabilityP = new Promise(resolve => {
+      const sc = document.createElement('script');
+      sc.src = NICO_READABILITY_SRC;
+      sc.async = true;
+      sc.onload = () => resolve(!!window.Readability);
+      sc.onerror = () => { nicoReadabilityP = null; resolve(false); };
+      document.head.appendChild(sc);
+    });
+  }
+  return Promise.race([nicoReadabilityP, new Promise(r => setTimeout(() => r(false), ms))]);
+}
+/* Pull readable article text out of raw page HTML. Exposed separately so it can be tested on its own. */
+function nicoExtractArticle(html) {
+  let title = '', text = '';
+  try {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const og = doc.querySelector('meta[property="og:title"]');
+    title = ((og && og.getAttribute('content')) || (doc.querySelector('title') || {}).textContent || '').trim();
+    if (window.Readability) {
+      const art = new window.Readability(doc).parse(); // mutates doc
+      if (art) { title = (art.title || title).trim(); text = (art.textContent || '').replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n').trim(); }
+    }
+  } catch (e) { /* fall through to the paragraph join */ }
+  if (text.length < 400) {
+    const doc2 = new DOMParser().parseFromString(html, 'text/html');
+    doc2.querySelectorAll('script, style, noscript, nav, header, footer, aside, form').forEach(n => n.remove());
+    const scope = doc2.querySelector('article') || doc2.body || doc2;
+    const joined = Array.from(scope.querySelectorAll('p')).map(p => p.textContent.replace(/\s+/g, ' ').trim())
+      .filter(x => x.length > 40).join('\n');
+    if (joined.length > text.length) text = joined;
+  }
+  return { title, text };
+}
+async function nicoProxyText(url) {
+  const deadline = Date.now() + 30000;
+  const left = () => Math.max(0, deadline - Date.now());
+  const readyP = nicoLoadReadability(10000); // loads while the proxy request is in flight
+  const tried = [];
+  let html = '';
+  for (const px of NICO_PROXIES) {
+    if (left() < 1000) { tried.push(px.name + ': out of time'); break; }
+    try {
+      const res = await fetchWithTimeout(px.make(url), undefined, left());
+      if (!res.ok) { tried.push(px.name + ': HTTP ' + res.status); continue; }
+      const t = await res.text();
+      if (t && t.length > 800) { html = t; break; }
+      tried.push(px.name + ': page too small (' + (t ? t.length : 0) + ' chars)');
+    } catch (e) {
+      tried.push(px.name + ': ' + (e && e.name === 'AbortError' ? 'timed out' : ((e && e.message) || 'network error')));
+    }
+  }
+  if (!html) throw new Error('proxy fetch failed (' + tried.join('; ') + ')');
+  await Promise.race([readyP, new Promise(r => setTimeout(r, Math.min(left(), 10000)))]);
+  const art = nicoExtractArticle(html);
+  if (art.text.length < 200) throw new Error('proxy returned too little article text (' + art.text.length + ' chars)');
+  return art;
+}
 /* Last resort: Google Search grounding on the card headline. Never the default. */
 async function geminiSummarizeSearch(key, headline) {
   const prompt = 'You are building a radio show prep sheet. Use Google Search to research this story, then write a bulleted brief the host can read on air.\n\n'
@@ -3355,29 +3426,63 @@ function nicoIsKeyError(e) {
 function nicoIsAvailabilityError(msg) {
   return /404|NOT_FOUND|not found|no longer available|does not exist|is not available/i.test(msg || '');
 }
-/* Full chain: url_context -> tweet text -> Jina -> Google Search. Each step only if the previous failed. */
+/* Full chain: url_context -> tweet text -> Jina -> CORS proxy + Readability -> Google Search.
+   Each step runs only if the previous one failed. Every failure is logged to the console with its
+   real reason; the card only ever shows calm copy plus the name of the step that failed last. */
+const NICO_STEP_NAMES = { url: 'Direct read', tweet: 'Tweet text', jina: 'Reader', proxy: 'Proxy read', search: 'Google search' };
+function nicoFailReason(e) {
+  const m = (e && e.message) || '';
+  if (m === 'NICO_MODELS_UNAVAILABLE') return 'AI models unavailable';
+  if (e && e.name === 'AbortError') return 'timed out';
+  if (/HTTP 403|HTTP 401/.test(m)) return 'site blocked it';
+  if (/too little|too small/i.test(m)) return 'too little text';
+  if (/timed out/i.test(m)) return 'timed out';
+  if (/could not retrieve/i.test(m)) return 'page not readable';
+  if (/Failed to fetch|NetworkError|network error|Load failed/i.test(m)) return 'could not connect';
+  return 'no usable summary';
+}
 async function nicoFetchChain(key, card) {
   const url = nicoPrimaryUrl(card);
   const headline = cardHeadlineText(card);
+  const failures = [];
+  const fail = (step, e) => {
+    failures.push({ step, reason: nicoFailReason(e), detail: (e && e.message) || String(e) });
+    console.warn('Nico: ' + NICO_STEP_NAMES[step] + ' step failed for ' + url + ':', (e && e.message) || e);
+  };
   try {
     const r = await geminiSummarizeUrl(key, url);
     return Object.assign({ via: 'url' }, r);
   } catch (e1) {
     if (nicoIsKeyError(e1)) throw e1;
-    if (nicoTweetId(url)) {
-      try {
-        const tw = await nicoFetchTweetText(url);
-        const r = await geminiSummarizeText(key, tw.text, headline);
-        return Object.assign({ via: 'tweet' }, r);
-      } catch (e2) { /* fall through to Jina */ }
-    }
+    fail('url', e1);
+  }
+  if (nicoTweetId(url)) {
     try {
-      const jr = await nicoJinaText(url);
-      const r = await geminiSummarizeText(key, jr.text, jr.title || headline);
-      return Object.assign({ via: 'jina' }, r);
-    } catch (e3) { /* fall through to Google Search */ }
+      const tw = await nicoFetchTweetText(url);
+      const r = await geminiSummarizeText(key, tw.text, headline);
+      return Object.assign({ via: 'tweet' }, r);
+    } catch (e2) { fail('tweet', e2); }
+  }
+  try {
+    const jr = await nicoJinaText(url);
+    const r = await geminiSummarizeText(key, jr.text, jr.title || headline);
+    return Object.assign({ via: 'jina' }, r);
+  } catch (e3) { fail('jina', e3); }
+  try {
+    const pr = await nicoProxyText(url);
+    const r = await geminiSummarizeText(key, pr.text, pr.title || headline);
+    return Object.assign({ via: 'proxy' }, r);
+  } catch (e4) { fail('proxy', e4); }
+  try {
     const r = await geminiSummarizeSearch(key, headline);
     return Object.assign({ via: 'search' }, r);
+  } catch (e5) {
+    if (nicoIsKeyError(e5)) throw e5;
+    fail('search', e5);
+    console.warn('Nico: every step failed for ' + url + '\n' + failures.map(f => '  ' + NICO_STEP_NAMES[f.step] + ': ' + f.detail).join('\n'));
+    const err = new Error(e5.message === 'NICO_MODELS_UNAVAILABLE' ? 'NICO_MODELS_UNAVAILABLE' : 'NICO_FAILED');
+    err.failures = failures;
+    throw err;
   }
 }
 function nicoPrimaryUrl(card) {
@@ -3470,8 +3575,14 @@ async function nicoFetch(card, nico) {
     const m = (err && err.message) || '';
     console.warn('Nico fetch failed:', err);
     if (m === 'API_KEY_INVALID') { nicoNoKey(card, nico); }
-    else if (m === 'NICO_MODELS_UNAVAILABLE') { nicoError(card, nico, "Nico couldn't reach the AI models just now.", true); }
-    else { nicoError(card, nico, "Nico couldn't summarize this story.", true); }
+    else {
+      const base = m === 'NICO_MODELS_UNAVAILABLE' ? "Nico couldn't reach the AI models just now." : "Nico couldn't summarize this story.";
+      const fl = (err && err.failures) || [];
+      const last = fl[fl.length - 1];
+      nicoError(card, nico, last ? base + ' Last try: ' + NICO_STEP_NAMES[last.step] + ', ' + last.reason + '.' : base, true);
+      const box = card.querySelector('.nico-error');
+      if (box && fl.length) box.title = fl.map(f => NICO_STEP_NAMES[f.step] + ': ' + f.reason).join(' / ');
+    }
   } finally {
     nico.classList.remove('loading');
     nico.querySelector('.nico-label').textContent = 'Fetch with Nico';
