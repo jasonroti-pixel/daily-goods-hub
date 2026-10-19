@@ -205,7 +205,7 @@ h1,h2,.lane-title,.brand,.guest-name{font-family:'Fraunces',Georgia,serif}
 .builder-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
 .day-title{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin:0}
 .day-title em{font-style:italic;font-weight:500}
-.lock-controls{display:flex;gap:8px;align-items:center}
+.lock-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .locked-banner{
   display:flex;align-items:center;gap:14px;flex-wrap:wrap;
   border:1px solid var(--accent);
@@ -1128,6 +1128,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
       </div>
       <button class="btn btn-sm" id="lockAll">Lock all</button>
       <button class="btn btn-sm" id="unlockAll">Unlock all</button>
+      <button class="btn btn-sm" id="copyLockedBtn" type="button" disabled title="Lock at least one segment to copy it">Copy locked for Sheets</button>
       <button class="btn btn-sm" id="wrapUpBtn" type="button">Wrap up</button>
     </div>
   </div>
@@ -3001,6 +3002,68 @@ async function copyTextToClipboard(text) {
   }
 }
 
+/* ---------- copy locked lanes for Sheets: TSV, one card per row, one field per cell ----------
+   Columns: Segment | Time | Topic label | Headline or guest | Bullets or intro | Producer note | Source | Link | Audio cue.
+   Separate from the per-card Copy button, which writes one multi-line cell. */
+function tsvCell(v) {
+  let t = String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ').replace(/ {2,}/g, ' ').trim();
+  // Sheets reads a cell that starts with a quote as a quoted field and would swallow the tabs after it
+  if (t.charAt(0) === '"') t = '"' + t.replace(/"/g, '""') + '"';
+  return t;
+}
+function tsvRow(fields) {
+  const cells = fields.map(tsvCell);
+  while (cells.length && cells[cells.length - 1] === '') cells.pop(); // no trailing tab
+  return cells.join('\t');
+}
+function lockedLanesTsv() {
+  const rows = [];
+  $$('#lanes .lane').forEach(lane => {
+    if (!lane.classList.contains('locked')) return;
+    const id = lane.dataset.lane;
+    const seg = segNameUC(id, safeViewKey());
+    const time = LANE_TIMES[id] || '';
+    if (laneTypeOf(lane) === 'interview') {
+      const g = lane.querySelector(':scope > .guest-pane [data-guest]');
+      if (!g) return;
+      const val = sel => { const el = g.querySelector(sel); return el ? el.value.trim() : ''; };
+      const name = val('.guest-name-input'), intro = val('.guest-intro-input');
+      if (!name && !intro) return;
+      rows.push(tsvRow([seg, time, 'GUEST', name, intro]));
+      return;
+    }
+    let n = 0;
+    lane.querySelectorAll(':scope > .cards > .card').forEach(card => {
+      const headEl = card.querySelector('.card-headline');
+      let headline = '';
+      if (headEl) {
+        const clone = headEl.cloneNode(true);
+        clone.querySelectorAll('.backup-tag').forEach(x => x.remove());
+        headline = clone.textContent.trim();
+      }
+      const sw = card.querySelector('.switch[aria-label="Mark as backup"]');
+      const isBackup = card.classList.contains('backup') || (sw && sw.getAttribute('aria-checked') === 'true');
+      const label = isBackup ? 'BACKUP' : 'TOPIC ' + (++n);
+      const noteEl = card.querySelector('.prod-notes');
+      const srcEl = card.querySelector('.card-meta .src');
+      const a = card.querySelector('.url-row a');
+      let link = a ? (a.getAttribute('href') || '').trim() : '';
+      if (!link || link === '#') link = a ? normUrl(a.textContent.trim()) : '';
+      const cueEl = card.querySelector('.card-details input[type="text"]');
+      rows.push(tsvRow([seg, time, label, headline || 'Untitled story', bulletLines(card).join('; '),
+        noteEl ? noteEl.value : '', srcEl ? srcEl.textContent : '', link, cueEl ? cueEl.value : '']));
+    });
+  });
+  return rows;
+}
+document.getElementById('copyLockedBtn').addEventListener('click', () => {
+  const rows = lockedLanesTsv();
+  if (!rows.length) { toast('No cards in the locked segments'); return; }
+  copyTextToClipboard(rows.join('\n')).then(ok => {
+    toast(ok ? rows.length + (rows.length === 1 ? ' card' : ' cards') + ' copied. Paste into Sheets.' : 'Copy failed. Select the text and copy manually.');
+  });
+});
+
 /* ---------- card expand / collapse (delegated) ---------- */
 document.addEventListener('click', e => {
   const cp0 = e.target.closest('.copy-btn');
@@ -3508,6 +3571,12 @@ function updateShowLock() {
   const lanes = $$('.lane');
   const all = lanes.length > 0 && lanes.every(l => l.classList.contains('locked'));
   document.getElementById('lockedBanner').hidden = !all;
+  const cl = document.getElementById('copyLockedBtn');
+  if (cl) {
+    const any = lanes.some(l => l.classList.contains('locked'));
+    cl.disabled = !any;
+    cl.title = any ? 'Copy locked segments, one card per row, one field per cell' : 'Lock at least one segment to copy it';
+  }
 }
 /* ================= ARCHIVE (v39) ================= */
 const ARCHIVE_KEY = 'dg_archive_v1';
