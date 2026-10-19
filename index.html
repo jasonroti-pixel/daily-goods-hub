@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Geist:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" onerror="window.__sortableFailed=true"></script>
 <style>
 :root{
   --bg:#8DBBFF;
@@ -1558,12 +1558,30 @@ const GEMINI_API_KEY=""; /* key is managed in Settings, stored only in this brow
   }
   window.__bootError = show;
   window.addEventListener('error', function(ev){
+    var tsrc = (ev && ev.target && ev.target.src) || '';
+    var msg0 = String((ev && ev.message) || '');
+    var sanitized = /^\s*Script error\.?\s*$/.test(msg0) && !(ev && ev.lineno) && !(ev && ev.error && ev.error.stack);
+    if (/cdn\.jsdelivr\.net/i.test(tsrc) || (window.__sortableFailed && sanitized)) {
+      /* The SortableJS CDN tag reported a load failure (its own onerror sets
+         __sortableFailed), or a fully-sanitized error arrived while the CDN
+         library is known dead. Either way this is the drag-and-drop library,
+         not the app: the app runs fine without it and cards still reorder
+         with their arrow buttons. Stay quiet instead of raising the alarm. */
+      window.__sortableFailed = true;
+      setTimeout(function(){
+        if (window.__sortableFailed && !window.__sortableToastShown && typeof toast === 'function') {
+          window.__sortableToastShown = true;
+          toast('Card drag-and-drop did not load just now. The arrow buttons on each card still reorder.');
+        }
+      }, 2500);
+      return;
+    }
     var msg = String((ev && ev.message) || 'unknown error');
     if ((msg === 'Script error.' || msg === 'Script error') && ev && ev.error && ev.error.stack) {
       msg = String(ev.error.stack).split('\n').slice(0, 3).join('\n');
     }
     show(msg + (ev && ev.lineno ? ' (line ' + ev.lineno + ')' : ''));
-  });
+  }, true);
   window.addEventListener('unhandledrejection', function(ev){
     var r = ev && ev.reason;
     show('unhandled: ' + String((r && r.message) || r || 'unknown'));
