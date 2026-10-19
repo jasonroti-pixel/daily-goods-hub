@@ -446,28 +446,47 @@ html[data-theme="dark"] .spinner{border-color:rgba(236,232,250,.35);border-top-c
 .note-add{display:flex;gap:8px;flex:1;min-width:260px;max-width:560px}
 .board{
   position:relative;
-  min-height:520px;
-  border-radius:10px;
-  border:1px solid #453D85;
+  min-height:560px;
+  border-radius:6px;
+  border:14px solid #6B4A2E;
+  outline:2px solid #4A3120;
   background:
-    repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 2px,transparent 2px 8px),
-    linear-gradient(135deg,#332C70,#221D52);
-  box-shadow:inset 0 2px 10px rgba(0,0,0,.30);
+    radial-gradient(ellipse at 20% 30%, rgba(255,255,255,.06) 0, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(0,0,0,.08) 0, transparent 50%),
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(120,80,40,.05) 3px 4px),
+    repeating-linear-gradient(90deg, transparent 0 5px, rgba(120,80,40,.04) 5px 6px),
+    linear-gradient(135deg,#C89A6B,#B8835A 40%,#C2946A 70%,#B07E52);
+  box-shadow:inset 0 2px 18px rgba(0,0,0,.35), 0 12px 32px rgba(0,0,0,.3);
   overflow:hidden;
 }
 html[data-theme="dark"] .board{background:repeating-linear-gradient(45deg,rgba(255,255,255,.04) 0 2px,transparent 2px 8px),linear-gradient(135deg,#1C1940,#12102A)}
 .note{
   position:absolute;
-  width:190px;
-  padding:12px 12px 10px;
-  border-radius:2px 2px 8px 2px;
-  box-shadow:0 6px 14px rgba(0,0,0,.25);
-  font-size:13px;
+  width:200px;
+  padding:26px 14px 12px;
+  border-radius:2px;
+  background:linear-gradient(175deg, rgba(255,255,255,.25) 0%, transparent 12%), var(--note-bg, #FFF3B0);
+  box-shadow:0 8px 16px rgba(0,0,0,.28), 0 2px 4px rgba(0,0,0,.18);
+  font-size:13.5px;
+  line-height:1.5;
   cursor:grab;
   user-select:none;
-  transition:box-shadow 150ms var(--ease);
+  transition:box-shadow 180ms var(--ease), transform 180ms var(--ease);
 }
-.note.dragging{cursor:grabbing;box-shadow:0 16px 30px rgba(0,0,0,.35);z-index:50}
+.note::after{
+  content:'';position:absolute;bottom:0;right:0;width:28px;height:28px;
+  background:linear-gradient(315deg, rgba(0,0,0,.14) 0%, transparent 55%);
+  border-radius:2px 0 2px 0;
+  pointer-events:none;
+}
+.note:hover{transform:rotate(0deg) scale(1.03) !important;box-shadow:0 12px 24px rgba(0,0,0,.32);z-index:20}
+.note.dragging{cursor:grabbing;box-shadow:0 22px 44px rgba(0,0,0,.4);z-index:50;transform:rotate(0deg) scale(1.06) !important}
+.note.just-pinned{animation:notePop 420ms var(--ease)}
+@keyframes notePop{
+  0%{transform:scale(.6) rotate(-6deg);opacity:0}
+  60%{transform:scale(1.05) rotate(1deg);opacity:1}
+  100%{transform:scale(1) rotate(var(--tilt, 0deg));opacity:1}
+}
 .note p{margin:0 0 10px;white-space:pre-wrap;word-break:break-word;color:#2A2620}
 .note-actions{display:flex;gap:6px}
 .note-actions button{
@@ -476,10 +495,15 @@ html[data-theme="dark"] .board{background:repeating-linear-gradient(45deg,rgba(2
 }
 .note-actions button:hover{background:rgba(0,0,0,.22)}
 .note .pin{
-  position:absolute;top:-9px;left:50%;transform:translateX(-50%);
-  width:18px;height:18px;border-radius:50%;
-  background:radial-gradient(circle at 35% 30%,#B9D2FF,#376CFF);
-  box-shadow:0 2px 4px rgba(0,0,0,.4);
+  position:absolute;top:-11px;left:50%;transform:translateX(-50%);
+  width:22px;height:22px;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%, #E8F0FF 0%, #8DBBFF 28%, #376CFF 62%, #2547B8 100%);
+  box-shadow:0 3px 6px rgba(0,0,0,.45), inset 0 -2px 4px rgba(0,0,0,.25), inset 0 2px 3px rgba(255,255,255,.5);
+}
+.note .pin::after{
+  content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:6px;height:14px;background:linear-gradient(180deg,#999,#666);
+  border-radius:2px;z-index:-1;
 }
 html[data-theme="dark"] .note p{color:#ECE8FA}
 html[data-theme="dark"] .note-actions button{background:rgba(255,255,255,.14);color:#ECE8FA}
@@ -833,6 +857,46 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
   .rd-input{border:1px solid #999 !important;color:#000 !important;background:#fff !important}
   .rd-guest-summary{color:#000 !important}
 }
+
+/* ---------- archive (v39) ---------- */
+#archList .arch-month{margin:0 0 26px}
+#archList .arch-month h3{font-family:Fraunces,serif;font-size:20px;color:#fff;margin:0 0 12px}
+.arch-entry{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 18px;margin-bottom:10px;cursor:pointer;transition:background 160ms var(--ease),transform 160ms var(--ease)}
+.arch-entry:hover{background:rgba(255,255,255,.1);transform:translateY(-1px)}
+.arch-entry .arch-date{font-family:"Space Mono",monospace;font-size:15px;color:#fff;min-width:170px}
+.arch-entry .arch-summary{flex:1;color:rgba(255,255,255,.75);font-size:13.5px}
+.arch-entry .arch-count{font-size:12px;color:var(--marker);background:rgba(141,187,255,.14);border-radius:20px;padding:3px 12px;white-space:nowrap}
+.arch-empty{color:rgba(255,255,255,.55);font-style:italic;padding:24px;text-align:center}
+#archViewer .arch-day-head{margin:18px 0 6px}
+#archViewer .arch-day-head h3{font-family:Fraunces,serif;font-size:26px;color:#fff;margin:0}
+.arch-day-meta{color:rgba(255,255,255,.6);font-size:13px;margin-top:4px}
+.arch-day-actions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 20px}
+.arch-day-body{background:#fff;color:#1a1a2e;border-radius:14px;padding:34px 38px;max-width:860px}
+.arch-day-body h4{font-family:Fraunces,serif;font-size:19px;margin:22px 0 10px;color:#1a1a2e}
+.arch-day-body h4:first-child{margin-top:0}
+.arch-day-body .ad-seg{margin-bottom:18px;border-bottom:1px solid #eee;padding-bottom:14px}
+.arch-day-body .ad-seg-time{font-family:"Space Mono",monospace;font-size:12.5px;color:#5E6AD2;font-weight:700}
+.arch-day-body .ad-seg-name{font-weight:700;font-size:15px;margin:2px 0 8px}
+.arch-day-body .ad-story{margin:0 0 10px 12px}
+.arch-day-body .ad-story-head{font-weight:600;font-size:14px}
+.arch-day-body .ad-bullets{margin:4px 0 0 18px;font-size:13.5px;color:#333}
+.arch-day-body .ad-bullets li{margin-bottom:3px}
+.arch-day-body .ad-note{font-size:12.5px;color:#666;font-style:italic;margin-top:3px}
+.arch-day-body .ad-guest{background:#f6f5f1;border-radius:8px;padding:12px 14px;margin-top:8px;font-size:13.5px}
+.arch-day-body .ad-guest strong{display:block;margin-bottom:4px}
+@media print{
+  body *{visibility:hidden}
+  #archViewer, #archViewer *{visibility:visible}
+  #archViewer{position:absolute;left:0;top:0;width:100%}
+  .arch-day-actions, #archBack{display:none !important}
+  .arch-day-body{border-radius:0;max-width:none}
+}
+
+/* ---------- keep v40: unified long-form ---------- */
+.keep-newnote{display:block;width:100%;text-align:left;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:14px 18px;color:rgba(255,255,255,.6);font-size:15px;cursor:pointer;transition:background 160ms var(--ease)}
+.keep-newnote:hover{background:rgba(255,255,255,.11);color:rgba(255,255,255,.85)}
+.keep-editor .ke-body{min-height:280px;font-size:15.5px;line-height:1.65}
+.keep-editor{max-width:640px}
 </style>
 </head>
 <body>
@@ -859,6 +923,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
   <button class="tab" role="tab" data-tab="interviews">Interviews</button>
   <button class="tab" role="tab" data-tab="corkboard">Corkboard</button>
   <button class="tab" role="tab" data-tab="keep">The Keep</button>
+  <button class="tab" role="tab" data-tab="archive">Archive</button>
   <button class="tab" role="tab" data-tab="tools">Tools &amp; Resources</button>
 </nav>
 <main>
@@ -935,15 +1000,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
     </aside>
     <div class="keep-main">
       <div class="keep-toolbar">
-        <div class="keep-composer" id="keepComposer">
-          <div class="keep-composer-bar" id="keepComposerBar">Take a note...</div>
-          <input type="text" id="keepTitle" placeholder="Title" aria-label="Note title" hidden>
-          <textarea id="keepBody" placeholder="Take a note..." rows="2" aria-label="Note body" spellcheck="true" hidden></textarea>
-          <div class="keep-composer-actions" id="keepComposerActions" hidden>
-            <button class="btn btn-sm" id="keepCancel">Cancel</button>
-            <button class="btn btn-sm btn-primary" id="keepSave">Save</button>
-          </div>
-        </div>
+        <button class="keep-newnote" id="keepNewNote">Take a note...</button>
         <input type="text" id="keepSearch" placeholder="Search notes" aria-label="Search notes">
       </div>
       <div class="keep-sec-label" id="keepPinnedHead" hidden>Pinned</div>
@@ -1002,6 +1059,33 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 </section>
 
 <!-- TOOLS & RESOURCES -->
+<!-- ARCHIVE (v39) -->
+<section class="tab-panel" id="panel-archive" role="tabpanel">
+  <div class="builder-toolbar">
+    <h2 class="day-title">Show <em>archive</em></h2>
+    <div class="np-toolbar-right">
+      <button class="btn btn-sm" id="archDlDataset">Download dataset</button>
+    </div>
+  </div>
+  <p class="hint">Every finished rundown, stored automatically when all six segments lock. Entries are immutable snapshots.</p>
+  <div id="archList"></div>
+  <div id="archViewer" hidden>
+    <button class="btn btn-sm" id="archBack">&larr; Back to archive</button>
+    <div class="arch-day-head">
+      <h3 id="archDayTitle"></h3>
+      <div class="arch-day-meta" id="archDayMeta"></div>
+    </div>
+    <div class="arch-day-actions">
+      <button class="btn btn-sm" id="archPrint">Print</button>
+      <button class="btn btn-sm" id="archCopy">Copy as text</button>
+      <button class="btn btn-sm" id="archJson">Download JSON</button>
+      <button class="btn btn-sm" id="archMd">Download Markdown</button>
+      <button class="btn btn-sm" id="archDup">Duplicate to today</button>
+      <button class="btn btn-sm btn-danger" id="archDel">Delete entry</button>
+    </div>
+    <div id="archDayBody" class="arch-day-body"></div>
+  </div>
+</section>
 <section class="tab-panel" id="panel-tools" role="tabpanel">
   <div class="panel-card">
     <h2>Tools &amp; Resources</h2>
@@ -3424,6 +3508,337 @@ function updateShowLock() {
   const all = lanes.length > 0 && lanes.every(l => l.classList.contains('locked'));
   document.getElementById('lockedBanner').hidden = !all;
 }
+/* ================= ARCHIVE (v39) ================= */
+const ARCHIVE_KEY = 'dg_archive_v1';
+/* Normalize "MONDAY, OCTOBER 19, 2026" -> "2026-10-19" */
+function archNormDate(s) {
+  s = (s || '').trim();
+  const m = s.match(/([A-Z]+)\s*,?\s*([A-Z]+)\s+(\d{1,2})\s*,?\s*(\d{4})/i);
+  if (!m) { const d = new Date(s); if (!isNaN(d)) return d.toISOString().slice(0, 10); return s; }
+  const months = { JANUARY: '01', FEBRUARY: '02', MARCH: '03', APRIL: '04', MAY: '05', JUNE: '06', JULY: '07', AUGUST: '08', SEPTEMBER: '09', OCTOBER: '10', NOVEMBER: '11', DECEMBER: '12' };
+  const mo = months[m[2].toUpperCase()];
+  if (!mo) return s;
+  return `${m[4]}-${mo}-${String(m[3]).padStart(2, '0')}`;
+}
+function archiveLoad() {
+  try { const r = localStorage.getItem(ARCHIVE_KEY); const a = r ? JSON.parse(r) : []; return Array.isArray(a) ? a : []; }
+  catch (e) { return []; }
+}
+function archiveSave(entries) {
+  try { localStorage.setItem(ARCHIVE_KEY, JSON.stringify(entries)); } catch (e) {}
+}
+/* Extract structured card data from a story card element */
+function archExtractCard(card) {
+  const t = s => (card.querySelector(s) || {}).textContent || '';
+  const v = s => { const el = card.querySelector(s); return el ? el.value || '' : ''; };
+  const headline = t('.card-headline').trim();
+  const bullets = Array.from(card.querySelectorAll('.card-bullets li')).map(li => li.textContent.trim()).filter(x => x && !/No summary yet/i.test(x));
+  const talkPts = v('.bullets-edit').split('\n').map(x => x.trim()).filter(Boolean);
+  const urls = Array.from(card.querySelectorAll('.url-row a')).map(a => a.getAttribute('href') || '').filter(Boolean);
+  const audioCue = v('.card-details input[placeholder*="CLIP"]') || (function(){ const i = card.querySelector('.card-details input[type="text"]'); return i ? i.value : ''; })();
+  const prodNotes = v('.prod-notes') || v('.card-details textarea[placeholder*="Producer notes"]');
+  const sw = card.querySelector('.switch');
+  const isBackup = sw ? sw.getAttribute('aria-checked') === 'true' : false;
+  const src = t('.card-meta .src').trim();
+  return { headline, bullets: talkPts.length ? talkPts : bullets, urls, audioCue: (audioCue || '').trim(), producerNotes: (prodNotes || '').trim(), isBackup, source: src };
+}
+/* Extract guest block data */
+function archExtractGuest(g) {
+  const v = s => { const el = g.querySelector(s); return el ? (el.value || '').trim() : ''; };
+  return {
+    name: v('.guest-name-input'), slot: v('.guest-slot'), format: v('.guest-format'),
+    intro: v('.guest-intro-input'), segInfo: v('.guest-seginfo'),
+    tapeOut: v('.guest-tapeout'), tease: v('.guest-tease')
+  };
+}
+/* Extract the full rundown as structured data */
+function archExtractRundown() {
+  const lanes = [];
+  document.querySelectorAll('.lane').forEach(lane => {
+    const id = lane.dataset.lane || '';
+    const timeEl = lane.querySelector('.lane-time');
+    const titleEl = lane.querySelector('.lane-title');
+    let name = titleEl ? titleEl.textContent.replace(/Locked/g, '').trim() : '';
+    const time = timeEl ? timeEl.textContent.trim() : '';
+    const guestEl = lane.querySelector('[data-guest]');
+    const isInterview = !!guestEl || lane.dataset.segtype === 'interview';
+    const entry = { id, time, name, type: isInterview ? 'interview' : 'talk' };
+    if (isInterview && guestEl) {
+      entry.guest = archExtractGuest(guestEl);
+    } else {
+      entry.stories = [];
+      lane.querySelectorAll('.cards .card').forEach(card => {
+        entry.stories.push(archExtractCard(card));
+      });
+    }
+    lanes.push(entry);
+  });
+  // furniture snapshot
+  let furn = {};
+  try { furn = typeof rdFurn !== 'undefined' ? JSON.parse(JSON.stringify(rdFurn)) : {}; } catch (e) {}
+  // newspaper for this date
+  let np = [];
+  try {
+    const key = (typeof rdDateKey === 'function') ? rdDateKey() : '';
+    const days = JSON.parse(localStorage.getItem('dg_newspaper_v1') || '{}');
+    np = (key && days[key]) ? days[key] : [];
+  } catch (e) {}
+  // corkboard notes
+  const notes = [];
+  document.querySelectorAll('#board .note p').forEach(p => { const x = p.textContent.trim(); if (x) notes.push(x); });
+  return { lanes, furniture: furn, newspaper: np, corkboard: notes };
+}
+/* Create or update the archive entry for the working date */
+function archSnapshotDay() {
+  let dateKey = '';
+  try { dateKey = archNormDate((typeof rdDateKey === 'function') ? rdDateKey() : ''); } catch (e) {}
+  if (!dateKey) return;
+  const data = archExtractRundown();
+  const storyCount = data.lanes.reduce((n, l) => n + (l.stories ? l.stories.length : 0), 0);
+  const entries = archiveLoad();
+  const now = new Date().toISOString();
+  const idx = entries.findIndex(e => e.date === dateKey);
+  let displayDate = dateKey;
+  try { displayDate = (typeof rdDateKey === 'function') ? rdDateKey() : dateKey; } catch (e) {}
+  const rec = { date: dateKey, displayDate, lockedAt: now, storyCount, guestCount: data.lanes.filter(l => l.type === 'interview').length, rundown: data };
+  if (idx >= 0) entries[idx] = rec; else entries.push(rec);
+  entries.sort((a, b) => (a.date < b.date ? 1 : -1));
+  archiveSave(entries);
+  renderArchive();
+}
+/* Hook: when all six lock, snapshot */
+let archWasAllLocked = false;
+const _origUpdateShowLock = updateShowLock;
+updateShowLock = function() {
+  _origUpdateShowLock();
+  const lanes = $$('.lane');
+  const all = lanes.length > 0 && lanes.every(l => l.classList.contains('locked'));
+  if (all && !archWasAllLocked) {
+    try { archSnapshotDay(); toast('Show archived'); } catch (e) { console.warn('archive snapshot failed', e); }
+  }
+  archWasAllLocked = all;
+};
+/* ---------- archive list rendering ---------- */
+function archMonthLabel(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-CA', { month: 'long', year: 'numeric', timeZone: 'America/Toronto' });
+}
+function archDateLabel(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/Toronto' });
+}
+function renderArchive() {
+  const list = document.getElementById('archList');
+  const viewer = document.getElementById('archViewer');
+  if (!list) return;
+  if (viewer) viewer.hidden = true;
+  list.hidden = false;
+  const entries = archiveLoad();
+  if (!entries.length) {
+    list.innerHTML = '<div class="arch-empty">No archived shows yet. Lock all six segments to archive a finished rundown.</div>';
+    return;
+  }
+  const months = {};
+  entries.forEach(e => {
+    const m = e.date.slice(0, 7);
+    (months[m] = months[m] || []).push(e);
+  });
+  const mkeys = Object.keys(months).sort().reverse();
+  list.innerHTML = mkeys.map(mk => {
+    const rows = months[mk].map(e => {
+      const bits = [];
+      if (e.storyCount) bits.push(e.storyCount + ' stories');
+      if (e.guestCount) bits.push(e.guestCount + (e.guestCount === 1 ? ' guest' : ' guests'));
+      return `<div class="arch-entry" data-date="${e.date}" tabindex="0" role="button" aria-label="Open ${e.date}">
+        <span class="arch-date">${archDateLabel(e.date)}</span>
+        <span class="arch-summary">${bits.join(' · ') || 'Locked show'}</span>
+        <span class="arch-count">${e.rundown && e.rundown.lanes ? e.rundown.lanes.length : 6} segments</span>
+      </div>`;
+    }).join('');
+    return `<div class="arch-month"><h3>${archMonthLabel(mk + '-01')}</h3>${rows}</div>`;
+  }).join('');
+  list.querySelectorAll('.arch-entry').forEach(el => {
+    const open = () => openArchiveDay(el.dataset.date);
+    el.addEventListener('click', open);
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  });
+}
+/* ---------- archive day viewer ---------- */
+let archCurrent = null;
+function openArchiveDay(date) {
+  const e = archiveLoad().find(x => x.date === date);
+  if (!e) return;
+  archCurrent = e;
+  document.getElementById('archList').hidden = true;
+  const viewer = document.getElementById('archViewer');
+  viewer.hidden = false;
+  document.getElementById('archDayTitle').textContent = e.displayDate || archDateLabel(e.date);
+  const locked = e.lockedAt ? new Date(e.lockedAt).toLocaleString('en-CA', { timeZone: 'America/Toronto' }) : '';
+  document.getElementById('archDayMeta').textContent = 'Locked in ' + locked + ' · Immutable snapshot';
+  const body = document.getElementById('archDayBody');
+  const r = e.rundown || { lanes: [] };
+  let html = '';
+  // header furniture
+  const f = r.furniture || {};
+  if (f.title || f.date) html += `<h4>${escapeHtml(f.title || 'THE DAILY GOODS')} — ${escapeHtml(f.date || e.date)}</h4>`;
+  (r.lanes || []).forEach(lane => {
+    html += `<div class="ad-seg"><div class="ad-seg-time">${escapeHtml(lane.time || '')}</div><div class="ad-seg-name">${escapeHtml(lane.name || '')}</div>`;
+    if (lane.type === 'interview' && lane.guest) {
+      const g = lane.guest;
+      html += `<div class="ad-guest"><strong>GUEST: ${escapeHtml(g.name || '')}</strong>`;
+      if (g.intro) html += `<div><em>Intro:</em> ${escapeHtml(g.intro).replace(/\n/g, '<br>')}</div>`;
+      if (g.segInfo) html += `<div><em>Segment info:</em> ${escapeHtml(g.segInfo)}</div>`;
+      if (g.tapeOut) html += `<div><em>Tape out:</em> ${escapeHtml(g.tapeOut)}</div>`;
+      html += `</div>`;
+    } else {
+      (lane.stories || []).forEach(st => {
+        html += `<div class="ad-story"><div class="ad-story-head">${st.isBackup ? '[BACKUP] ' : ''}${escapeHtml(st.headline || 'Untitled')}</div>`;
+        if (st.bullets && st.bullets.length) {
+          html += '<ul class="ad-bullets">' + st.bullets.map(b => `<li>${escapeHtml(b)}</li>`).join('') + '</ul>';
+        }
+        if (st.audioCue) html += `<div class="ad-note">Audio: ${escapeHtml(st.audioCue)}</div>`;
+        if (st.producerNotes) html += `<div class="ad-note">Producer: ${escapeHtml(st.producerNotes)}</div>`;
+        if (st.urls && st.urls.length) html += `<div class="ad-note">${st.urls.map(u => `<a href="${escapeHtml(u)}" target="_blank" rel="noopener">${escapeHtml(u)}</a>`).join('<br>')}</div>`;
+        html += `</div>`;
+      });
+    }
+    html += `</div>`;
+  });
+  // newspaper
+  if (r.newspaper && r.newspaper.length) {
+    html += `<h4>Newspaper</h4>`;
+    r.newspaper.forEach(n => {
+      const t = (n && (n.title || n.headline)) || '';
+      if (t) html += `<div class="ad-story"><div class="ad-story-head">${escapeHtml(t)}</div></div>`;
+    });
+  }
+  body.innerHTML = html || '<p class="arch-empty">Empty snapshot.</p>';
+  viewer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function closeArchiveDay() {
+  archCurrent = null;
+  document.getElementById('archViewer').hidden = true;
+  document.getElementById('archList').hidden = false;
+  renderArchive();
+}
+/* ---------- archive export ---------- */
+function archToMarkdown(e) {
+  const r = e.rundown || { lanes: [] };
+  let md = `# THE DAILY GOODS — ${e.date}\n\n_Locked in ${e.lockedAt || 'unknown'}_\n\n`;
+  (r.lanes || []).forEach(lane => {
+    md += `## ${lane.time || ''} ${lane.name || ''}\n\n`;
+    if (lane.type === 'interview' && lane.guest) {
+      const g = lane.guest;
+      md += `**GUEST: ${g.name || ''}**\n\n`;
+      if (g.intro) md += `Intro: ${g.intro}\n\n`;
+      if (g.segInfo) md += `Segment info: ${g.segInfo}\n\n`;
+      if (g.tapeOut) md += `Tape out: ${g.tapeOut}\n\n`;
+    } else {
+      (lane.stories || []).forEach((st, i) => {
+        md += `### ${i + 1}. ${st.isBackup ? '[BACKUP] ' : ''}${st.headline || 'Untitled'}\n\n`;
+        (st.bullets || []).forEach(b => { md += `- ${b}\n`; });
+        if (st.bullets && st.bullets.length) md += `\n`;
+        if (st.audioCue) md += `Audio cue: ${st.audioCue}\n\n`;
+        if (st.producerNotes) md += `Producer notes: ${st.producerNotes}\n\n`;
+        (st.urls || []).forEach(u => { md += `${u}\n`; });
+        if (st.urls && st.urls.length) md += `\n`;
+      });
+    }
+  });
+  return md;
+}
+function archToText(e) {
+  return archToMarkdown(e).replace(/^#{1,3} /gm, '').replace(/\*\*/g, '').replace(/^_/, '').replace(/_$/gm, '');
+}
+function archDownload(name, content, type) {
+  const blob = new Blob([content], { type: type || 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+/* ---------- duplicate to today ---------- */
+function archDuplicateToToday() {
+  if (!archCurrent || !archCurrent.rundown) return;
+  const today = (typeof rdDateKey === 'function') ? rdDateKey() : '';
+  if (archCurrent.date === today) { toast('This is already today'); return; }
+  if (!confirm(`Copy ${archDateLabel(archCurrent.date)} stories into today's rundown?`)) return;
+  let added = 0;
+  (archCurrent.rundown.lanes || []).forEach(lane => {
+    if (lane.type === 'interview' || !lane.stories) return;
+    const target = document.querySelector(`.lane[data-lane="${lane.id}"] .cards`);
+    if (!target) return;
+    lane.stories.forEach(st => {
+      if (!st.headline) return;
+      const el = document.createElement('article');
+      el.className = 'card';
+      el.setAttribute('tabindex', '0');
+      el.innerHTML = (typeof cardTemplate === 'function') ? cardTemplate(st.headline, (st.urls || [])[0] || '') : '';
+      // fill talking points
+      const ta = el.querySelector('.bullets-edit');
+      if (ta && st.bullets) ta.value = st.bullets.join('\n');
+      const bl = el.querySelector('.card-bullets');
+      if (bl) {
+        bl.innerHTML = '';
+        (st.bullets || []).forEach(b => { const li = document.createElement('li'); li.textContent = b; bl.appendChild(li); });
+      }
+      // audio cue + producer notes
+      const inputs = el.querySelectorAll('.card-details input[type="text"]');
+      if (inputs.length && st.audioCue) inputs[0].value = st.audioCue;
+      const pn = el.querySelector('.prod-notes');
+      if (pn && st.producerNotes) pn.value = st.producerNotes;
+      // backup switch
+      if (st.isBackup) {
+        const sw = el.querySelector('.switch');
+        if (sw) sw.setAttribute('aria-checked', 'true');
+      }
+      target.appendChild(el);
+      added++;
+    });
+  });
+  try { if (typeof renumberTopics === 'function') renumberTopics(); } catch (e) {}
+  try { if (typeof persistDay === 'function') persistDay(); else if (typeof saveDay === 'function') saveDay(); } catch (e) {}
+  toast(added ? `Duplicated ${added} stories to today` : 'Nothing to duplicate');
+}
+/* ---------- wire up ---------- */
+(function archInit() {
+  const bind = (id, fn) => { const el = document.getElementById(id); if (el && !el.dataset.archBound) { el.dataset.archBound = '1'; el.addEventListener('click', fn); } };
+  bind('archBack', closeArchiveDay);
+  bind('archPrint', () => window.print());
+  bind('archCopy', () => {
+    if (!archCurrent) return;
+    const txt = archToText(archCurrent);
+    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(
+      () => toast('Copied as text'),
+      () => { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast('Copied as text'); } catch (e) { toast('Copy failed'); } ta.remove(); }
+    );
+  });
+  bind('archJson', () => { if (archCurrent) archDownload(`daily-goods-${archCurrent.date}.json`, JSON.stringify(archCurrent, null, 2), 'application/json'); });
+  bind('archMd', () => { if (archCurrent) archDownload(`daily-goods-${archCurrent.date}.md`, archToMarkdown(archCurrent), 'text/markdown'); });
+  bind('archDup', archDuplicateToToday);
+  bind('archDel', () => {
+    if (!archCurrent) return;
+    if (!confirm(`Delete the archived show for ${archCurrent.date}? This cannot be undone.`)) return;
+    const entries = archiveLoad().filter(e => e.date !== archCurrent.date);
+    archiveSave(entries);
+    closeArchiveDay();
+    toast('Entry deleted');
+  });
+  bind('archDlDataset', () => {
+    const entries = archiveLoad();
+    if (!entries.length) { toast('Archive is empty'); return; }
+    archDownload('daily-goods-dataset.json', JSON.stringify(entries, null, 2), 'application/json');
+    toast(`Dataset downloaded (${entries.length} shows)`);
+  });
+  // render when archive tab is opened
+  document.querySelector('.tab[data-tab="archive"]').addEventListener('click', renderArchive);
+  // initial render (in case)
+  if (document.readyState === 'complete') renderArchive();
+  else window.addEventListener('load', renderArchive);
+})();
+
 
 function setLaneLocked(lane, locked) {
   lane.classList.toggle('locked', locked);  const btn = lane.querySelector('.lane-lock');
@@ -3615,12 +4030,15 @@ function keepSeed(title, body, opts) {
   keepNotes.push(n);
   return n;
 }
+const keepHadStored = keepRestore();
+if (!keepHadStored) {
 keepSeed("Today's must-dos", '', { pinned: true, color: 5, labels: ['Show prep'], checklist: true, items: [
   { text: 'Lock s1 topics by 2pm', checked: false },
   { text: 'Confirm 4:20 guest Zoom link', checked: false },
   { text: 'Print drive sheets', checked: true }
 ]});
 keepSeed('Liza cold open idea', 'Open on the Guelph homecoming story, then ask listeners for their wildest frosh week memory. Keep it to 90 seconds before the first guest.', { color: 3, labels: ['Ideas'] });
+} /* end seed guard */
 keepSeed('Guest wishlist', '', { color: 1, labels: ['Guests'], checklist: true, items: [
   { text: 'Chris Hansen outreach', checked: false },
   { text: 'Follow up on PR contact', checked: true }
@@ -3677,6 +4095,7 @@ function keepRender() {
   document.getElementById('cntArch').textContent = keepNotes.filter(n => n.archived && !n.trashed).length;
   document.getElementById('cntTrash').textContent = keepNotes.filter(n => n.trashed).length;
   document.getElementById('keepEmptyTrash').hidden = keepView !== 'trash' || !keepNotes.some(n => n.trashed);
+  try { keepPersist(); } catch (e) {}
   const ll = document.getElementById('keepLabelList');
   ll.innerHTML = '';
   keepLabels.forEach(l => {
@@ -3712,49 +4131,46 @@ document.getElementById('keepEmptyTrash').addEventListener('click', () => {
   keepRender();
   toast('Trash emptied');
 });
-/* composer */
-const keepComposer = document.getElementById('keepComposer');
-function keepExpandComposer() {
-  keepComposer.classList.add('open');
-  document.getElementById('keepComposerBar').hidden = true;
-  document.getElementById('keepTitle').hidden = false;
-  const body = document.getElementById('keepBody');
-  body.hidden = false;
-  document.getElementById('keepComposerActions').hidden = false;
-  body.focus();
-}
-function keepCollapseComposer() {
-  keepComposer.classList.remove('open');
-  document.getElementById('keepComposerBar').hidden = false;
-  document.getElementById('keepTitle').hidden = true;
-  document.getElementById('keepBody').hidden = true;
-  document.getElementById('keepComposerActions').hidden = true;
-  document.getElementById('keepTitle').value = '';
-  document.getElementById('keepBody').value = '';
-  document.getElementById('keepBody').style.height = 'auto';
-}
-keepComposer.addEventListener('click', e => {
-  if (!keepComposer.classList.contains('open') && !e.target.closest('button')) keepExpandComposer();
+/* v40: unified long-form editor. "Take a note" opens the SAME editor as clicking a note. Autosaves. */
+document.getElementById('keepNewNote').addEventListener('click', () => {
+  const n = keepSeed('', '', {});
+  keepOpen(n.id);
+  setTimeout(() => document.getElementById('keBody').focus(), 50);
 });
-document.getElementById('keepBody').addEventListener('input', function () {
-  this.style.height = 'auto';
-  this.style.height = this.scrollHeight + 'px';
-});
-document.getElementById('keepCancel').addEventListener('click', e => { e.stopPropagation(); keepCollapseComposer(); });
-document.getElementById('keepSave').addEventListener('click', e => {
-  e.stopPropagation();
-  const t = document.getElementById('keepTitle').value.trim();
-  const b = document.getElementById('keepBody').value.trim();
-  if (!t && !b) { keepCollapseComposer(); return; }
-  keepSeed(t, b, {});
-  keepCollapseComposer();
-  keepRender();
-  toast('Note saved');
+/* debounced autosave while typing in the editor */
+let keepSaveT = null;
+function keepAutoSave() {
+  clearTimeout(keepSaveT);
+  keepSaveT = setTimeout(() => {
+    keepSaveEditor();
+    try { keepPersist(); } catch (e) {}
+  }, 600);
+}
+['keTitle', 'keBody'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', keepAutoSave);
 });
 /* editor overlay */
 const keepOverlay = document.getElementById('keepOverlay');
 const keepEditor = document.getElementById('keepEditor');
 function keepNote() { return keepNotes.find(x => x.id === keepEditingId); }
+/* v40: persistence */
+const KEEP_STORE_KEY = 'dg_keep_v1';
+function keepPersist() {
+  try { localStorage.setItem(KEEP_STORE_KEY, JSON.stringify({ seq: keepSeq, notes: keepNotes, labels: keepLabels })); } catch (e) {}
+}
+function keepRestore() {
+  try {
+    const raw = localStorage.getItem(KEEP_STORE_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (!d || !Array.isArray(d.notes)) return false;
+    keepSeq = d.seq || (d.notes.length + 1);
+    keepNotes = d.notes;
+    if (Array.isArray(d.labels) && d.labels.length) keepLabels = d.labels;
+    return true;
+  } catch (e) { return false; }
+}
 function keepSyncEditorChrome() {
   const n = keepNote(); if (!n) return;
   keepEditor.className = 'keep-editor kc' + n.color;
@@ -3826,6 +4242,8 @@ function keepOpen(id) {
   document.getElementById('keTitle').value = n.title;
   document.getElementById('keBody').value = n.body;
   document.getElementById('keBody').hidden = n.checklist;
+  const keB = document.getElementById('keBody');
+  keB.style.height = 'auto'; keB.style.height = Math.max(280, keB.scrollHeight) + 'px';
   document.getElementById('keChecklist').hidden = !n.checklist;
   document.getElementById('keAddItem').hidden = !n.checklist;
   keepRenderChecklistEditor(); keepRenderLabelPick(); keepRenderSwatches(); keepSyncEditorChrome();
@@ -3835,6 +4253,7 @@ function keepSaveEditor() {
   const n = keepNote(); if (!n) return;
   n.title = document.getElementById('keTitle').value;
   if (!n.checklist) n.body = document.getElementById('keBody').value;
+  try { keepPersist(); } catch (e) {}
 }
 function keepClose() {
   keepSaveEditor();
@@ -4034,11 +4453,15 @@ const NOTE_COLORS = ['#FFF3B0', '#FFD6E0', '#D8EBFF', '#D9F2D0', '#FFE7C2'];
 function tilt() { return (Math.random() * 6 - 3).toFixed(1) + 'deg'; }
 function addNote(text, x, y) {
   const note = document.createElement('div');
-  note.className = 'note';
-  note.style.background = NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)];
+  note.className = 'note just-pinned';
+  const bg = NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)];
+  note.style.setProperty('--note-bg', bg);
   note.style.left = (x !== undefined ? x : 20 + Math.random() * 320) + 'px';
   note.style.top = (y !== undefined ? y : 20 + Math.random() * 320) + 'px';
-  note.style.transform = 'rotate(' + tilt() + ')';
+  const t = tilt();
+  note.style.setProperty('--tilt', t);
+  note.style.transform = 'rotate(' + t + ')';
+  setTimeout(() => note.classList.remove('just-pinned'), 450);
   const pin = document.createElement('div');
   pin.className = 'pin';
   const p = document.createElement('p');
