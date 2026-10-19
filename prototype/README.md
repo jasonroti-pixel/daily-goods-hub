@@ -61,7 +61,17 @@
   changes; startup hardened (a failure loading the saved day can no longer
   kill the app) and a visible boot-error banner reports the message instead
   of dying silently.
-- `prototype-v37-review5.html`: latest functional reference. Settings key
+- `prototype-v37-review5.html`: functional reference. Settings key
+  status pill; fetch timeouts; single-form talking points; producer notes
+  above talking points; post-show wrap triage.
+- `prototype-v38-interviews.html`: latest functional reference. Tab order is
+  Feeds, Newspaper, Builder, Interviews, Corkboard, The Keep, Tools &
+  Resources (Builder still the landing tab); Interviews page rebuilt as
+  builder-style cards (expand/collapse, up/down reorder, delete) with guest
+  name/date/slot/format/INTRO/SEGMENT INFO/TAPE OUT/producer notes/questions
+  and a "Push to today's show" button that fills the 3:20/4:20 interview
+  lane; Copy for Sheets keeps working on locked lanes (locked field editing
+  hardened). Settings key
   status pill (loaded/not loaded + masked tail); fetch timeouts on all Nico
   call sites (fxtwitter 20s, Jina 30s, Gemini 60s, model discovery 20s);
   single-form talking points (one textarea, add-point stays); producer notes
