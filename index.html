@@ -829,7 +829,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 .ppv-brand{font-family:'Fraunces',serif;font-weight:700;font-size:24px;margin-bottom:2px;color:#000}
 .ppv-row{display:flex;gap:14px;padding:7px 0;border-bottom:1px solid #e4e4e4;align-items:flex-start}
 .ppv-lab{flex:0 0 190px;font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#555;padding-top:3px}
-.ppv-con{flex:1;font-size:14px;line-height:1.5;min-width:0}
+.ppv-con{flex:1;font-size:14px;line-height:1.5;min-width:0;overflow-wrap:anywhere}
 .ppv-con .t{font-family:'Space Mono',monospace;font-size:12px;color:#555;margin-right:8px}
 .ppv-seg{margin:20px 0 4px;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;letter-spacing:.04em;color:#000}
 .ppv-topic{margin:10px 0}
@@ -850,6 +850,18 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 /* Drive sheet type matches the studio's Google Sheet: Arial Bold (the Sheets default) everywhere.
    Font only; sizes, spacing and layout above stay as they are. */
 .ppv-sheet,.ppv-sheet *{font-family:Arial,Helvetica,sans-serif !important;font-weight:700 !important}
+/* Drive sheet printing: body.ppv-printing prints only the preview sheet (the clean drive-sheet
+   render), never the live builder with its editing controls. */
+@media print{
+  body.ppv-printing > *:not(#ppvOverlay){display:none !important}
+  body.ppv-printing #ppvOverlay{display:block !important;position:static;inset:auto;background:none;padding:0;overflow:visible}
+  body.ppv-printing .ppv-dialog{max-width:none;border-radius:0;box-shadow:none;overflow:visible}
+  body.ppv-printing .ppv-bar{display:none !important}
+  body.ppv-printing .ppv-sheet{max-height:none;overflow:visible;padding:0}
+  body.ppv-printing .ppv-hour2{break-before:page}
+  body.ppv-printing .ppv-topic,body.ppv-printing .ppv-row,body.ppv-printing .ppv-seg{break-inside:avoid}
+  body.ppv-printing .ppv-seg{break-after:avoid}
+}
 
 @media print{
   .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast,.copy-btn,.card-del,.card-del-big,.push-tomorrow-btn,#rdTotsReset,.seg-rename{display:none !important}
@@ -871,8 +883,6 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
   .rd-brand,.topic-label{color:#000 !important}
   .rd-input{border:1px solid #999 !important;color:#000 !important;background:#fff !important}
   .rd-guest-summary{color:#000 !important}
-  /* printed drive sheet: Arial Bold like the Google Sheet (print only, screen untouched) */
-  #panel-builder,#panel-builder *,.ppv-sheet,.ppv-sheet *{font-family:Arial,Helvetica,sans-serif !important;font-weight:700 !important}
 }
 
 /* ---------- archive (v39) ---------- */
@@ -2259,7 +2269,7 @@ function renumberTopics() {
     lockCtl.appendChild(b);
     b.addEventListener('click', openPrintPreview);
   }
-  document.getElementById('ppvPrint').addEventListener('click', () => window.print());
+  document.getElementById('ppvPrint').addEventListener('click', () => printDriveSheet());
   document.getElementById('ppvCloseX').addEventListener('click', closePrintPreview);
   ov.addEventListener('click', e => { if (e.target === ov) closePrintPreview(); });
   document.addEventListener('keydown', e => {
@@ -2276,6 +2286,29 @@ function openPrintPreview(){
   const x = document.getElementById('ppvCloseX');
   if (x) x.focus();
 }
+/* Print the drive sheet: fill the preview sheet from live state and print only that. */
+function ppvPrintPrepare(){
+  if (document.body.classList.contains('arch-printing')) return false;
+  const sheet = document.getElementById('ppvSheet');
+  if (!sheet) return false;
+  sheet.innerHTML = buildPreviewHtml();
+  document.body.classList.add('ppv-printing');
+  return true;
+}
+function ppvPrintDone(){ document.body.classList.remove('ppv-printing'); }
+function printDriveSheet(){
+  document.body.classList.remove('arch-printing'); // a stale archive print must not hijack this one
+  ppvPrintPrepare();
+  window.print(); // afterprint clears the class; it only affects print media, so a missed afterprint is harmless on screen
+}
+/* Ctrl+P / browser menu: on the Builder tab (or with the preview open) print the drive sheet too */
+window.addEventListener('beforeprint', () => {
+  if (document.body.classList.contains('ppv-printing')) return;
+  const pb = document.getElementById('panel-builder');
+  const ov = document.getElementById('ppvOverlay');
+  if ((pb && pb.classList.contains('active')) || (ov && !ov.hidden)) ppvPrintPrepare();
+});
+window.addEventListener('afterprint', ppvPrintDone);
 function closePrintPreview(){
   const ov = document.getElementById('ppvOverlay');
   if (ov) ov.hidden = true;
@@ -2368,7 +2401,7 @@ function buildPreviewHtml(){
       if (tape) s += ppvRow('Tape out (host speaks last)', ppvEsc(tape));
       if (tease) s += ppvRow('Tease', ppvEsc(tease));
     } else {
-      let tnum = 0;
+      let tnum = 0, topics = '';
       const cards = lane.querySelectorAll('.cards > .card');
       if (!cards.length) s += ppvRow('Segment ' + n + ': Info', '<span class="ppv-empty">No topics yet.</span>');
       cards.forEach(card => {
@@ -2382,9 +2415,10 @@ function buildPreviewHtml(){
         const cue = ppvCardCue(card);
         if (cue) ch += '<div class="ppv-cue">AUDIO CUE: ' + ppvEsc(cue) + '</div>';
         ch += '</div>';
-        if (!isB && tnum === 1) s += ppvRow('Segment ' + n + ': Info', ch);
-        else s += ch;
+        topics += ch;
       });
+      // every topic (and backup) sits inside the one SEGMENT N: INFO row, like the sheet
+      if (topics) s += ppvRow('Segment ' + n + ': Info', topics);
     }
     // segment tease row is shared across Talk and Interview modes: always render the full block
     const ti = lane.querySelector('.rd-tease-input');
@@ -4165,7 +4199,7 @@ document.getElementById('unlockAll').addEventListener('click', () => {
   $$('.lane').forEach(lane => setLaneLocked(lane, false));
   toast('All segments unlocked');
 });
-document.getElementById('printBtn').addEventListener('click', () => window.print());
+document.getElementById('printBtn').addEventListener('click', () => printDriveSheet());
 
 
 
