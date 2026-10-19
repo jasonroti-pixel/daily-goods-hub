@@ -884,12 +884,13 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 .arch-day-body .ad-note{font-size:12.5px;color:#666;font-style:italic;margin-top:3px}
 .arch-day-body .ad-guest{background:#f6f5f1;border-radius:8px;padding:12px 14px;margin-top:8px;font-size:13.5px}
 .arch-day-body .ad-guest strong{display:block;margin-bottom:4px}
+/* scoped to archive prints only (body.arch-printing), so the builder drive sheet still prints */
 @media print{
-  body *{visibility:hidden}
-  #archViewer, #archViewer *{visibility:visible}
-  #archViewer{position:absolute;left:0;top:0;width:100%}
-  .arch-day-actions, #archBack{display:none !important}
-  .arch-day-body{border-radius:0;max-width:none}
+  body.arch-printing *{visibility:hidden}
+  body.arch-printing #archViewer, body.arch-printing #archViewer *{visibility:visible}
+  body.arch-printing #archViewer{position:absolute;left:0;top:0;width:100%}
+  body.arch-printing .arch-day-actions, body.arch-printing #archBack{display:none !important}
+  body.arch-printing .arch-day-body{border-radius:0;max-width:none}
 }
 
 /* ---------- keep v40: unified long-form ---------- */
@@ -3531,14 +3532,19 @@ function archiveSave(entries) {
 function archExtractCard(card) {
   const t = s => (card.querySelector(s) || {}).textContent || '';
   const v = s => { const el = card.querySelector(s); return el ? el.value || '' : ''; };
-  const headline = t('.card-headline').trim();
+  const hEl = card.querySelector('.card-headline');
+  let headline = '';
+  if (hEl) { const c = hEl.cloneNode(true); c.querySelectorAll('.backup-tag').forEach(x => x.remove()); headline = c.textContent.trim(); }
   const bullets = Array.from(card.querySelectorAll('.card-bullets li')).map(li => li.textContent.trim()).filter(x => x && !/No summary yet/i.test(x));
   const talkPts = v('.bullets-edit').split('\n').map(x => x.trim()).filter(Boolean);
-  const urls = Array.from(card.querySelectorAll('.url-row a')).map(a => a.getAttribute('href') || '').filter(Boolean);
+  const urls = Array.from(card.querySelectorAll('.url-row a')).map(a => {
+    const h = a.getAttribute('href') || '';
+    return h && h !== '#' ? h : normUrl(a.textContent.trim());
+  }).filter(Boolean);
   const audioCue = v('.card-details input[placeholder*="CLIP"]') || (function(){ const i = card.querySelector('.card-details input[type="text"]'); return i ? i.value : ''; })();
   const prodNotes = v('.prod-notes') || v('.card-details textarea[placeholder*="Producer notes"]');
   const sw = card.querySelector('.switch');
-  const isBackup = sw ? sw.getAttribute('aria-checked') === 'true' : false;
+  const isBackup = sw ? sw.getAttribute('aria-checked') === 'true' : card.classList.contains('backup');
   const src = t('.card-meta .src').trim();
   return { headline, bullets: talkPts.length ? talkPts : bullets, urls, audioCue: (audioCue || '').trim(), producerNotes: (prodNotes || '').trim(), isBackup, source: src };
 }
@@ -3558,16 +3564,22 @@ function archExtractRundown() {
     const id = lane.dataset.lane || '';
     const timeEl = lane.querySelector('.lane-time');
     const titleEl = lane.querySelector('.lane-title');
-    let name = titleEl ? titleEl.textContent.replace(/Locked/g, '').trim() : '';
+    let name = '';
+    if (titleEl) {
+      const c = titleEl.cloneNode(true);
+      c.querySelectorAll('.lane-locked-tag, .seg-rename, .seg-rename-input').forEach(x => x.remove());
+      name = c.textContent.trim();
+    }
     const time = timeEl ? timeEl.textContent.trim() : '';
-    const guestEl = lane.querySelector('[data-guest]');
-    const isInterview = !!guestEl || lane.dataset.segtype === 'interview';
+    /* every lane carries a guest block (hidden on talk lanes), so the lane's type decides */
+    const isInterview = laneTypeOf(lane) === 'interview';
+    const guestEl = lane.querySelector(':scope > .guest-pane [data-guest]') || lane.querySelector('[data-guest]');
     const entry = { id, time, name, type: isInterview ? 'interview' : 'talk' };
     if (isInterview && guestEl) {
       entry.guest = archExtractGuest(guestEl);
     } else {
       entry.stories = [];
-      lane.querySelectorAll('.cards .card').forEach(card => {
+      lane.querySelectorAll(':scope > .cards > .card').forEach(card => {
         entry.stories.push(archExtractCard(card));
       });
     }
@@ -3579,9 +3591,10 @@ function archExtractRundown() {
   // newspaper for this date
   let np = [];
   try {
-    const key = (typeof rdDateKey === 'function') ? rdDateKey() : '';
+    const raw = (typeof rdDateKey === 'function') ? rdDateKey() : '';
+    const key = archNormDate(raw); // newspaper days are keyed YYYY-MM-DD
     const days = JSON.parse(localStorage.getItem('dg_newspaper_v1') || '{}');
-    np = (key && days[key]) ? days[key] : [];
+    np = Array.isArray(days[key]) ? days[key] : (Array.isArray(days[raw]) ? days[raw] : []);
   } catch (e) {}
   // corkboard notes
   const notes = [];
@@ -3806,7 +3819,13 @@ function archDuplicateToToday() {
 (function archInit() {
   const bind = (id, fn) => { const el = document.getElementById(id); if (el && !el.dataset.archBound) { el.dataset.archBound = '1'; el.addEventListener('click', fn); } };
   bind('archBack', closeArchiveDay);
-  bind('archPrint', () => window.print());
+  bind('archPrint', () => {
+    document.body.classList.add('arch-printing');
+    const done = () => { document.body.classList.remove('arch-printing'); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    window.print();
+    setTimeout(done, 1000); // fallback for browsers that skip afterprint
+  });
   bind('archCopy', () => {
     if (!archCurrent) return;
     const txt = archToText(archCurrent);
@@ -4030,6 +4049,23 @@ function keepSeed(title, body, opts) {
   keepNotes.push(n);
   return n;
 }
+/* v40: persistence (defined before the restore call below) */
+const KEEP_STORE_KEY = 'dg_keep_v1';
+function keepPersist() {
+  try { localStorage.setItem(KEEP_STORE_KEY, JSON.stringify({ seq: keepSeq, notes: keepNotes, labels: keepLabels })); } catch (e) {}
+}
+function keepRestore() {
+  try {
+    const raw = localStorage.getItem(KEEP_STORE_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (!d || !Array.isArray(d.notes)) return false;
+    keepSeq = d.seq || (d.notes.length + 1);
+    keepNotes = d.notes;
+    if (Array.isArray(d.labels) && d.labels.length) keepLabels = d.labels;
+    return true;
+  } catch (e) { return false; }
+}
 const keepHadStored = keepRestore();
 if (!keepHadStored) {
 keepSeed("Today's must-dos", '', { pinned: true, color: 5, labels: ['Show prep'], checklist: true, items: [
@@ -4038,13 +4074,13 @@ keepSeed("Today's must-dos", '', { pinned: true, color: 5, labels: ['Show prep']
   { text: 'Print drive sheets', checked: true }
 ]});
 keepSeed('Liza cold open idea', 'Open on the Guelph homecoming story, then ask listeners for their wildest frosh week memory. Keep it to 90 seconds before the first guest.', { color: 3, labels: ['Ideas'] });
-} /* end seed guard */
 keepSeed('Guest wishlist', '', { color: 1, labels: ['Guests'], checklist: true, items: [
   { text: 'Chris Hansen outreach', checked: false },
   { text: 'Follow up on PR contact', checked: true }
 ]});
 keepSeed('Old bit: traffic reporter characters', 'Retired for now. Might revive for a slow Friday.', { archived: true, color: 0, labels: ['Ideas'] });
 keepSeed('scratch test note', 'delete me', { trashed: true, trashedAt: Date.now() - 31 * 864e5, color: 0 });
+} /* end seed guard */
 
 function keepMatch(n) {
   if (keepView === 'notes' && (n.archived || n.trashed)) return false;
@@ -4154,23 +4190,6 @@ function keepAutoSave() {
 const keepOverlay = document.getElementById('keepOverlay');
 const keepEditor = document.getElementById('keepEditor');
 function keepNote() { return keepNotes.find(x => x.id === keepEditingId); }
-/* v40: persistence */
-const KEEP_STORE_KEY = 'dg_keep_v1';
-function keepPersist() {
-  try { localStorage.setItem(KEEP_STORE_KEY, JSON.stringify({ seq: keepSeq, notes: keepNotes, labels: keepLabels })); } catch (e) {}
-}
-function keepRestore() {
-  try {
-    const raw = localStorage.getItem(KEEP_STORE_KEY);
-    if (!raw) return false;
-    const d = JSON.parse(raw);
-    if (!d || !Array.isArray(d.notes)) return false;
-    keepSeq = d.seq || (d.notes.length + 1);
-    keepNotes = d.notes;
-    if (Array.isArray(d.labels) && d.labels.length) keepLabels = d.labels;
-    return true;
-  } catch (e) { return false; }
-}
 function keepSyncEditorChrome() {
   const n = keepNote(); if (!n) return;
   keepEditor.className = 'keep-editor kc' + n.color;
@@ -4450,18 +4469,51 @@ document.addEventListener('input', e => {
 /* ---------- corkboard ---------- */
 const board = document.getElementById('board');
 const NOTE_COLORS = ['#FFF3B0', '#FFD6E0', '#D8EBFF', '#D9F2D0', '#FFE7C2'];
+const CORK_KEY = 'dg_corkboard_v1';
+let corkSeq = 0;
 function tilt() { return (Math.random() * 6 - 3).toFixed(1) + 'deg'; }
-function addNote(text, x, y) {
+/* Keep a note inside the board. The note's intended spot lives in data-x/data-y;
+   the shown spot is clamped, so a narrow screen never rewrites the saved layout. */
+function corkClamp(note) {
+  const bw = board.clientWidth, bh = board.clientHeight;
+  if (!bw || !bh) return; // board hidden (tab not open): clamp later
+  const x = parseFloat(note.dataset.x) || 0, y = parseFloat(note.dataset.y) || 0;
+  note.style.left = Math.max(0, Math.min(bw - note.offsetWidth, x)) + 'px';
+  note.style.top = Math.max(0, Math.min(bh - note.offsetHeight, y)) + 'px';
+}
+function corkClampAll() { board.querySelectorAll('.note').forEach(corkClamp); }
+function corkSave() {
+  const notes = Array.from(board.querySelectorAll('.note')).map(n => ({
+    id: n.dataset.id,
+    body: (n.querySelector('p') || {}).textContent || '',
+    color: n.dataset.color,
+    tilt: n.style.getPropertyValue('--tilt'),
+    x: parseFloat(n.dataset.x) || 0,
+    y: parseFloat(n.dataset.y) || 0
+  }));
+  try { localStorage.setItem(CORK_KEY, JSON.stringify({ notes })); } catch (e) {}
+}
+function corkLoad() {
+  try { const r = localStorage.getItem(CORK_KEY); const d = r ? JSON.parse(r) : null; return d && Array.isArray(d.notes) ? d.notes : null; }
+  catch (e) { return null; }
+}
+function addNote(text, x, y, opts) {
+  opts = opts || {};
   const note = document.createElement('div');
-  note.className = 'note just-pinned';
-  const bg = NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)];
+  note.className = opts.restored ? 'note' : 'note just-pinned';
+  note.dataset.id = opts.id || ('cn' + Date.now().toString(36) + (corkSeq++).toString(36));
+  const bg = opts.color || NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)];
+  note.dataset.color = bg;
   note.style.setProperty('--note-bg', bg);
-  note.style.left = (x !== undefined ? x : 20 + Math.random() * 320) + 'px';
-  note.style.top = (y !== undefined ? y : 20 + Math.random() * 320) + 'px';
-  const t = tilt();
+  const maxX = Math.max(0, (board.clientWidth || 540) - 200);
+  note.dataset.x = x !== undefined ? x : Math.round(20 + Math.random() * Math.min(320, maxX));
+  note.dataset.y = y !== undefined ? y : Math.round(20 + Math.random() * 320);
+  note.style.left = note.dataset.x + 'px';
+  note.style.top = note.dataset.y + 'px';
+  const t = opts.tilt || tilt();
   note.style.setProperty('--tilt', t);
   note.style.transform = 'rotate(' + t + ')';
-  setTimeout(() => note.classList.remove('just-pinned'), 450);
+  if (!opts.restored) setTimeout(() => note.classList.remove('just-pinned'), 450);
   const pin = document.createElement('div');
   pin.className = 'pin';
   const p = document.createElement('p');
@@ -4470,34 +4522,53 @@ function addNote(text, x, y) {
   actions.className = 'note-actions';
   const del = document.createElement('button');
   del.textContent = 'Delete';
-  del.addEventListener('click', e => { e.stopPropagation(); note.remove(); });
+  del.addEventListener('click', e => { e.stopPropagation(); note.remove(); corkSave(); });
   actions.appendChild(del);
   note.appendChild(pin); note.appendChild(p); note.appendChild(actions);
   board.appendChild(note);
+  corkClamp(note);
   note.addEventListener('pointerdown', e => {
     if (e.target.closest('button')) return;
     e.preventDefault();
     note.classList.add('dragging');
     const startX = e.clientX, startY = e.clientY;
     const origX = note.offsetLeft, origY = note.offsetTop;
+    const maxX = Math.max(0, board.clientWidth - note.offsetWidth);
+    const maxY = Math.max(0, board.clientHeight - note.offsetHeight);
     note.setPointerCapture(e.pointerId);
     const move = ev => {
-      note.style.left = Math.max(0, Math.min(board.clientWidth - 200, origX + ev.clientX - startX)) + 'px';
-      note.style.top = Math.max(0, origY + ev.clientY - startY) + 'px';
+      note.style.left = Math.max(0, Math.min(maxX, origX + ev.clientX - startX)) + 'px';
+      note.style.top = Math.max(0, Math.min(maxY, origY + ev.clientY - startY)) + 'px';
     };
     const up = () => {
       note.classList.remove('dragging');
       note.removeEventListener('pointermove', move);
       note.removeEventListener('pointerup', up);
+      note.removeEventListener('pointercancel', up);
+      note.dataset.x = note.offsetLeft;
+      note.dataset.y = note.offsetTop;
+      corkSave();
     };
     note.addEventListener('pointermove', move);
     note.addEventListener('pointerup', up);
+    note.addEventListener('pointercancel', up);
   });
+  if (!opts.restored) corkSave();
   return note;
 }
-addNote('Ask Liza about her Guelph frosh week story for lifestyle chat', 40, 40);
-addNote('Clip idea: Carney soundbite vs Trump rally audio back to back', 300, 120);
-addNote('Kicker backup: penguin discovered for first time in 100 years?', 90, 260);
+(function corkRestore() {
+  const saved = corkLoad();
+  if (saved) {
+    saved.forEach(n => addNote(n.body, n.x, n.y, { id: n.id, color: n.color, tilt: n.tilt, restored: true }));
+  } else {
+    addNote('Ask Liza about her Guelph frosh week story for lifestyle chat', 40, 40);
+    addNote('Clip idea: Carney soundbite vs Trump rally audio back to back', 300, 120);
+    addNote('Kicker backup: penguin discovered for first time in 100 years?', 90, 260);
+  }
+})();
+/* the board has no size while its tab is hidden: clamp when it opens and on resize */
+document.querySelector('.tab[data-tab="corkboard"]').addEventListener('click', () => requestAnimationFrame(corkClampAll));
+window.addEventListener('resize', corkClampAll);
 const noteInput = document.getElementById('noteInput');
 function pinNote() {
   const v = noteInput.value.trim();
@@ -5354,8 +5425,8 @@ function corkSendButton(note, p) {
   return send;
 }
 const _addNote = addNote;
-addNote = function (text, x, y) {
-  const note = _addNote(text, x, y);
+addNote = function (text, x, y, opts) {
+  const note = _addNote(text, x, y, opts);
   const actions = note.querySelector('.note-actions');
   const p = note.querySelector('p');
   if (actions && p) actions.insertBefore(corkSendButton(note, p), actions.firstChild);
