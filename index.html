@@ -835,6 +835,9 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 .ppv-tease-line{margin:3px 0;line-height:1.5}
 .ppv-tease-prefix{font-family:'Space Mono',monospace;font-size:12px;font-weight:700}
 @media(max-width:700px){.ppv-row{flex-direction:column;gap:4px}.ppv-lab{flex:none}}
+/* Drive sheet type matches the studio's Google Sheet: Arial Bold (the Sheets default) everywhere.
+   Font only; sizes, spacing and layout above stay as they are. */
+.ppv-sheet,.ppv-sheet *{font-family:Arial,Helvetica,sans-serif !important;font-weight:700 !important}
 
 @media print{
   .proto-banner,.app-header,.tabs,.builder-toolbar,.lane-actions,.locked-banner .btn,.hint,.toast,.copy-btn,.card-del,.card-del-big,.push-tomorrow-btn,#rdTotsReset,.seg-rename{display:none !important}
@@ -856,6 +859,8 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
   .rd-brand,.topic-label{color:#000 !important}
   .rd-input{border:1px solid #999 !important;color:#000 !important;background:#fff !important}
   .rd-guest-summary{color:#000 !important}
+  /* printed drive sheet: Arial Bold like the Google Sheet (print only, screen untouched) */
+  #panel-builder,#panel-builder *,.ppv-sheet,.ppv-sheet *{font-family:Arial,Helvetica,sans-serif !important;font-weight:700 !important}
 }
 
 /* ---------- archive (v39) ---------- */
