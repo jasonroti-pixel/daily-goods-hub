@@ -343,6 +343,18 @@ body.viewing-tomorrow #wrapUpBtn{display:none}
 html[data-theme="dark"] .tag.alt{background:rgba(232,184,75,.14);color:#F0C35A}
 .card-bullets{margin:8px 0 0;padding-left:18px;font-size:13px;color:var(--ink)}
 .card-bullets li{margin-bottom:3px}
+/* deletable bullets: a tiny X sits where the bullet marker was. The glyph comes from CSS so the
+   button adds no text to the li (several readers use li.textContent). */
+.card-bullets li.has-x{list-style:none;position:relative}
+.bullet-x{position:absolute;left:-22px;top:-1px;width:20px;height:20px;padding:0;border:none;border-radius:50%;background:none;color:var(--muted);cursor:pointer;opacity:.35;line-height:1;transition:opacity 100ms var(--ease),background 100ms var(--ease),color 100ms var(--ease);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.bullet-x::before{content:"\00d7";font-size:14px;font-weight:700}
+.card-bullets li:hover > .bullet-x,.bullet-x:focus-visible{opacity:.9}
+.bullet-x:hover,.bullet-x:active{opacity:1;color:#B3261E;background:rgba(179,38,30,.10)}
+.bullet-x:focus-visible{outline:2px solid var(--marker);outline-offset:1px}
+@media (hover:none){.bullet-x{opacity:.55;width:26px;height:26px;left:-25px;top:-4px}}
+.lane.locked .card-bullets li.has-x{list-style:disc}
+.lane.locked .bullet-x{display:none}
+@media print{.card-bullets li.has-x{list-style:disc}.bullet-x{display:none !important}}
 .card-audio{
   margin-top:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.03em;
   color:var(--muted);background:var(--surface-2);
@@ -3068,6 +3080,69 @@ document.getElementById('copyLockedBtn').addEventListener('click', () => {
     toast(ok ? rows.length + (rows.length === 1 ? ' card' : ' cards') + ' copied. Paste into Sheets.' : 'Copy failed. Select the text and copy manually.');
   });
 });
+
+/* ---------- deletable bullets: tiny X per talking point (builder + newspaper cards) ---------- */
+function bulletXScope(ul) { return ul.closest('#lanes .card, .np-item'); }
+function decorateBullets(root) {
+  (root || document).querySelectorAll('.card-bullets').forEach(ul => {
+    if (!bulletXScope(ul)) return;
+    ul.querySelectorAll(':scope > li').forEach(li => {
+      if (li.classList.contains('empty-note')) return;
+      if (li.querySelector(':scope > .bullet-x')) return;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'bullet-x';
+      b.setAttribute('aria-label', 'Delete this talking point');
+      b.title = 'Delete this talking point';
+      li.classList.add('has-x');
+      li.insertBefore(b, li.firstChild);
+    });
+  });
+}
+/* bullets are rendered from many places; decorate whatever lands in a card's list */
+new MutationObserver(muts => {
+  for (const m of muts) {
+    const t = m.target;
+    if (t.nodeType === 1 && (t.matches('.card-bullets') || t.closest('.card-bullets') || t.querySelector('.card-bullets'))) { decorateBullets(t.closest('.card') || t); }
+  }
+}).observe(document.body, { childList: true, subtree: true });
+function deleteBullet(btn) {
+  const li = btn.closest('li');
+  const ul = li && li.closest('.card-bullets');
+  const card = ul && bulletXScope(ul);
+  if (!card || laneLocked(card)) return;
+  const items = Array.from(ul.querySelectorAll(':scope > li')).filter(x => !x.classList.contains('empty-note'));
+  const idx = items.indexOf(li);
+  if (idx < 0) return;
+  // what the card shows is the truth (some paths fill the list without the textarea)
+  const rest = items.map(x => x.textContent.trim()).filter((_, i) => i !== idx);
+  const isNp = card.classList.contains('np-item');
+  if (!isNp) pushUndo();
+  const ta = card.querySelector('.bullets-edit');
+  if (ta) ta.value = rest.join('\n');
+  syncBulletPreview(card);
+  if (isNp) {
+    const it = npFind(card.dataset.npId);
+    if (it) { it.bullets = rest; npSave(); }
+  } else if (typeof saveCurrentDay === 'function') {
+    saveCurrentDay();
+  }
+  const next = card.querySelectorAll('.card-bullets .bullet-x')[Math.min(idx, rest.length - 1)];
+  if (next && document.activeElement === btn) next.focus();
+}
+/* keep presses on the X away from SortableJS: on touch it cancels the touchstart of a filtered
+   element, which kills the tap's click. Stopped in the capture phase, before the list sees it. */
+['pointerdown', 'touchstart', 'mousedown'].forEach(type => document.addEventListener(type, e => {
+  if (e.target.closest && e.target.closest('.bullet-x')) e.stopPropagation();
+}, { capture: true, passive: true }));
+document.addEventListener('click', e => {
+  const bx = e.target.closest('.bullet-x');
+  if (!bx) return;
+  e.preventDefault();
+  e.stopPropagation();
+  deleteBullet(bx);
+}, true);
+decorateBullets(document);
 
 /* ---------- card expand / collapse (delegated) ---------- */
 document.addEventListener('click', e => {
