@@ -311,6 +311,11 @@ body.viewing-tomorrow #wrapUpBtn{display:none}
 .lane.locked .card{opacity:.78;cursor:default}
 .lane.locked .card .grip{display:none}
 .lane.locked .cards{min-height:60px}
+/* v38: locked lanes are read-only for editing, but Copy stays live (copy is not editing) */
+.lane.locked .guest-block input,
+.lane.locked .guest-block textarea,
+.lane.locked .guest-block select,
+.lane.locked .rd-tease-input{pointer-events:none}
 .card{
   background:linear-gradient(180deg,#FFFFFF 0%,#F8F7FD 100%);
   border:1px solid var(--card-border);
@@ -483,6 +488,26 @@ html[data-theme="dark"] .note-actions button{background:rgba(255,255,255,.14);co
 .panel-card .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
 .feed-row,.iv-row{display:flex;gap:12px;align-items:center;padding:11px 4px;border-top:1px solid var(--border);font-size:13.5px}
 .feed-row:first-of-type,.iv-row:first-of-type{border-top:none}
+/* ---- v38: interview cards (builder-card look and behavior) ---- */
+.iv-form{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.iv-form input[type="text"]{flex:2;min-width:160px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--ink);font-size:13.5px}
+.iv-form input[type="date"],.iv-form select{padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--ink);font-size:13.5px}
+#ivList .card{margin-bottom:10px;cursor:pointer}
+#ivArchived .card{margin-bottom:10px;cursor:pointer}
+.iv-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.iv-head .iv-name{font-weight:600;font-size:15px;flex:1;min-width:120px}
+.iv-head .iv-date{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted)}
+.iv-arrows{display:inline-flex;gap:2px}
+.iv-arrows button{border:1px solid var(--border);background:var(--surface-2);color:var(--muted);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;line-height:1.4}
+.iv-arrows button:hover{color:var(--ink);border-color:var(--accent)}
+.iv-del{border:none;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1}
+.iv-del:hover{color:#c0392b;background:rgba(192,57,43,.08)}
+.iv-calm{margin-top:10px;padding:8px 12px;border-radius:8px;background:var(--accent-soft);color:var(--ink);font-size:13px}
+.iv-calm[hidden]{display:none}
+.iv-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.iv-archived-wrap{margin-top:14px}
+#ivArchToggle{margin-bottom:8px}
+.iv-empty{color:var(--muted);font-style:italic;padding:12px 4px;font-size:13.5px}
 .feed-row .t,flex:1;font-weight:500}
 /* ---- v17: feed cards (full feed, expandable, no source labels) ---- */
 .feed-head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
@@ -828,12 +853,12 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
   </div>
 </header>
 <nav class="tabs" role="tablist">
-  <button class="tab active" role="tab" data-tab="builder">Builder</button>
-  <button class="tab" role="tab" data-tab="newspaper">Newspaper</button>
   <button class="tab" role="tab" data-tab="feeds">Feeds</button>
+  <button class="tab" role="tab" data-tab="newspaper">Newspaper</button>
+  <button class="tab active" role="tab" data-tab="builder">Builder</button>
+  <button class="tab" role="tab" data-tab="interviews">Interviews</button>
   <button class="tab" role="tab" data-tab="corkboard">Corkboard</button>
   <button class="tab" role="tab" data-tab="keep">The Keep</button>
-  <button class="tab" role="tab" data-tab="interviews">Interviews</button>
   <button class="tab" role="tab" data-tab="tools">Tools &amp; Resources</button>
 </nav>
 <main>
@@ -960,10 +985,19 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 <section class="tab-panel" id="panel-interviews" role="tabpanel">
   <div class="panel-card">
     <h2>Upcoming interviews</h2>
-    <p class="sub">Paste prep below each guest for reference. Copy and paste only. (Placeholder)</p>
-    <div class="iv-row"><span class="t"><strong>General Wayne Eyre</strong> - memoir Into the Breach</span><span class="badge">3:20</span><span class="badge">In-studio</span></div>
-    <div class="iv-row"><span class="t"><strong>Cam Maitland</strong> - Shocktober streaming picks</span><span class="badge">4:20</span><span class="badge">Zoom</span></div>
-    <div class="iv-row"><span class="t"><strong>Dolph Lundgren</strong> - new action slate</span><span class="badge">3:20</span><span class="badge">Pre-tape</span></div>
+    <p class="sub">Guest prep cards. Click a card to edit it, push a booked guest into today's show.</p>
+    <div class="iv-form">
+      <input type="text" id="ivNewName" placeholder="Guest name" aria-label="Guest name" spellcheck="true">
+      <input type="date" id="ivNewDate" aria-label="Show date">
+      <select id="ivNewSlot" aria-label="Slot"><option>3:20</option><option>4:20</option></select>
+      <select id="ivNewFormat" aria-label="Format"><option>In-studio</option><option>Zoom</option><option>Pre-tape</option><option>Hold</option></select>
+      <button type="button" class="btn btn-primary btn-sm" id="ivAdd">Add interview</button>
+    </div>
+    <div id="ivList"></div>
+    <div class="iv-archived-wrap">
+      <button type="button" class="btn btn-sm" id="ivArchToggle" hidden></button>
+      <div id="ivArchived" hidden></div>
+    </div>
   </div>
 </section>
 
@@ -2394,7 +2428,7 @@ function rebindLaneControls(){
   $$('.segtype-btn').forEach(bindSegType);
   $$('.guest-pull').forEach(bindGuestPull);
   $$('.guest-block textarea').forEach(bindGuestTa);
-  $$('.card').forEach(enhanceCard);
+  $$('#lanes .card').forEach(enhanceCard);
   bindFurnitureEls();
   $$('#lanes .lane').forEach(lane => {
     const add = lane.querySelector('.lane-add');
@@ -3374,8 +3408,7 @@ function updateShowLock() {
 }
 
 function setLaneLocked(lane, locked) {
-  lane.classList.toggle('locked', locked);
-  const btn = lane.querySelector('.lane-lock');
+  lane.classList.toggle('locked', locked);  const btn = lane.querySelector('.lane-lock');
   btn.classList.toggle('on', locked);
   btn.setAttribute('aria-pressed', String(locked));
   btn.setAttribute('aria-label', locked ? 'Unlock segment' : 'Lock segment');
@@ -3388,6 +3421,15 @@ function setLaneLocked(lane, locked) {
   if (s) s.option('disabled', locked);
   updateShowLock();
 }
+/* v38: locked lanes refuse keyboard focus on editable fields (mouse is already
+   blocked by pointer-events CSS). Copy buttons are <button>s, unaffected. */
+document.addEventListener('focusin', e => {
+  const t = e.target;
+  if (t && t.matches && t.matches('input, textarea, select')) {
+    const lane = t.closest('.lane.locked');
+    if (lane) { e.preventDefault(); t.blur(); }
+  }
+}, true);
 
 function bindLaneLock(btn) {
   if (alreadyBound(btn)) return;
@@ -3417,7 +3459,7 @@ document.getElementById('printBtn').addEventListener('click', () => window.print
 
 /* ---------- card arrows: collapsed = small arrows, expanded = prominent arrows, never drag while expanded ---------- */
 function moveCard(card, dir) {
-  if (!card || laneLocked(card)) return;
+  if (!card || card.classList.contains('iv-card') || laneLocked(card)) return;
   pushUndo();
   const sib = dir < 0 ? card.previousElementSibling : card.nextElementSibling;
   if (!sib || !sib.classList.contains('card')) return;
@@ -3502,32 +3544,43 @@ function bindGuestTa(ta) {
   grow();
 }
 $$('.guest-block textarea').forEach(bindGuestTa);
-const INTERVIEWS = [
-  { name: 'General Wayne Eyre', desc: 'memoir Into the Breach', slot: '3:20', format: 'In-studio' },
-  { name: 'Cam Maitland', desc: 'Shocktober streaming picks', slot: '4:20', format: 'Zoom' },
-  { name: 'Dolph Lundgren', desc: 'new action slate', slot: '3:20', format: 'Pre-tape' }
-];
+/* v38: interview picker reads from the Interviews page card store (window.ivList),
+   populated by the interviews module at the end of this script. */
+function ivStore(){ return (window.ivList && Array.isArray(window.ivList)) ? window.ivList : []; }
+function ivPickerOptions(sel){
+  sel.querySelectorAll('option[data-iv]').forEach(o => o.remove());
+  ivStore().filter(iv => !iv.archived).forEach(iv => {
+    const o = document.createElement('option');
+    o.setAttribute('data-iv', '1');
+    o.value = iv.id;
+    o.textContent = iv.name + ' (' + iv.slot + ')';
+    sel.appendChild(o);
+  });
+}
 function bindGuestPull(sel) {
-  if (alreadyBound(sel)) return;
-  if (!sel.querySelector('option[value="0"]')) {
-    INTERVIEWS.forEach((iv, i) => {
-      const o = document.createElement('option');
-      o.value = String(i);
-      o.textContent = iv.name + ' (' + iv.slot + ')';
-      sel.appendChild(o);
+  if (!alreadyBound(sel)) {
+    sel.addEventListener('change', () => {
+      if (sel.value === '') return;
+      const iv = ivStore().find(x => x.id === sel.value);
+      if (!iv) { sel.selectedIndex = 0; return; }
+      const block = sel.closest('.guest-block');
+      if (!block) return;
+      const setV = (s, v) => { const el = block.querySelector(s); if (el) { el.value = v || ''; el.dispatchEvent(new Event('input', { bubbles: true })); } };
+      setV('.guest-name-input', iv.name);
+      setV('.guest-slot', iv.slot);
+      const fmt = block.querySelector('.guest-format');
+      if (fmt) { fmt.value = iv.format; fmt.dispatchEvent(new Event('change', { bubbles: true })); }
+      const intro = block.querySelector('.guest-intro-input');
+      if (intro && !intro.value.trim() && iv.intro) setV('.guest-intro-input', iv.intro);
+      const seg = block.querySelector('.guest-seginfo');
+      if (seg && !seg.value.trim() && iv.seginfo) setV('.guest-seginfo', iv.seginfo);
+      if (typeof rdSaveFurnitureFields === 'function') rdSaveFurnitureFields();
+      if (typeof rdRefreshShow === 'function') rdRefreshShow();
+      if (typeof saveCurrentDay === 'function') saveCurrentDay();
+      toast('Pulled in ' + iv.name);
     });
   }
-  sel.addEventListener('change', () => {
-    if (sel.value === '') return;
-    const iv = INTERVIEWS[+sel.value];
-    const block = sel.closest('.guest-block');
-    block.querySelector('.guest-name-input').value = iv.name;
-    block.querySelector('.guest-slot').value = iv.slot;
-    block.querySelector('.guest-format').value = iv.format;
-    const seg = block.querySelector('.guest-seginfo');
-    if (!seg.value.trim()) { seg.value = iv.desc; seg.dispatchEvent(new Event('input')); }
-    toast('Pulled in ' + iv.name);
-  });
+  ivPickerOptions(sel);
 }
 $$('.guest-pull').forEach(bindGuestPull);
 
@@ -4120,7 +4173,8 @@ function npAddItem(data) {
   };
   npState.push(it);
   npSave();
-  renderNewspaper();
+  
+renderNewspaper();
   const el = npList.querySelector('[data-np-id="' + it.id + '"]');
   if (el) {
     el.classList.add('just-added');
@@ -5160,6 +5214,290 @@ document.getElementById('panel-tools').addEventListener('click', e => {
   }
 });
 renderTools();
+
+/* ================= v38: Interviews page, guest prep cards ================= */
+const IV_STORE_KEY = 'dg_interviews_v1';
+const IV_FORMATS = ['In-studio', 'Zoom', 'Pre-tape', 'Hold'];
+let ivSeq = 1;
+function ivNewId(){ return 'iv' + Date.now().toString(36) + (ivSeq++) + Math.floor(Math.random() * 1e4).toString(36); }
+/* Normalize any stored shape into the v38 card structure. Legacy entries that
+   kept pasted questions in a notes string get them split into the Questions list. */
+function ivNormalize(raw){
+  const o = (raw && typeof raw === 'object') ? raw : {};
+  const hasQ = Array.isArray(o.questions);
+  const legacyNotes = (!hasQ && typeof o.notes === 'string') ? o.notes : '';
+  return {
+    id: o.id || ivNewId(),
+    name: o.name || 'Untitled guest',
+    date: o.date || '',
+    slot: o.slot === '4:20' ? '4:20' : '3:20',
+    format: IV_FORMATS.indexOf(o.format) >= 0 ? o.format : 'In-studio',
+    intro: o.intro || '',
+    seginfo: o.seginfo || o.desc || '',
+    tapeout: o.tapeout || '',
+    notes: hasQ ? (o.notes || '') : '',
+    questions: hasQ ? o.questions.filter(s => typeof s === 'string')
+                    : legacyNotes.split('\n').map(s => s.trim()).filter(Boolean),
+    archived: !!o.archived,
+    order: typeof o.order === 'number' && isFinite(o.order) ? o.order : 0,
+    created: o.created || Date.now()
+  };
+}
+function ivLoadRaw(){
+  try {
+    const r = localStorage.getItem(IV_STORE_KEY);
+    const a = r ? JSON.parse(r) : null;
+    return Array.isArray(a) ? a : null;
+  } catch (e) { return null; }
+}
+function ivPersist(){
+  try { localStorage.setItem(IV_STORE_KEY, JSON.stringify(window.ivList || [])); } catch (e) {}
+}
+function ivMigrate(){
+  let list = ivLoadRaw();
+  ['dg_interviews_legacy_v1', 'dg_upcoming_interviews_v1'].forEach(k => {
+    try {
+      const r = localStorage.getItem(k);
+      if (r) {
+        const a = JSON.parse(r);
+        if (Array.isArray(a) && a.length) {
+          list = (list || []).concat(a);
+          try { localStorage.removeItem(k); } catch (e) {}
+        }
+      }
+    } catch (e) {}
+  });
+  if (!list) {
+    list = [
+      { name: 'General Wayne Eyre', slot: '3:20', format: 'In-studio', seginfo: 'memoir Into the Breach' },
+      { name: 'Cam Maitland', slot: '4:20', format: 'Zoom', seginfo: 'Shocktober streaming picks' },
+      { name: 'Dolph Lundgren', slot: '3:20', format: 'Pre-tape', seginfo: 'new action slate' }
+    ];
+  }
+  const norm = list.map(ivNormalize);
+  norm.sort((a, b) => a.order - b.order);
+  norm.forEach((iv, i) => { iv.order = i; });
+  window.ivList = norm;
+  ivPersist();
+}
+function ivById(id){ return ivStore().find(x => x.id === id) || null; }
+function ivEsc(s){ return escapeHtml(s == null ? '' : String(s)); }
+function ivCardHtml(iv){
+  const opts = (arr, cur) => arr.map(v => '<option' + (v === cur ? ' selected' : '') + '>' + ivEsc(v) + '</option>').join('');
+  return '<div class="iv-head">' +
+    '<span class="iv-arrows"><button type="button" class="iv-up" aria-label="Move interview up" title="Move up">▲</button>' +
+    '<button type="button" class="iv-dn" aria-label="Move interview down" title="Move down">▼</button></span>' +
+    '<strong class="iv-name">' + ivEsc(iv.name) + '</strong>' +
+    '<span class="badge iv-b-slot">' + ivEsc(iv.slot) + '</span>' +
+    '<span class="badge iv-b-format">' + ivEsc(iv.format) + '</span>' +
+    '<span class="iv-date iv-b-date">' + ivEsc(iv.date) + '</span>' +
+    '<button type="button" class="btn btn-sm iv-push">Push to today\'s show</button>' +
+    '<button type="button" class="iv-del" aria-label="Delete interview" title="Delete interview">×</button>' +
+    '</div>' +
+    '<div class="card-details">' +
+    '<div class="field-label">Guest name</div><input type="text" class="iv-f-name" value="' + ivEsc(iv.name) + '" spellcheck="true" aria-label="Guest name">' +
+    '<div class="field-label">Show date</div><input type="date" class="iv-f-date" value="' + ivEsc(iv.date) + '" aria-label="Show date">' +
+    '<div class="field-label">Slot</div><select class="iv-f-slot" aria-label="Slot">' + opts(['3:20', '4:20'], iv.slot) + '</select>' +
+    '<div class="field-label">Format</div><select class="iv-f-format" aria-label="Format">' + opts(IV_FORMATS, iv.format) + '</select>' +
+    '<div class="field-label">Intro</div><textarea class="iv-f-intro" rows="3" spellcheck="true" aria-label="Intro">' + ivEsc(iv.intro) + '</textarea>' +
+    '<div class="field-label">Segment info</div><textarea class="iv-f-seginfo" rows="2" spellcheck="true" aria-label="Segment info">' + ivEsc(iv.seginfo) + '</textarea>' +
+    '<div class="field-label">Tape out <span class="tape-out">HOST speaks last</span></div><input type="text" class="iv-f-tapeout" value="' + ivEsc(iv.tapeout) + '" spellcheck="true" aria-label="Tape out">' +
+    '<div class="field-label">Producer notes</div><textarea class="iv-f-notes" rows="2" spellcheck="true" aria-label="Producer notes">' + ivEsc(iv.notes) + '</textarea>' +
+    '<div class="field-label">Questions</div><textarea class="iv-f-questions" rows="6" spellcheck="true" aria-label="Questions" placeholder="One question per line">' + ivEsc(iv.questions.join('\n')) + '</textarea>' +
+    '<button type="button" class="btn btn-sm iv-addq" style="margin-top:6px">+ Add question</button>' +
+    '<div class="iv-actions">' +
+    '<button type="button" class="btn btn-sm btn-primary iv-push">Push to today\'s show</button>' +
+    '<button type="button" class="btn btn-sm iv-archive">' + (iv.archived ? 'Unarchive' : 'Archive') + '</button>' +
+    '<button type="button" class="btn btn-sm iv-del-big">Delete</button>' +
+    '</div>' +
+    '<div class="iv-calm" hidden></div>' +
+    '</div>';
+}
+function ivCardEl(iv){
+  return '<article class="card iv-card" data-ivid="' + iv.id + '" tabindex="0">' + ivCardHtml(iv) + '</article>';
+}
+function ivRefreshPickers(){ $$('.guest-pull').forEach(ivPickerOptions); }
+function ivRender(){
+  const expanded = {};
+  $$('#panel-interviews .iv-card.expanded').forEach(c => { expanded[c.dataset.ivid] = true; });
+  const list = ivStore();
+  const active = list.filter(iv => !iv.archived);
+  const arch = list.filter(iv => iv.archived);
+  const host = document.getElementById('ivList');
+  host.innerHTML = active.length ? active.map(ivCardEl).join('')
+    : '<div class="iv-empty">No upcoming interviews. Add one above.</div>';
+  document.getElementById('ivArchived').innerHTML = arch.map(ivCardEl).join('');
+  const tg = document.getElementById('ivArchToggle');
+  tg.hidden = !arch.length;
+  tg.textContent = 'Archived (' + arch.length + ')';
+  Object.keys(expanded).forEach(id => {
+    const el = document.querySelector('#panel-interviews .iv-card[data-ivid="' + id + '"]');
+    if (el) el.classList.add('expanded');
+  });
+  ivRefreshPickers();
+}
+function ivSyncCard(card){
+  const iv = ivById(card.dataset.ivid);
+  if (!iv) return;
+  const v = s => { const el = card.querySelector(s); return el ? el.value : ''; };
+  iv.name = v('.iv-f-name');
+  iv.date = v('.iv-f-date');
+  iv.slot = v('.iv-f-slot');
+  iv.format = v('.iv-f-format');
+  iv.intro = v('.iv-f-intro');
+  iv.seginfo = v('.iv-f-seginfo');
+  iv.tapeout = v('.iv-f-tapeout');
+  iv.notes = v('.iv-f-notes');
+  iv.questions = v('.iv-f-questions').split('\n').map(s => s.trim()).filter(Boolean);
+  const nm = card.querySelector('.iv-b-name, .iv-name');
+  if (nm) nm.textContent = iv.name || 'Untitled guest';
+  const bs = card.querySelector('.iv-b-slot'); if (bs) bs.textContent = iv.slot;
+  const bf = card.querySelector('.iv-b-format'); if (bf) bf.textContent = iv.format;
+  const bd = card.querySelector('.iv-b-date'); if (bd) bd.textContent = iv.date || '';
+  ivPersist();
+  ivRefreshPickers();
+}
+function ivMove(id, dir){
+  const list = ivStore();
+  const iv = ivById(id);
+  if (!iv) return;
+  const group = list.filter(x => !!x.archived === !!iv.archived);
+  const i = group.findIndex(x => x.id === id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= group.length) return;
+  const a = group[i], b = group[j];
+  const t = a.order; a.order = b.order; b.order = t;
+  list.sort((x, y) => x.order - y.order);
+  list.forEach((x, k) => { x.order = k; });
+  ivPersist();
+  ivRender();
+}
+function ivDelete(id){
+  const iv = ivById(id);
+  if (!iv) return;
+  if (!confirm('Delete the interview with ' + (iv.name || 'this guest') + '?')) return;
+  window.ivList = ivStore().filter(x => x.id !== id);
+  window.ivList.forEach((x, k) => { x.order = k; });
+  ivPersist();
+  ivRender();
+  toast('Interview deleted');
+}
+function ivToggleArchive(id){
+  const iv = ivById(id);
+  if (!iv) return;
+  iv.archived = !iv.archived;
+  const list = ivStore();
+  const act = list.filter(x => !x.archived), arch = list.filter(x => x.archived);
+  act.forEach((x, k) => { x.order = k; });
+  arch.forEach((x, k) => { x.order = act.length + k; });
+  ivPersist();
+  ivRender();
+  toast(iv.archived ? 'Interview archived' : 'Interview unarchived');
+}
+function ivClearCalm(cardEl){
+  const d = cardEl && cardEl.querySelector('.iv-calm');
+  if (d) d.hidden = true;
+}
+function ivCalm(cardEl, msg){
+  const d = cardEl && cardEl.querySelector('.iv-calm');
+  if (!d) return;
+  d.textContent = msg;
+  d.hidden = false;
+}
+/* Push an interview card into TODAY's builder rundown: the lane matching the
+   card's slot becomes Interview type (talk payload preserved) and its guest
+   block is filled. One undo entry. Locked target lane refuses calmly. */
+function ivPushToToday(iv, cardEl){
+  if (!iv) return;
+  ivClearCalm(cardEl);
+  const laneId = iv.slot === '4:20' ? 's5' : 's2';
+  try { if (viewedDate !== todayKey()) switchBuilderDay(todayKey()); } catch (e) {}
+  const lane = document.querySelector('#lanes .lane[data-lane="' + laneId + '"]');
+  if (!lane) { ivCalm(cardEl, 'Could not find the ' + iv.slot + ' segment.'); return; }
+  if (laneLocked(lane)) { ivCalm(cardEl, 'That segment is locked.'); return; }
+  pushUndo();
+  setLaneType(lane, 'interview', true);
+  const block = lane.querySelector('.guest-block');
+  if (block) {
+    const setV = (s, val) => {
+      const el = block.querySelector(s);
+      if (el) { el.value = val || ''; el.dispatchEvent(new Event('input', { bubbles: true })); }
+    };
+    setV('.guest-name-input', iv.name);
+    setV('.guest-slot', iv.slot);
+    const fmt = block.querySelector('.guest-format');
+    if (fmt) { fmt.value = iv.format; fmt.dispatchEvent(new Event('change', { bubbles: true })); }
+    setV('.guest-intro-input', iv.intro);
+    setV('.guest-seginfo', iv.seginfo);
+    setV('.guest-tapeout', iv.tapeout);
+  }
+  if (typeof rdSaveFurnitureFields === 'function') rdSaveFurnitureFields();
+  if (typeof rdRefreshShow === 'function') rdRefreshShow();
+  if (typeof saveCurrentDay === 'function') saveCurrentDay();
+  toast('Guest pushed to today\'s ' + iv.slot + ' segment');
+}
+(function ivBind(){
+  const panel = document.getElementById('panel-interviews');
+  panel.addEventListener('input', e => {
+    const card = e.target.closest('.iv-card');
+    if (card) ivSyncCard(card);
+  });
+  panel.addEventListener('change', e => {
+    const card = e.target.closest('.iv-card');
+    if (card) ivSyncCard(card);
+  });
+  panel.addEventListener('click', e => {
+    const card = e.target.closest('.iv-card');
+    const push = e.target.closest('.iv-push');
+    if (push && card) { e.stopPropagation(); ivPushToToday(ivById(card.dataset.ivid), card); return; }
+    const up = e.target.closest('.iv-up'), dn = e.target.closest('.iv-dn');
+    if ((up || dn) && card) { e.stopPropagation(); ivMove(card.dataset.ivid, up ? -1 : 1); return; }
+    const del = e.target.closest('.iv-del, .iv-del-big');
+    if (del && card) { e.stopPropagation(); ivDelete(card.dataset.ivid); return; }
+    const arc = e.target.closest('.iv-archive');
+    if (arc && card) { e.stopPropagation(); ivToggleArchive(card.dataset.ivid); return; }
+    const aq = e.target.closest('.iv-addq');
+    if (aq && card) {
+      e.stopPropagation();
+      const ta = card.querySelector('.iv-f-questions');
+      if (ta) {
+        ta.value = ta.value.replace(/\s+$/, '');
+        if (ta.value) ta.value += '\n';
+        ta.focus();
+        ivSyncCard(card);
+      }
+      return;
+    }
+  });
+  document.getElementById('ivArchToggle').addEventListener('click', () => {
+    const ah = document.getElementById('ivArchived');
+    ah.hidden = !ah.hidden;
+  });
+  document.getElementById('ivAdd').addEventListener('click', () => {
+    const list = ivStore();
+    const iv = ivNormalize({
+      name: document.getElementById('ivNewName').value.trim() || 'Untitled guest',
+      date: document.getElementById('ivNewDate').value,
+      slot: document.getElementById('ivNewSlot').value,
+      format: document.getElementById('ivNewFormat').value
+    });
+    iv.order = list.length;
+    list.push(iv);
+    ivPersist();
+    ivRender();
+    document.getElementById('ivNewName').value = '';
+    document.getElementById('ivNewDate').value = (typeof todayKey === 'function') ? todayKey() : '';
+    const el = document.querySelector('#panel-interviews .iv-card[data-ivid="' + iv.id + '"]');
+    if (el) { el.classList.add('expanded'); el.scrollIntoView({ block: 'nearest' }); }
+    toast('Interview added');
+  });
+})();
+function ivInit(){
+  ivMigrate();
+  try { document.getElementById('ivNewDate').value = todayKey(); } catch (e) {}
+  ivRender();
+}
+ivInit();
 
 renderNewspaper();
 </script>
