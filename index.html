@@ -711,6 +711,15 @@ html[data-theme="dark"] .guest-block{background:linear-gradient(180deg,#242052 0
 .np-composer-row input[type="text"]{padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--ink);font-size:13.5px;font-family:'Geist',sans-serif}
 .np-composer-row #npHeadline{flex:2;min-width:200px}
 .np-composer-row #npUrl{flex:1;min-width:160px}
+.np-thoughts-label{display:block;margin:12px 0 6px;font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+#npThoughts{width:100%;min-height:72px;resize:vertical;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--ink);font-size:13.5px;line-height:1.5;font-family:'Geist',sans-serif}
+#npThoughts:focus{outline:none;background:var(--surface);box-shadow:0 0 0 2px var(--marker)}
+/* newspaper grouped by day: one banner per show date, newest first */
+.np-day{margin:0 0 22px}
+.np-day-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:6px 0 12px;padding:10px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--card-border);border-left:4px solid var(--accent);box-shadow:0 1px 2px rgba(27,35,64,.05)}
+.np-day-banner{font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin:0;color:var(--ink)}
+.np-day-head .count{font-size:12px;color:var(--muted)}
+.np-day-list.np-flash .card{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 #npList .card{cursor:default}
 .np-item .card-headline{outline:none;border-radius:4px;padding:2px 4px;margin-left:-4px}
 .np-item .card-headline:focus{background:var(--accent-ghost);box-shadow:0 0 0 2px var(--accent-soft)}
@@ -995,6 +1004,8 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
       <input type="text" id="npUrl" placeholder="Link (optional)" aria-label="Link">
       <button class="btn btn-primary btn-sm" id="npAdd">Add</button>
     </div>
+    <label class="np-thoughts-label" for="npThoughts">Talking points / thoughts</label>
+    <textarea id="npThoughts" rows="3" placeholder="One talking point per line" spellcheck="true"></textarea>
   </div>
   <div class="cards" id="npList"></div>
   <p class="hint" id="npEmpty">No stories yet. Promote one from Feeds or add it above.</p>
@@ -3208,8 +3219,8 @@ function deleteBullet(btn) {
   if (ta) ta.value = rest.join('\n');
   syncBulletPreview(card);
   if (isNp) {
-    const it = npFind(card.dataset.npId);
-    if (it) { it.bullets = rest; npSave(); }
+    const loc = npLocate(card); // the card's own day, not only the working date
+    if (loc && loc.it) { loc.it.bullets = rest; npCommitDay(loc.date, loc.items); }
   } else if (typeof saveCurrentDay === 'function') {
     saveCurrentDay();
   }
@@ -4964,6 +4975,35 @@ function npSave() {
   npSaveAll(days);
 }
 let npState = npGetItems();
+/* Every day that has entries is shown. The working date (npState) is where new stories are filed;
+   any card's actions write back to that card's own day. */
+const NP_DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+function npItemsFor(date) {
+  if (date === npDate) return npState;
+  const v = npLoadAll()[date];
+  return Array.isArray(v) ? v : [];
+}
+function npCommitDay(date, items) {
+  if (date === npDate) { npState = items; npSave(); return; }
+  const days = npLoadAll();
+  days[date] = items;
+  npSaveAll(days);
+}
+function npDateOf(el) { const g = el && el.closest('.np-day'); return g ? g.dataset.date : npDate; }
+function npLocate(el) {
+  const card = el && el.closest('.np-item');
+  if (!card) return null;
+  const date = npDateOf(card), items = npItemsFor(date);
+  return { date, items, card, it: items.find(i => i.id === card.dataset.npId) || null };
+}
+/* "Tuesday, October 20th, 2026" (Toronto; the key is a calendar date, read at Toronto noon) */
+function npOrdinal(n) { const t = n % 100; if (t >= 11 && t <= 13) return n + 'th'; return n + ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'); }
+function npDayLabel(date) {
+  const p = String(date).split('-').map(Number);
+  const d = new Date(Date.UTC(p[0], p[1] - 1, p[2], 17)); // 17:00 UTC is midday in Toronto
+  const part = o => new Intl.DateTimeFormat('en-US', Object.assign({ timeZone: 'America/Toronto' }, o)).format(d);
+  return part({ weekday: 'long' }) + ', ' + part({ month: 'long' }) + ' ' + npOrdinal(+part({ day: 'numeric' })) + ', ' + part({ year: 'numeric' });
+}
 function npNewId() { return 'np' + Date.now().toString(36) + (npSeq++).toString(36); }
 
 function npBuildItemEl(it) {
@@ -5013,11 +5053,46 @@ function npBuildItemEl(it) {
 }
 
 function renderNewspaper() {
+  const days = npLoadAll();
+  days[npDate] = npState;
+  const dates = Object.keys(days).filter(d => NP_DAY_RE.test(d) && Array.isArray(days[d]) && days[d].length).sort().reverse();
   npList.innerHTML = '';
-  npState.forEach(it => npList.appendChild(npBuildItemEl(it)));
-  document.getElementById('npEmpty').hidden = npState.length > 0;
+  dates.forEach(d => {
+    const group = document.createElement('section');
+    group.className = 'np-day';
+    group.dataset.date = d;
+    const head = document.createElement('div');
+    head.className = 'np-day-head';
+    const h = document.createElement('h3');
+    h.className = 'np-day-banner';
+    h.textContent = npDayLabel(d);
+    head.appendChild(h);
+    if (d === npDate) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'Working date'; head.appendChild(t); }
+    const n = document.createElement('span');
+    n.className = 'count';
+    n.textContent = days[d].length + (days[d].length === 1 ? ' story' : ' stories');
+    head.appendChild(n);
+    const list = document.createElement('div');
+    list.className = 'np-day-list';
+    days[d].forEach(it => list.appendChild(npBuildItemEl(it)));
+    group.appendChild(head);
+    group.appendChild(list);
+    npList.appendChild(group);
+    npMakeSortable(list, d);
+  });
+  document.getElementById('npEmpty').hidden = dates.length > 0;
   const title = document.querySelector('#panel-newspaper .day-title em');
   if (title) title.textContent = npDate === npTodayStr() ? 'newspaper' : npDate;
+}
+let npRenderQueued = false;
+function npRenderSoon() { if (npRenderQueued) return; npRenderQueued = true; requestAnimationFrame(() => { npRenderQueued = false; renderNewspaper(); }); }
+function npRefreshDayHead(date) {
+  const g = npList.querySelector('.np-day[data-date="' + date + '"]');
+  if (!g) return;
+  const n = g.querySelectorAll('.np-item').length;
+  if (!n) { g.remove(); return; }
+  const c = g.querySelector('.np-day-head .count');
+  if (c) c.textContent = n + (n === 1 ? ' story' : ' stories');
 }
 
 function npAddItem(data) {
@@ -5029,7 +5104,7 @@ function npAddItem(data) {
     feed: data.feed || 'MANUAL',
     category: data.category || '',
     segment: data.segment || '',
-    bullets: [],
+    bullets: Array.isArray(data.bullets) ? data.bullets.filter(b => typeof b === 'string' && b.trim()).map(b => b.trim()) : [],
     sent: false,
     createdAt: Date.now()
   };
@@ -5037,7 +5112,7 @@ function npAddItem(data) {
   npSave();
   
 renderNewspaper();
-  const el = npList.querySelector('[data-np-id="' + it.id + '"]');
+  const el = npList.querySelector('.np-day[data-date="' + npDate + '"] [data-np-id="' + it.id + '"]');
   if (el) {
     el.classList.add('just-added');
     setTimeout(() => el.classList.remove('just-added'), 1400);
@@ -5046,7 +5121,6 @@ renderNewspaper();
   return it;
 }
 
-function npFind(id) { return npState.find(i => i.id === id); }
 
 function npPromote(data) {
   const url = (data.url || '').trim();
@@ -5061,17 +5135,21 @@ function npPromote(data) {
 /* manual add composer */
 const npHeadlineInput = document.getElementById('npHeadline');
 const npUrlInput = document.getElementById('npUrl');
+const npThoughtsInput = document.getElementById('npThoughts');
 function npCommitManual() {
   const h = npHeadlineInput.value.trim();
   const u = normUrl(npUrlInput.value.trim());
   if (!h && !u) return;
-  const it = npAddItem({ headline: h, url: u, source: 'Manual', feed: 'MANUAL' });
+  // talking points: one per line, trimmed, blank lines dropped; stored as bullets like a Nico fetch
+  const bullets = npThoughtsInput.value.split('\n').map(l => l.trim()).filter(Boolean);
+  const it = npAddItem({ headline: h, url: u, source: 'Manual', feed: 'MANUAL', bullets });
   npHeadlineInput.value = '';
   npUrlInput.value = '';
+  npThoughtsInput.value = '';
   npHeadlineInput.focus();
   toast('Story added');
-  if (u && it) {
-    const el = npList.querySelector('[data-np-id="' + it.id + '"]');
+  if (u && it && !bullets.length) { // typed talking points are kept: only auto-fetch when there are none
+    const el = npList.querySelector('.np-day[data-date="' + npDate + '"] [data-np-id="' + it.id + '"]');
     const btn = el && el.querySelector('.np-bar .nico-btn');
     if (el && btn) nicoFetch(el, btn);
   }
@@ -5088,6 +5166,8 @@ npDateInput.addEventListener('change', () => {
   npDate = npDateInput.value;
   npState = npGetItems();
   renderNewspaper();
+  const g = npList.querySelector('.np-day[data-date="' + npDate + '"]');
+  if (g) g.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
 });
 
 /* headline edits: Enter blurs, blur saves */
@@ -5099,43 +5179,43 @@ npList.addEventListener('keydown', e => {
 });
 npList.addEventListener('focusout', e => {
   if (!e.target.dataset.npHeadline) return;
-  const el = e.target.closest('.np-item');
-  const it = el && npFind(el.dataset.npId);
-  if (it) {
+  const loc = npLocate(e.target);
+  if (loc && loc.it) {
     const v = e.target.textContent.trim() || 'Untitled story';
-    if (v !== it.headline) { it.headline = v; npSave(); }
+    if (v !== loc.it.headline) { loc.it.headline = v; npCommitDay(loc.date, loc.items); }
   }
 });
 
 /* segment picker + delete + send (delegated) */
 npList.addEventListener('change', e => {
   if (!e.target.classList.contains('np-seg')) return;
-  const el = e.target.closest('.np-item');
-  const it = el && npFind(el.dataset.npId);
-  if (it) { it.segment = e.target.value; npSave(); }
+  const loc = npLocate(e.target);
+  if (loc && loc.it) { loc.it.segment = e.target.value; npCommitDay(loc.date, loc.items); }
 });
 npList.addEventListener('click', e => {
   const del = e.target.closest('.np-del');
   if (del) {
-    const el = del.closest('.np-item');
-    npState = npState.filter(i => i.id !== el.dataset.npId);
-    npSave();
-    el.remove();
-    document.getElementById('npEmpty').hidden = npState.length > 0;
+    const loc = npLocate(del);
+    if (!loc) return;
+    npCommitDay(loc.date, loc.items.filter(i => i.id !== loc.card.dataset.npId));
+    loc.card.remove();
+    npRefreshDayHead(loc.date);
+    document.getElementById('npEmpty').hidden = !!npList.querySelector('.np-item');
     toast('Removed from newspaper');
     return;
   }
   const snd = e.target.closest('.np-send');
   if (snd) {
-    const el = snd.closest('.np-item');
-    const it = el && npFind(el.dataset.npId);
-    if (it) npSendToBuilder(it);
+    const loc = npLocate(snd);
+    if (loc && loc.it) npSendToBuilder(loc.it, loc.date, loc.items);
   }
 });
 
-function npSendToBuilder(it) {
+function npSendToBuilder(it, date, items) {
+  date = date || npDate;
+  items = items || npItemsFor(date);
   if (!it.segment) {
-    const el = npList.querySelector('[data-np-id="' + it.id + '"] .np-seg');
+    const el = npList.querySelector('.np-day[data-date="' + date + '"] [data-np-id="' + it.id + '"] .np-seg');
     if (el) {
       el.classList.add('need-seg');
       setTimeout(() => el.classList.remove('need-seg'), 1600);
@@ -5169,7 +5249,7 @@ function npSendToBuilder(it) {
   lane.classList.add('lane-flash');
   setTimeout(() => lane.classList.remove('lane-flash'), 450);
   it.sent = true;
-  npSave();
+  npCommitDay(date, items);
   renderNewspaper();
   const label = (NP_SEGMENTS.find(s => s[0] === it.segment) || [])[1] || it.segment;
   toast('Sent to ' + label);
@@ -5216,34 +5296,38 @@ let npSyncT;
 new MutationObserver(() => {
   clearTimeout(npSyncT);
   npSyncT = setTimeout(() => {
-    let changed = false;
-    const order = Array.from(npList.querySelectorAll('.np-item')).map(el => el.dataset.npId);
-    const curOrder = npState.map(i => i.id);
-    if (order.length === curOrder.length && JSON.stringify(order) !== JSON.stringify(curOrder)) {
-      npState.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-      changed = true;
-    }
-    npList.querySelectorAll('.np-item').forEach(el => {
-      const it = npFind(el.dataset.npId);
-      if (!it) return;
-      const h = el.querySelector('[data-np-headline]');
-      if (h) {
-        const v = h.textContent.trim() || 'Untitled story';
-        if (v !== it.headline) { it.headline = v; changed = true; }
+    npList.querySelectorAll('.np-day').forEach(group => {
+      const date = group.dataset.date, items = npItemsFor(date);
+      let changed = false;
+      const order = Array.from(group.querySelectorAll('.np-item')).map(el => el.dataset.npId);
+      const curOrder = items.map(i => i.id);
+      if (order.length === curOrder.length && JSON.stringify(order) !== JSON.stringify(curOrder)) {
+        items.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+        changed = true;
       }
-      const bs = Array.from(el.querySelectorAll('.card-bullets li'))
-        .filter(li => !li.classList.contains('empty-note'))
-        .map(li => li.textContent.trim()).filter(Boolean);
-      if (JSON.stringify(bs) !== JSON.stringify(it.bullets)) { it.bullets = bs; changed = true; }
+      group.querySelectorAll('.np-item').forEach(el => {
+        const it = items.find(i => i.id === el.dataset.npId);
+        if (!it) return;
+        const h = el.querySelector('[data-np-headline]');
+        if (h) {
+          const v = h.textContent.trim() || 'Untitled story';
+          if (v !== it.headline) { it.headline = v; changed = true; }
+        }
+        const bs = Array.from(el.querySelectorAll('.card-bullets li'))
+          .filter(li => !li.classList.contains('empty-note'))
+          .map(li => li.textContent.trim()).filter(Boolean);
+        if (JSON.stringify(bs) !== JSON.stringify(it.bullets || [])) { it.bullets = bs; changed = true; }
+      });
+      if (changed) npCommitDay(date, items);
     });
-    if (changed) npSave();
   }, 600);
 }).observe(npList, { childList: true, subtree: true, characterData: true });
 
-/* drag to reorder the newspaper (same solitaire motion recipe) */
-if (window.Sortable) {
-  new Sortable(npList, {
-    group: 'newspaper',
+/* drag to reorder within a day (same solitaire motion recipe); one list per day, no cross-day drags */
+function npMakeSortable(list, date) {
+  if (!window.Sortable) return;
+  new Sortable(list, {
+    group: 'newspaper-' + date,
     draggable: '.card:not(.expanded)',
     animation: REDUCED ? 0 : 220,
     easing: 'cubic-bezier(0.16,1,0.3,1)',
@@ -5258,11 +5342,12 @@ if (window.Sortable) {
     onEnd(evt) {
       const item = evt.item;
       item.classList.remove('is-dragging');
-      const order = Array.from(npList.querySelectorAll('.np-item')).map(el => el.dataset.npId);
-      npState.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-      npSave();
-      npList.classList.add('np-flash');
-      setTimeout(() => npList.classList.remove('np-flash'), 450);
+      const order = Array.from(list.querySelectorAll('.np-item')).map(el => el.dataset.npId);
+      const items = npItemsFor(date);
+      items.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+      npCommitDay(date, items);
+      list.classList.add('np-flash');
+      setTimeout(() => list.classList.remove('np-flash'), 450);
       if (!REDUCED) {
         item.classList.add('confirm-pulse');
         item.addEventListener('animationend', () => item.classList.remove('confirm-pulse'), { once: true });
@@ -6548,7 +6633,8 @@ const SYNC_SURFACES = {
       const days = npLoadAll();
       days[date] = Array.isArray(p) ? p : [];
       _syncOrig.npSaveAll(days);
-      if (date === npDate) { npState = JSON.parse(JSON.stringify(days[date])); renderNewspaper(); }
+      if (date === npDate) npState = JSON.parse(JSON.stringify(days[date]));
+      npRenderSoon(); // every day is on screen now, not only the working date
     }
   },
   corkboard: {
@@ -6926,6 +7012,16 @@ async function syncPull(keys) {
   syncSetRest(true);
   return true;
 }
+/* every newspaper:<date> doc (the tab shows all days); each still goes through the per-day guard */
+async function syncPullPrefix(prefix) {
+  if (!syncClient) return false;
+  let res;
+  try { res = await syncTimeout(syncClient.from(SYNC_TABLE).select('key,payload,updated_at').like('key', prefix + '%')); }
+  catch (e) { res = { error: e }; }
+  if (!res || res.error) { syncSetRest(false); return false; }
+  (res.data || []).forEach(r => { if (r && r.key && syncSurfaceOf(r.key)) syncReconcile(r.key, r); });
+  return true;
+}
 function syncInterestKeys() {
   const keys = new Set(['corkboard', 'archive', 'feed-flags']);
   try { keys.add('builder:' + todayKey()); keys.add('builder:' + tomorrowKey()); if (viewedDate) keys.add('builder:' + viewedDate); } catch (e) {}
@@ -6982,7 +7078,7 @@ function syncSubscribe() {
       const was = syncRealtimeOk;
       syncRealtimeOk = status === 'SUBSCRIBED';
       syncUpdateDot();
-      if (syncRealtimeOk && !was) syncPull(syncInterestKeys()); // catch up on anything missed while disconnected
+      if (syncRealtimeOk && !was) syncPull(syncInterestKeys()).then(ok => { if (ok) syncPullPrefix('newspaper:'); }); // catch up on anything missed while disconnected
     });
 }
 async function syncConnect() {
@@ -6996,7 +7092,7 @@ async function syncConnect() {
       catch (e) { syncClient = null; syncSetRest(false); return; }
     }
     const pulled = await syncPull(syncInterestKeys());
-    if (pulled) syncSubscribe(); // realtime only once the REST side answers
+    if (pulled) { await syncPullPrefix('newspaper:'); syncSubscribe(); } // realtime only once the REST side answers
   } finally { syncConnecting = false; }
 }
 /* new surfaces opened: pull their docs */
