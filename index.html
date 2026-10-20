@@ -2677,8 +2677,10 @@ function normalizeFurn(f, key){
   if (o.outro == null) o.outro = '';
   return o;
 }
+let SEED_LANES_HTML = ''; // the shipped demo rundown, captured before any saved day is restored (sync guard)
 function captureEmptyLanes(){
   const lanes = document.getElementById('lanes');
+  if (!SEED_LANES_HTML) { syncFormState(lanes); SEED_LANES_HTML = lanes.innerHTML; }
   const tmp = document.createElement('div');
   tmp.innerHTML = lanes.innerHTML;
   tmp.querySelectorAll('.card').forEach(c => c.remove());
@@ -2690,9 +2692,10 @@ function captureEmptyLanes(){
     if (h3) setLaneTitle(lane, true);
     const tag2 = lane.querySelector('.lane-locked-tag'); if (tag2) tag2.hidden = true;
     const gb = lane.querySelector('.guest-block');
-    if (gb) gb.querySelectorAll('input, textarea, select').forEach(el => { el.value = ''; });
+    // clear the markup too (value attributes, textarea text), not only the live values
+    if (gb) gb.querySelectorAll('input, textarea, select').forEach(el => { el.value = ''; if (el.tagName === 'INPUT') el.removeAttribute('value'); if (el.tagName === 'TEXTAREA') el.textContent = ''; });
   });
-  tmp.querySelectorAll('.rd-tease-input').forEach(el => { el.value = ''; });
+  tmp.querySelectorAll('.rd-tease-input').forEach(el => { el.value = ''; el.removeAttribute('value'); if (el.tagName === 'TEXTAREA') el.textContent = ''; });
   EMPTY_LANES_HTML = tmp.innerHTML;
 }
 function setFurnitureFieldValues(){
@@ -4900,14 +4903,17 @@ function addNote(text, x, y, opts) {
   if (!opts.restored) corkSave();
   return note;
 }
+const CORK_DEMO_NOTES = [
+  ['Ask Liza about her Guelph frosh week story for lifestyle chat', 40, 40],
+  ['Clip idea: Carney soundbite vs Trump rally audio back to back', 300, 120],
+  ['Kicker backup: penguin discovered for first time in 100 years?', 90, 260]
+];
 (function corkRestore() {
   const saved = corkLoad();
   if (saved) {
     saved.forEach(n => addNote(n.body, n.x, n.y, { id: n.id, color: n.color, tilt: n.tilt, restored: true }));
   } else {
-    addNote('Ask Liza about her Guelph frosh week story for lifestyle chat', 40, 40);
-    addNote('Clip idea: Carney soundbite vs Trump rally audio back to back', 300, 120);
-    addNote('Kicker backup: penguin discovered for first time in 100 years?', 90, 260);
+    CORK_DEMO_NOTES.forEach(d => addNote(d[0], d[1], d[2]));
   }
 })();
 /* the board has no size while its tab is hidden: clamp when it opens and on resize */
@@ -6443,8 +6449,8 @@ function syncKnownAt(key) { return Math.max(syncMeta.at[key] || 0, syncInFlightA
 /* meta (persisted): sent = hash of our last upload, seen = hash of the local payload we last
    processed, at = newest updated_at we know for the doc (ms), dirty = ms of a local edit not yet uploaded */
 let syncMeta = (function () {
-  try { const m = JSON.parse(localStorage.getItem(SYNC_META_KEY) || '{}'); return { sent: m.sent || {}, seen: m.seen || {}, at: m.at || {}, dirty: m.dirty || {} }; }
-  catch (e) { return { sent: {}, seen: {}, at: {}, dirty: {} }; }
+  try { const m = JSON.parse(localStorage.getItem(SYNC_META_KEY) || '{}'); return { sent: m.sent || {}, seen: m.seen || {}, at: m.at || {}, dirty: m.dirty || {}, synced: m.synced || {} }; }
+  catch (e) { return { sent: {}, seen: {}, at: {}, dirty: {}, synced: {} }; }
 })();
 let syncMetaT = null;
 function syncMetaSave() { clearTimeout(syncMetaT); syncMetaT = setTimeout(() => { try { localStorage.setItem(SYNC_META_KEY, JSON.stringify(syncMeta)); } catch (e) {} }, 200); }
@@ -6496,7 +6502,9 @@ function syncCleanLanes(html) {
 /* ---------- surfaces: how each shared doc is read from and applied to local state ---------- */
 const SYNC_SURFACES = {
   builder: {
-    name: 'builder', saveNow: () => { lastSavedSnap = ''; saveCurrentDay(); },
+    name: 'builder', saveNow: () => { lastSavedSnap = ''; saveCurrentDay(); }, label: 'rundown',
+    kind: p => syncBuilderKind(p),
+    sig: p => syncBuilderSig(p),
     match: k => /^builder:\d{4}-\d{2}-\d{2}$/.test(k),
     localKeys: () => Object.keys(dayStoreLoad()).map(d => 'builder:' + d),
     raw: k => { const r = dayStoreLoad()[k.slice(8)]; return r ? JSON.stringify(r) : ''; },
@@ -6528,7 +6536,8 @@ const SYNC_SURFACES = {
     }
   },
   newspaper: {
-    name: 'newspaper', saveNow: () => {},
+    name: 'newspaper', saveNow: () => {}, label: 'newspaper',
+    kind: p => (Array.isArray(p) && p.length) ? 'content' : 'empty',
     match: k => /^newspaper:\d{4}-\d{2}-\d{2}$/.test(k),
     localKeys: () => Object.keys(npLoadAll()).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).map(d => 'newspaper:' + d),
     raw: k => { const v = npLoadAll()[k.slice(10)]; return v ? JSON.stringify(v) : ''; },
@@ -6543,7 +6552,12 @@ const SYNC_SURFACES = {
     }
   },
   corkboard: {
-    name: 'corkboard',
+    name: 'corkboard', label: 'corkboard',
+    kind: p => {
+      if (!Array.isArray(p) || !p.length) return 'empty';
+      const demo = new Set(CORK_DEMO_NOTES.map(d => d[0]));
+      return p.every(n => n && demo.has(String(n.body || ''))) ? 'default' : 'content';
+    },
     match: k => k === 'corkboard',
     localKeys: () => ['corkboard'],
     raw: () => { try { return localStorage.getItem(CORK_KEY) || ''; } catch (e) { return ''; } },
@@ -6561,7 +6575,8 @@ const SYNC_SURFACES = {
     }
   },
   archive: {
-    name: 'archive',
+    name: 'archive', label: 'archive',
+    kind: p => (Array.isArray(p) && p.length) ? 'content' : 'empty',
     match: k => k === 'archive',
     localKeys: () => ['archive'],
     raw: () => { try { return localStorage.getItem(ARCHIVE_KEY) || ''; } catch (e) { return ''; } },
@@ -6574,7 +6589,9 @@ const SYNC_SURFACES = {
     }
   },
   flags: {
-    name: 'flags',
+    name: 'flags', label: 'story flags',
+    kind: p => (p && typeof p === 'object' && Object.keys(p).some(k => p[k])) ? 'content' : 'empty',
+    demoMode: () => typeof feedDemoMode !== 'undefined' && feedDemoMode, // flags on demo stories never leave the device
     match: k => k === 'feed-flags',
     localKeys: () => ['feed-flags'],
     raw: () => JSON.stringify(feedState.flags || []),
@@ -6589,6 +6606,96 @@ const SYNC_SURFACES = {
 };
 function syncSurfaceOf(key) { for (const n in SYNC_SURFACES) if (SYNC_SURFACES[n].match(key)) return SYNC_SURFACES[n]; return null; }
 function syncIsEmpty(p) { return p == null || (Array.isArray(p) && !p.length) || (typeof p === 'object' && !Array.isArray(p) && !Object.keys(p).length); }
+
+/* ---------- first-connect protection: empty / default (seed) / real content ----------
+   Rules (every shared key, on first connect and on every remote apply):
+   - local has content, remote is empty or the shipped default  -> keep local, push it up
+   - local is empty or default, remote has content              -> apply remote
+   - both have content and differ  -> stash local in sync_recovery:<key>:<ts> first, then the later
+     write wins (if local wins, the remote copy is stashed too). No stash, no apply.
+   - default/demo content is never pushed; an empty doc is only pushed as a deliberate clear (a real
+     edit on a doc that has synced before), and only accepted when this device holds nothing unsynced. */
+function syncBuilderContent(p) {
+  const t = document.createElement('template');
+  t.innerHTML = (p && p.lanes) || '';
+  const cards = [];
+  t.content.querySelectorAll('.lane').forEach(lane => lane.querySelectorAll('.cards > .card').forEach(c => {
+    const h = c.querySelector('.card-headline');
+    let head = '';
+    if (h) { const x = h.cloneNode(true); x.querySelectorAll('.backup-tag, .topic-label').forEach(e => e.remove()); head = x.textContent.trim(); }
+    const ta = c.querySelector('.bullets-edit');
+    const bullets = (ta && ta.textContent.trim())
+      ? ta.textContent.split('\n').map(x => x.trim()).filter(Boolean)
+      : Array.from(c.querySelectorAll('.card-bullets li')).filter(li => !li.classList.contains('empty-note')).map(li => li.textContent.trim()).filter(Boolean);
+    const note = c.querySelector('.prod-notes');
+    const cue = c.querySelector('.card-details input[type="text"]');
+    cards.push([lane.dataset.lane || '', head, bullets.join('|'), note ? note.textContent.trim() : '', cue ? (cue.getAttribute('value') || '').trim() : '', c.classList.contains('backup') ? 1 : 0]);
+  }));
+  const guests = [];
+  t.content.querySelectorAll('[data-guest]').forEach(g => {
+    const v = sel => { const e = g.querySelector(sel); if (!e) return ''; return (e.tagName === 'TEXTAREA' ? e.textContent : (e.getAttribute('value') || '')).trim(); };
+    const row = [v('.guest-name-input'), v('.guest-intro-input'), v('.guest-seginfo'), v('.guest-tapeout'), v('.guest-tease')];
+    if (row.some(Boolean)) guests.push(row.join('|'));
+  });
+  const f = (p && p.furn) || {};
+  const text = [].concat(f.chats || [], Object.values(f.teases || {}), [f.outro || ''], Object.values(f.segNames || {}), Object.values(f.totsByDate || {}))
+    .map(x => String(x == null ? '' : x).trim()).filter(Boolean);
+  return { cards, guests, text };
+}
+/* content signature: what the doc says, not how its HTML happens to be serialized */
+function syncBuilderSig(p) {
+  const t = document.createElement('template');
+  t.innerHTML = (p && p.lanes) || '';
+  const lanes = Array.from(t.content.querySelectorAll('.lane')).map(l => (l.dataset.lane || '') + ':' + (l.classList.contains('locked') ? 'L' : '') + ':' + (l.dataset.segtype || ''));
+  return syncHashStr(syncStable(syncBuilderContent(p)) + '|' + lanes.join(',') + '|' + syncStable(((p && p.furn) || {}).guests || {}));
+}
+function syncSig(s, p) { return p == null ? null : (s.sig ? s.sig(p) : syncHash(p)); }
+let syncSeed = null;
+/* default = the shipped demo untouched: exactly the demo cards, guests that are demo guests or blank
+   (the demo guests drop off after a reload), and no furniture text of its own */
+function syncBuilderKind(p) {
+  if (!p || !p.lanes) return 'empty';
+  const c = syncBuilderContent(p);
+  if (!c.cards.length && !c.guests.length && !c.text.length) return 'empty';
+  if (syncSeed === null) syncSeed = SEED_LANES_HTML ? syncBuilderContent({ lanes: SEED_LANES_HTML, furn: {} }) : { cards: [], guests: [] };
+  const isDemo = syncSeed.cards.length > 0 && !c.text.length &&
+    syncStable(c.cards) === syncStable(syncSeed.cards) &&
+    c.guests.every(g => syncSeed.guests.indexOf(g) !== -1);
+  return isDemo ? 'default' : 'content';
+}
+function syncKind(s, p) {
+  if (p == null) return 'empty';
+  try { return s.kind(p); } catch (e) { return 'content'; } // unsure: treat as real work (never overwritten without a stash)
+}
+function syncHasContent(s, p) { return syncKind(s, p) === 'content'; }
+/* recovery stash: sync_recovery:<key>:<ts>. Kept for the session; a later session prunes stashes
+   older than 7 days (newest 20 kept regardless). Returns false if it could not be written. */
+const SYNC_RECOVERY_PREFIX = 'sync_recovery:';
+function syncStash(key, payload, reason) {
+  const k = SYNC_RECOVERY_PREFIX + key + ':' + Date.now();
+  const body = JSON.stringify({ savedAt: new Date().toISOString(), key: key, reason: reason, payload: payload });
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try { localStorage.setItem(k, body); console.info('Sync: saved a recovery copy of ' + key + ' as ' + k); return true; }
+    catch (e) { if (!syncPruneStashes(true)) break; }
+  }
+  console.warn('Sync: could not save a recovery copy of ' + key + '; leaving this device\'s copy in place.');
+  return false;
+}
+const syncSessionStart = Date.now();
+function syncPruneStashes(squeeze) {
+  try {
+    const all = Object.keys(localStorage).filter(k => k.indexOf(SYNC_RECOVERY_PREFIX) === 0)
+      .map(k => ({ k, ts: +k.slice(k.lastIndexOf(':') + 1) || 0 })).sort((a, b) => a.ts - b.ts);
+    let removed = 0;
+    all.forEach((x, i) => {
+      if (x.ts >= syncSessionStart) return; // never this session's stashes
+      const old = Date.now() - x.ts > 7 * 864e5, beyond = all.length - i > 20;
+      if (old || beyond || (squeeze && removed === 0)) { localStorage.removeItem(x.k); removed++; }
+    });
+    return removed > 0;
+  } catch (e) { return false; }
+}
+syncPruneStashes(false);
 
 /* ---------- local writes: wrap the existing save functions, push what changed ---------- */
 const _syncOrig = { dayStoreSave, npSaveAll, corkSave, archiveSave, feedSaveState };
@@ -6618,7 +6725,10 @@ function syncLocalChanged(surfaceName) {
     // right after applying a teammate's change, the re-render's own save is absorbed, not echoed back;
     // anything the person did since that apply is a real edit and is uploaded
     const settling = Date.now() < (syncSettleUntil[key] || 0) && syncLastUserAt <= (syncAppliedAt[key] || 0);
-    if (!syncUserActed || settling) { syncMetaSave(); return; }
+    if (settling) { syncMeta.synced[key] = syncSig(s, p); syncMetaSave(); return; } // the re-render of a doc we just applied
+    // boot-time re-render saves are not edits; the synced signature is left alone (formatting-only
+    // changes don't alter it, and anything else must still count as unsynced work)
+    if (!syncUserActed) { syncMetaSave(); return; }
     syncMeta.dirty[key] = Date.now();
     syncMetaSave();
     syncSchedulePush(key);
@@ -6636,6 +6746,10 @@ async function syncPush(key) {
   if (syncPending[key]) return; // a teammate's change is waiting for this doc: merge it first (stays dirty)
   const s = syncSurfaceOf(key); if (!s) return;
   const payload = s.read(key); if (payload == null) return;
+  if (s.demoMode && s.demoMode()) return; // surface is showing demo data: stays local (dirty) until real data
+  const kind = syncKind(s, payload);
+  if (kind === 'default') return; // the shipped demo/seed content is never a shared doc
+  if (kind === 'empty' && !(syncMeta.at[key] && syncMeta.dirty[key])) return; // only a deliberate clear of a synced doc goes up empty
   const h = syncHash(payload);
   const ts = new Date().toISOString(), pushStart = Date.now();
   syncMeta.sent[key] = h; // set before the request so a fast realtime echo is recognised
@@ -6647,41 +6761,59 @@ async function syncPush(key) {
   if (res && res.error) { console.warn('Sync: upload failed for ' + key + ', keeping it local for now:', res.error.message || res.error); syncSetRest(false); return; }
   for (let i = syncEdited.length - 1; i >= 0; i--) if (syncEdited[i].surface === s.name && syncEdited[i].ts <= pushStart) syncEdited.splice(i, 1);
   syncMeta.at[key] = Math.max(syncMeta.at[key] || 0, syncMs(ts));
+  syncMeta.synced[key] = syncSig(s, payload);
   if (syncMeta.seen[key] === h) delete syncMeta.dirty[key];
   syncMetaSave();
   syncSetRest(true);
 }
 
 /* ---------- applying remote docs ---------- */
-function syncBackupLocal(key, local) {
-  // a remote doc is about to replace local work that was never synced: keep one copy, three docs max
-  try {
-    const bk = 'dg_sync_backup:' + key;
-    if (localStorage.getItem(bk)) return;
-    const all = Object.keys(localStorage).filter(k => k.indexOf('dg_sync_backup:') === 0).sort((a, b) => (JSON.parse(localStorage.getItem(a)).savedAt || 0) - (JSON.parse(localStorage.getItem(b)).savedAt || 0));
-    while (all.length >= 3) localStorage.removeItem(all.shift());
-    localStorage.setItem(bk, JSON.stringify({ savedAt: Date.now(), payload: local }));
-  } catch (e) {}
-}
+/* The guard every remote apply goes through. Returns true if the remote doc was applied. */
 function syncApplyRemote(key, row) {
-  const s = syncSurfaceOf(key); if (!s) return;
-  if (s.editing()) { syncPending[key] = row; return; } // mid-edit: wait for blur
+  const s = syncSurfaceOf(key); if (!s) return false;
+  if (s.editing()) { syncPending[key] = row; return false; } // mid-edit: wait for blur
   delete syncPending[key];
   const local = s.read(key);
-  if (local != null && !syncIsEmpty(local) && !syncMeta.at[key]) syncBackupLocal(key, local);
   const h = syncHash(row.payload);
+  const lh = local == null ? null : syncHash(local);
+  const lsig = syncSig(s, local);
+  if (lh === h) { syncMarkSynced(key, lsig, row.updated_at); return true; }
+  const remoteHas = syncHasContent(s, row.payload), localHas = syncHasContent(s, local);
+  if (localHas && !remoteHas) {
+    // a deliberate clear from a teammate is accepted only when this device holds nothing unsynced
+    const cleanHere = !!syncMeta.at[key] && lsig === syncMeta.synced[key] && !syncMeta.dirty[key];
+    if (!(cleanHere && syncKind(s, row.payload) === 'empty')) {
+      console.info('Sync: kept this device\'s ' + key + ' (the shared copy is empty or the default) and uploaded it.');
+      syncMeta.dirty[key] = syncMeta.dirty[key] || Date.now();
+      syncMetaSave();
+      syncSchedulePush(key);
+      return false;
+    }
+  }
+  // stash when this device holds something the server never had (unsynced edits, or a first connect);
+  // replacing the copy we last synced with a newer shared one is normal live editing
+  const unsyncedHere = lsig !== syncMeta.synced[key] && lsig !== syncSig(s, row.payload);
+  const stashed = localHas && remoteHas && unsyncedHere;
+  if (stashed && !syncStash(key, local, 'replaced by a newer shared copy')) return false; // no stash, no apply
   syncApplying = true;
   try { s.apply(key, row.payload); }
   catch (e) { console.warn('Sync: could not apply ' + key, e); }
   finally { syncApplying = false; }
+  if (stashed && syncStartupGuard && s.label) toast('Loaded the shared ' + s.label + '. This device\'s copy is saved.');
   syncMeta.seen[key] = h;
-  syncMeta.at[key] = Math.max(syncMeta.at[key] || 0, syncMs(row.updated_at));
+  syncMarkSynced(key, syncSig(s, s.read(key)), row.updated_at); // what this device now holds, as stored
   delete syncMeta.dirty[key];
   syncSettleUntil[key] = Date.now() + SYNC_SETTLE_MS;
   syncAppliedAt[key] = Date.now();
   s.localKeys().forEach(k => { syncRawSeen[k] = s.raw(k); });
   syncMetaSave();
 }
+function syncMarkSynced(key, h, updatedAt) {
+  syncMeta.synced[key] = h;
+  syncMeta.at[key] = Math.max(syncMeta.at[key] || 0, syncMs(updatedAt));
+  syncMetaSave();
+}
+let syncStartupGuard = true; // first-connect: tell the person when a shared copy replaced theirs
 /* Field locator: find "the same field" again after a remote doc re-renders the surface. */
 function syncFieldRoot(c) {
   if (c.kind === 'np') return document.querySelector('#npList .np-item[data-np-id="' + CSS.escape(c.np) + '"]');
@@ -6769,12 +6901,17 @@ setInterval(syncFlushPending, 2000);
 function syncReconcile(key, row) {
   const s = syncSurfaceOf(key); if (!s) return;
   const local = s.read(key);
-  if (!row) { if (local != null && !syncIsEmpty(local)) syncPush(key); return; } // first-run migration
+  const localHas = syncHasContent(s, local);
+  if (!row) { if (localHas) syncPush(key); return; } // first-run migration: real content only, never the demo
   const rh = syncHash(row.payload), lh = local == null ? null : syncHash(local), rt = syncMs(row.updated_at);
-  if (rh === lh) { syncMeta.at[key] = Math.max(syncMeta.at[key] || 0, rt); syncMeta.seen[key] = lh; delete syncMeta.dirty[key]; syncMetaSave(); return; }
-  if (syncMeta.dirty[key]) { if (rt > syncMeta.dirty[key]) syncApplyRemote(key, row); else syncPush(key); return; } // last write wins
-  if (rt > (syncMeta.at[key] || 0)) syncApplyRemote(key, row);
-  else if (local != null) syncPush(key);
+  if (rh === lh || (local != null && syncSig(s, local) === syncSig(s, row.payload))) { syncMeta.seen[key] = lh; syncMarkSynced(key, syncSig(s, local), rt); delete syncMeta.dirty[key]; syncMetaSave(); return; }
+  const remoteHas = syncHasContent(s, row.payload);
+  if (!remoteHas) { if (localHas || syncMeta.dirty[key]) syncApplyRemote(key, row); return; } // guard keeps + pushes local, or takes a deliberate clear
+  if (!localHas) { syncApplyRemote(key, row); return; } // local empty/default: take the shared copy
+  // both hold real work and differ: the later write wins; the loser is stashed first
+  const localAt = Math.max(syncMeta.dirty[key] || 0, syncMeta.at[key] || 0);
+  if (rt > localAt) syncApplyRemote(key, row); // stashes local inside the guard
+  else if (syncStash(key, row.payload, 'shared copy replaced by this device\'s newer work')) { syncMeta.dirty[key] = syncMeta.dirty[key] || Date.now(); syncMetaSave(); syncPush(key); }
 }
 async function syncPull(keys) {
   if (!syncClient || !keys.length) return false;
@@ -6785,6 +6922,7 @@ async function syncPull(keys) {
   const byKey = {};
   (res.data || []).forEach(r => { byKey[r.key] = r; });
   keys.forEach(k => syncReconcile(k, byKey[k] || null));
+  syncStartupGuard = false; // first connect done
   syncSetRest(true);
   return true;
 }
