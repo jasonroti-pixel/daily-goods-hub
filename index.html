@@ -569,6 +569,7 @@ html[data-theme="dark"] .note-actions button{background:rgba(255,255,255,.14);co
 .feed-btn-row{display:flex;gap:8px;flex-wrap:wrap}
 .feed-del{color:#B3261E}
 .feed-del:hover{background:rgba(179,38,30,.08)}
+.feed-ingest{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.02em;color:var(--muted);font-feature-settings:"tnum"}
 .feed-saved-tag{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:rgba(30,122,76,.12);color:var(--ok)}
 #feedSavedCard{margin-top:18px}
 #feedDeleted{margin-top:12px;border-top:1px solid var(--border);padding-top:8px}
@@ -5369,11 +5370,40 @@ function feedNormScore(v) {
 function feedNormRec(r, tag) {
   if (!r || !r.title) return null;
   const bullets = Array.isArray(r.bullets) ? r.bullets.filter(function (b) { return typeof b === 'string'; }) : [];
+  const ing = (r.meta && r.meta.ingested_at) || '';
   return {
     headline: r.title, url: r.url || '', source: r.source || '', category: r.category || '',
     bullets: bullets, angle: r.angle || '', date: r.date || '', slot: r.slot || '',
-    score: feedNormScore(r.score), is_backup: !!r.is_backup, feed: tag
+    score: feedNormScore(r.score), is_backup: !!r.is_backup, feed: tag,
+    ingestedAt: (typeof ing === 'string' && !isNaN(Date.parse(ing))) ? ing : ''
   };
+}
+/* Display order inside a day: pm before am (pm is ingested later), then stories with an ingest
+   timestamp newest first, then untimed ones (the production feed has only date + slot), keeping
+   their original order. A fixed sort key keeps the ordering consistent. */
+function feedSlotRank(s) { const v = String(s.slot || '').toLowerCase(); return v === 'pm' ? 0 : v === 'am' ? 1 : 2; }
+function feedSortByIngest(list) {
+  return list.map(function (s, i) { const t = s.ingestedAt ? Date.parse(s.ingestedAt) : NaN; return { s: s, r: feedSlotRank(s), t: t, i: i }; })
+    .sort(function (a, b) {
+      if (a.r !== b.r) return a.r - b.r;
+      const at = !isNaN(a.t), bt = !isNaN(b.t);
+      if (at !== bt) return at ? -1 : 1;
+      if (at && a.t !== b.t) return b.t - a.t;
+      return a.i - b.i;
+    })
+    .map(function (x) { return x.s; });
+}
+/* "Ingested 6:17 PM" in Toronto time; adds the date when it differs from the story's scout day */
+function feedIngestLabel(st) {
+  if (!st.ingestedAt) return '';
+  const d = new Date(st.ingestedAt);
+  if (isNaN(d)) return '';
+  try {
+    const time = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', hour: 'numeric', minute: '2-digit' }).format(d);
+    const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Toronto', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+    const pre = (st.date && day !== st.date) ? new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', month: 'short', day: 'numeric' }).format(d) + ', ' : '';
+    return 'Ingested ' + pre + time;
+  } catch (e) { return ''; }
 }
 async function feedFetchSource(url, tag) {
   const res = await fetch(url, { cache: 'no-store' });
@@ -5520,7 +5550,8 @@ function feedCardHtml(st, savedMode) {
   const savedTag = savedMode ? '<span class="feed-saved-tag">Saved</span>' : '';
   return '<article class="feed-item" data-fkey="' + escapeHtml(st._key || feedKey(st)) + '" data-saved="' + (savedMode ? '1' : '0') + '">' +
     '<p class="feed-headline" tabindex="0">' + escapeHtml(st.headline || 'Untitled story') + '</p>' +
-    '<div class="feed-meta">' + (st.category ? '<span class="tag">' + escapeHtml(st.category) + '</span>' : '') + savedTag + '</div>' +
+    '<div class="feed-meta">' + (st.category ? '<span class="tag">' + escapeHtml(st.category) + '</span>' : '') + savedTag +
+    (feedIngestLabel(st) ? '<span class="feed-ingest" title="' + escapeHtml(st.ingestedAt) + '">' + escapeHtml(feedIngestLabel(st)) + '</span>' : '') + '</div>' +
     '<div class="feed-details">' + bullets + link +
     '<div class="feed-actions">' +
     '<div class="feed-seg-row"><select class="feed-seg" aria-label="Segment">' + feedSegOptions('') + '</select>' +
@@ -5574,7 +5605,7 @@ function renderFeeds() {
   let groups = [];
   if (feedDemoMode) {
     const demo = feedDedupeStories(feedDemoPool());
-    groups = [{ day: demo.length ? demo[0].date : '', stories: demo, capNote: '' }];
+    groups = [{ day: demo.length ? demo[0].date : '', stories: feedSortByIngest(demo), capNote: '' }];
   } else {
     groups = feedHistoryDates().map(function (d) {
       let list = (feedHist.days[d] || []).filter(function (s) { return !feedExcluded(s); });
@@ -5583,7 +5614,7 @@ function renderFeeds() {
         capNote = ' Showing the top 150 by score.';
         list = list.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); }).slice(0, 150);
       }
-      return { day: d, stories: list, capNote: capNote };
+      return { day: d, stories: feedSortByIngest(list), capNote: capNote };
     });
   }
   const total = groups.reduce(function (n, g) { return n + g.stories.length; }, 0);
