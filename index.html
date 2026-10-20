@@ -570,6 +570,21 @@ html[data-theme="dark"] .note-actions button{background:rgba(255,255,255,.14);co
 .feed-del{color:#B3261E}
 .feed-del:hover{background:rgba(179,38,30,.08)}
 .feed-ingest{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.02em;color:var(--muted);font-feature-settings:"tnum"}
+/* story of interest: a warm highlight (the hub's marker-amber) so a flagged story reads at a glance */
+.feed-item{position:relative}
+.feed-item .feed-headline{padding-right:36px}
+.feed-flag{position:absolute;top:8px;right:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid transparent;border-radius:8px;background:none;color:var(--muted);cursor:pointer;opacity:.55;transition:opacity 100ms var(--ease),background 100ms var(--ease),color 100ms var(--ease);touch-action:manipulation}
+.feed-flag svg{width:18px;height:18px}
+.feed-flag:hover,.feed-flag:focus-visible{opacity:1;background:var(--surface-2)}
+.feed-flag:focus-visible{outline:2px solid var(--marker);outline-offset:1px}
+.feed-item.flagged{border-color:#E0A526;box-shadow:inset 4px 0 0 #E0A526,0 2px 12px rgba(224,165,38,.22);background:linear-gradient(90deg,rgba(255,200,87,.20),rgba(255,200,87,.05) 65%),var(--surface)}
+.feed-item.flagged:hover{border-color:#C98A06}
+.feed-item.flagged .feed-flag{opacity:1;color:#C98A06}
+.feed-item.flagged .feed-flag svg{fill:currentColor}
+.feed-interest-tag{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:rgba(224,165,38,.20);color:#8A5A00}
+html[data-theme="dark"] .feed-item.flagged{background:linear-gradient(90deg,rgba(255,200,87,.16),rgba(255,200,87,.03) 65%),var(--surface)}
+html[data-theme="dark"] .feed-item.flagged .feed-flag{color:#FFC857}
+html[data-theme="dark"] .feed-interest-tag{background:rgba(255,200,87,.18);color:#FFD27A}
 .feed-saved-tag{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:rgba(30,122,76,.12);color:var(--ok)}
 #feedSavedCard{margin-top:18px}
 #feedDeleted{margin-top:12px;border-top:1px solid var(--border);padding-top:8px}
@@ -5351,6 +5366,7 @@ function feedSundayWipe() {
   feedHistSave();
   feedState.saved = [];
   feedState.tombstones = [];
+  feedState.flags = [];
   feedSaveState();
   return true;
 }
@@ -5507,8 +5523,9 @@ function feedLoadState() {
   try {
     const raw = localStorage.getItem(FEED_STORE_KEY);
     const p = raw ? JSON.parse(raw) : {};
-    return { saved: Array.isArray(p.saved) ? p.saved : [], tombstones: Array.isArray(p.tombstones) ? p.tombstones : [] };
-  } catch (e) { return { saved: [], tombstones: [] }; }
+    return { saved: Array.isArray(p.saved) ? p.saved : [], tombstones: Array.isArray(p.tombstones) ? p.tombstones : [],
+             flags: Array.isArray(p.flags) ? p.flags : [] };
+  } catch (e) { return { saved: [], tombstones: [], flags: [] }; }
 }
 let feedState = feedLoadState();
 function feedSaveState() {
@@ -5521,6 +5538,26 @@ function feedExcluded(st) {
   const keys = feedKeys(st);
   if (keys.some(k => feedState.tombstones.indexOf(k) !== -1)) return true;
   return feedState.saved.some(sv => feedKeys(sv).some(k => keys.indexOf(k) !== -1));
+}
+/* story of interest: flagged by any of the story's keys, so a refresh that changes one key keeps the flag */
+function feedIsFlagged(st) { return feedKeys(st).some(k => feedState.flags.indexOf(k) !== -1); }
+function feedToggleFlag(st) {
+  const keys = feedKeys(st);
+  const on = !feedIsFlagged(st);
+  feedState.flags = feedState.flags.filter(k => keys.indexOf(k) === -1);
+  if (on) feedState.flags.push(feedKey(st));
+  feedSaveState();
+  return on;
+}
+const FEED_FLAG_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>';
+function feedApplyFlagUi(item, on) {
+  item.classList.toggle('flagged', on);
+  const b = item.querySelector('.feed-flag');
+  if (b) { b.setAttribute('aria-pressed', String(on)); b.title = on ? 'Story of interest (click to unflag)' : 'Flag as a story of interest'; }
+  const meta = item.querySelector('.feed-meta');
+  const tag = meta && meta.querySelector('.feed-interest-tag');
+  if (on && meta && !tag) { const t = document.createElement('span'); t.className = 'feed-interest-tag'; t.textContent = 'Story of interest'; meta.insertBefore(t, meta.firstChild); }
+  if (!on && tag) tag.remove();
 }
 const feedList = document.getElementById('feedList');
 const feedSavedWrap = document.getElementById('feedSaved');
@@ -5548,9 +5585,11 @@ function feedCardHtml(st, savedMode) {
     ? '<button class="btn btn-sm feed-unsave">Unsave</button>'
     : '<button class="btn btn-sm feed-save">Save for Tomorrow</button>';
   const savedTag = savedMode ? '<span class="feed-saved-tag">Saved</span>' : '';
-  return '<article class="feed-item" data-fkey="' + escapeHtml(st._key || feedKey(st)) + '" data-saved="' + (savedMode ? '1' : '0') + '">' +
+  const flagged = feedIsFlagged(st);
+  return '<article class="feed-item' + (flagged ? ' flagged' : '') + '" data-fkey="' + escapeHtml(st._key || feedKey(st)) + '" data-saved="' + (savedMode ? '1' : '0') + '">' +
+    '<button type="button" class="feed-flag" aria-pressed="' + flagged + '" aria-label="Story of interest" title="' + (flagged ? 'Story of interest (click to unflag)' : 'Flag as a story of interest') + '">' + FEED_FLAG_ICON + '</button>' +
     '<p class="feed-headline" tabindex="0">' + escapeHtml(st.headline || 'Untitled story') + '</p>' +
-    '<div class="feed-meta">' + (st.category ? '<span class="tag">' + escapeHtml(st.category) + '</span>' : '') + savedTag +
+    '<div class="feed-meta">' + (flagged ? '<span class="feed-interest-tag">Story of interest</span>' : '') + (st.category ? '<span class="tag">' + escapeHtml(st.category) + '</span>' : '') + savedTag +
     (feedIngestLabel(st) ? '<span class="feed-ingest" title="' + escapeHtml(st.ingestedAt) + '">' + escapeHtml(feedIngestLabel(st)) + '</span>' : '') + '</div>' +
     '<div class="feed-details">' + bullets + link +
     '<div class="feed-actions">' +
@@ -5701,6 +5740,13 @@ document.getElementById('panel-feeds').addEventListener('click', e => {
   const key = item.dataset.fkey;
   const story = feedFindStory(key);
   if (e.target.closest('button, select, input, textarea, a, [contenteditable="true"]')) {
+    const fl = e.target.closest('.feed-flag');
+    if (fl && story) {
+      const on = feedToggleFlag(story);
+      feedApplyFlagUi(item, on); // in place: no re-render, no reorder, open cards stay open
+      toast(on ? 'Flagged as a story of interest' : 'Flag removed');
+      return;
+    }
     const add = e.target.closest('.feed-add');
     if (add && story) {
       const sel = item.querySelector('.feed-seg');
