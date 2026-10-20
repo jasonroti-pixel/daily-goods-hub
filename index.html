@@ -151,6 +151,10 @@ h1,h2,.lane-title,.brand,.guest-name{font-family:'Fraunces',Georgia,serif}
 .brand em{font-style:italic;font-weight:500;color:var(--accent-glow)}
 .brand small{display:block;font-family:'Space Mono',monospace;font-size:10.5px;font-weight:400;color:var(--bar-muted);letter-spacing:.16em;text-transform:uppercase;margin-top:2px}
 .header-actions{display:flex;gap:10px;align-items:center}
+/* shared-state sync dot: green = synced with the team, amber = local only */
+.sync-dot{width:10px;height:10px;border-radius:50%;background:#F2B544;box-shadow:0 0 0 3px rgba(242,181,68,.25);flex:none;transition:background 250ms var(--ease),box-shadow 250ms var(--ease)}
+.sync-dot.on{background:#3DDC84;box-shadow:0 0 0 3px rgba(61,220,132,.25)}
+@media print{.sync-dot{display:none !important}}
 .btn{
   font-family:'Geist',sans-serif;
   border:1px solid var(--border);
@@ -958,6 +962,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 <header class="app-header">
   <div class="brand">Daily <em>Goods</em> Hub<small>Show production prototype</small></div>
   <div class="header-actions">
+    <span class="sync-dot" id="syncDot" role="status" aria-live="polite" title="Local only: changes save on this device" aria-label="Local only"></span>
     <button class="icon-btn" id="settingsBtn" aria-label="Open settings" title="Settings"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     <button class="btn" id="themeToggle" aria-label="Toggle dark mode">Dark mode</button>
   </div>
@@ -1730,6 +1735,8 @@ function escapeHtml(s) {
 function normUrl(u) {
   u = (u || '').trim();
   if (!u) return '';
+  // shared docs can come from anyone holding the public key: never emit a script-capable link
+  if (/^(javascript|vbscript|data):/i.test(u.replace(/[\u0000-\u0020]+/g, ''))) return '';
   if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return u;
   return 'https://' + u;
 }
@@ -4048,7 +4055,7 @@ function openArchiveDay(date) {
         }
         if (st.audioCue) html += `<div class="ad-note">Audio: ${escapeHtml(st.audioCue)}</div>`;
         if (st.producerNotes) html += `<div class="ad-note">Producer: ${escapeHtml(st.producerNotes)}</div>`;
-        if (st.urls && st.urls.length) html += `<div class="ad-note">${st.urls.map(u => `<a href="${escapeHtml(u)}" target="_blank" rel="noopener">${escapeHtml(u)}</a>`).join('<br>')}</div>`;
+        if (st.urls && st.urls.length) html += `<div class="ad-note">${st.urls.map(u => normUrl(u) ? `<a href="${escapeHtml(normUrl(u))}" target="_blank" rel="noopener">${escapeHtml(u)}</a>` : escapeHtml(u)).join('<br>')}</div>`;
         html += `</div>`;
       });
     }
@@ -6410,6 +6417,458 @@ function ivInit(){
 ivInit();
 
 renderNewspaper();
+
+/* ================= Shared real-time state (Supabase, "Route B") =================
+   localStorage stays the instant local store and the UI never waits on the network. This layer
+   mirrors the shared surfaces to one public.hub_docs row per document and applies other people's
+   changes as they arrive:
+     builder:<YYYY-MM-DD>  {lanes, furn}      newspaper:<YYYY-MM-DD>  items[]
+     corkboard             notes[]            archive                 entries[]
+     feed-flags            {storyKey: true}
+   Not synced: The Keep, Tools, settings, the Gemini key.
+   Conflict model v1: last write wins per document. No accounts; the publishable key is public by
+   design (never a service_role key). If Supabase or the CDN is unreachable the app is local-only. */
+const SYNC_URL = 'https://zwyiaskobzosrytjkvrl.supabase.co';
+const SYNC_PUBLIC_KEY = 'sb_publishable_UoM97xpyj3a1q9bHOv-r3g__T9cnwru';
+const SYNC_LIB_SRC = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+const SYNC_TABLE = 'hub_docs';
+const SYNC_META_KEY = 'dg_sync_meta_v1';
+const SYNC_DEBOUNCE_MS = 800, SYNC_RETRY_MS = 30000, SYNC_SETTLE_MS = 2500, SYNC_NET_TIMEOUT_MS = 15000;
+
+let syncClient = null, syncChannel = null, syncLibLoading = null;
+let syncRestOk = false, syncRealtimeOk = false, syncApplying = false, syncConnecting = false;
+const syncTimers = {}, syncPending = {}, syncSettleUntil = {}, syncRawSeen = {};
+const syncInFlightAt = {}; // updated_at of an upload still in flight: anything older is already superseded
+function syncKnownAt(key) { return Math.max(syncMeta.at[key] || 0, syncInFlightAt[key] || 0); }
+/* meta (persisted): sent = hash of our last upload, seen = hash of the local payload we last
+   processed, at = newest updated_at we know for the doc (ms), dirty = ms of a local edit not yet uploaded */
+let syncMeta = (function () {
+  try { const m = JSON.parse(localStorage.getItem(SYNC_META_KEY) || '{}'); return { sent: m.sent || {}, seen: m.seen || {}, at: m.at || {}, dirty: m.dirty || {} }; }
+  catch (e) { return { sent: {}, seen: {}, at: {}, dirty: {} }; }
+})();
+let syncMetaT = null;
+function syncMetaSave() { clearTimeout(syncMetaT); syncMetaT = setTimeout(() => { try { localStorage.setItem(SYNC_META_KEY, JSON.stringify(syncMeta)); } catch (e) {} }, 200); }
+
+/* stable serialization (Postgres jsonb reorders object keys) + a fast 53-bit string hash */
+function syncStable(v) {
+  if (v === undefined || v === null || typeof v !== 'object') return v === undefined ? 'null' : JSON.stringify(v);
+  if (Array.isArray(v)) return '[' + v.map(syncStable).join(',') + ']';
+  return '{' + Object.keys(v).filter(k => v[k] !== undefined).sort().map(k => JSON.stringify(k) + ':' + syncStable(v[k])).join(',') + '}';
+}
+function syncHashStr(str) {
+  let h1 = 0xdeadbeef ^ str.length, h2 = 0x41c6ce57 ^ str.length;
+  for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h2 >>> 0).toString(16) + ':' + (h1 >>> 0).toString(16);
+}
+function syncHash(v) { return syncHashStr(syncStable(v)); }
+function syncMs(t) { const n = typeof t === 'number' ? t : Date.parse(t); return isNaN(n) ? 0 : n; }
+function syncEditable(el) { return !!(el && el.matches && el.matches('input, textarea, select, [contenteditable="true"]')); }
+function syncFocusIn(sel) { const a = document.activeElement; return syncEditable(a) && !!a.closest(sel); }
+
+/* Remote builder HTML is rendered as markup, and anyone with the public key can write a doc:
+   strip anything that can run script before it reaches the page. */
+const SYNC_BAD_TAGS = 'script, iframe, frame, frameset, object, embed, applet, link, meta, base, style, form, svg script, foreignObject';
+function syncSanitizeHtml(html) {
+  const t = document.createElement('template');
+  t.innerHTML = html || '';
+  t.content.querySelectorAll(SYNC_BAD_TAGS).forEach(el => el.remove());
+  t.content.querySelectorAll('*').forEach(el => {
+    Array.from(el.attributes).forEach(a => {
+      const n = a.name.toLowerCase();
+      const v = String(a.value || '').replace(/[\u0000-\u0020]+/g, '').toLowerCase();
+      if (n.startsWith('on') || n === 'srcdoc' || n === 'formaction' ||
+          (/^(href|src|xlink:href|action|data|poster|background)$/.test(n) && /^(javascript|vbscript|data:text\/html)/.test(v))) el.removeAttribute(a.name);
+    });
+  });
+  return t.innerHTML;
+}
+/* builder lanes carry per-viewer UI classes (an open card, a drag in progress): never share them */
+const SYNC_TRANSIENT = ['expanded', 'is-dragging', 'just-added', 'lane-flash', 'confirm-pulse', 'drag-ghost'];
+function syncCleanLanes(html) {
+  const t = document.createElement('template');
+  t.innerHTML = html || '';
+  SYNC_TRANSIENT.forEach(c => t.content.querySelectorAll('.' + c).forEach(el => el.classList.remove(c)));
+  return t.innerHTML;
+}
+
+/* ---------- surfaces: how each shared doc is read from and applied to local state ---------- */
+const SYNC_SURFACES = {
+  builder: {
+    name: 'builder', saveNow: () => { lastSavedSnap = ''; saveCurrentDay(); },
+    match: k => /^builder:\d{4}-\d{2}-\d{2}$/.test(k),
+    localKeys: () => Object.keys(dayStoreLoad()).map(d => 'builder:' + d),
+    raw: k => { const r = dayStoreLoad()[k.slice(8)]; return r ? JSON.stringify(r) : ''; },
+    read: k => { const r = dayStoreLoad()[k.slice(8)]; return (r && r.lanes) ? { lanes: syncCleanLanes(r.lanes), furn: r.furn || {} } : null; },
+    editing: () => syncFocusIn('#panel-builder') || !!document.querySelector('#lanes .is-dragging'),
+    apply: (k, p) => {
+      const date = k.slice(8);
+      const days = dayStoreLoad();
+      p = { lanes: syncSanitizeHtml(p.lanes || ''), furn: p.furn || {} };
+      days[date] = { lanes: p.lanes, furn: p.furn };
+      _syncOrig.dayStoreSave(days);
+      if (date !== viewedDate) return;
+      // keep this viewer's open cards open (cards have no ids: match by headline)
+      const open = new Set(Array.from(document.querySelectorAll('#lanes .card.expanded .card-headline')).map(h => h.textContent.trim()));
+      daySavePaused = true;
+      try {
+        const lanes = document.getElementById('lanes');
+        lanes.innerHTML = p.lanes || EMPTY_LANES_HTML;
+        lanes.querySelectorAll('.card').forEach(c => { const h = c.querySelector('.card-headline'); if (h && open.has(h.textContent.trim())) c.classList.add('expanded'); });
+        rdFurn = normalizeFurn(JSON.parse(JSON.stringify(p.furn || {})), date);
+        rdSaveFurn();
+        // a remote lock-in is not a local lock-in: only the person who locked writes the archive entry
+        const ls = Array.from(lanes.querySelectorAll('.lane'));
+        archWasAllLocked = ls.length > 0 && ls.every(l => l.classList.contains('locked'));
+        renderDayView();
+        undoStack.length = 0; redoStack.length = 0; syncUndoButtons(); // undo must not roll back a teammate's change
+        lastSavedSnap = '';
+      } finally { daySavePaused = false; }
+    }
+  },
+  newspaper: {
+    name: 'newspaper', saveNow: () => {},
+    match: k => /^newspaper:\d{4}-\d{2}-\d{2}$/.test(k),
+    localKeys: () => Object.keys(npLoadAll()).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).map(d => 'newspaper:' + d),
+    raw: k => { const v = npLoadAll()[k.slice(10)]; return v ? JSON.stringify(v) : ''; },
+    read: k => { const v = npLoadAll()[k.slice(10)]; return Array.isArray(v) ? v : null; },
+    editing: () => syncFocusIn('#panel-newspaper') || !!document.querySelector('#npList .is-dragging'),
+    apply: (k, p) => {
+      const date = k.slice(10);
+      const days = npLoadAll();
+      days[date] = Array.isArray(p) ? p : [];
+      _syncOrig.npSaveAll(days);
+      if (date === npDate) { npState = JSON.parse(JSON.stringify(days[date])); renderNewspaper(); }
+    }
+  },
+  corkboard: {
+    name: 'corkboard',
+    match: k => k === 'corkboard',
+    localKeys: () => ['corkboard'],
+    raw: () => { try { return localStorage.getItem(CORK_KEY) || ''; } catch (e) { return ''; } },
+    read: () => corkLoad(),
+    editing: () => !!document.querySelector('#board .note.dragging'),
+    apply: (k, p) => {
+      const notes = (Array.isArray(p) ? p : []).filter(n => n && typeof n === 'object').map(n => ({
+        id: String(n.id || ''), body: String(n.body || ''), x: +n.x || 0, y: +n.y || 0,
+        color: /^#[0-9a-f]{3,8}$/i.test(n.color) ? n.color : NOTE_COLORS[0],
+        tilt: /^-?\d+(\.\d+)?deg$/.test(n.tilt) ? n.tilt : '0deg' }));
+      try { localStorage.setItem(CORK_KEY, JSON.stringify({ notes })); } catch (e) {}
+      board.querySelectorAll('.note').forEach(n => n.remove());
+      notes.forEach(n => addNote(n.body, n.x, n.y, { id: n.id, color: n.color, tilt: n.tilt, restored: true }));
+      corkClampAll();
+    }
+  },
+  archive: {
+    name: 'archive',
+    match: k => k === 'archive',
+    localKeys: () => ['archive'],
+    raw: () => { try { return localStorage.getItem(ARCHIVE_KEY) || ''; } catch (e) { return ''; } },
+    read: () => { const a = archiveLoad(); return a.length ? a : (localStorage.getItem(ARCHIVE_KEY) ? a : null); },
+    editing: () => false,
+    apply: (k, p) => {
+      _syncOrig.archiveSave(Array.isArray(p) ? p : []);
+      const list = document.getElementById('archList'), viewer = document.getElementById('archViewer');
+      if (list && !list.hidden && (!viewer || viewer.hidden)) renderArchive();
+    }
+  },
+  flags: {
+    name: 'flags',
+    match: k => k === 'feed-flags',
+    localKeys: () => ['feed-flags'],
+    raw: () => JSON.stringify(feedState.flags || []),
+    read: () => { if (!feedState.flags || !feedState.flags.length) return localStorage.getItem(FEED_STORE_KEY) ? {} : null; const m = {}; feedState.flags.forEach(f => { m[f] = true; }); return m; },
+    editing: () => false,
+    apply: (k, p) => {
+      feedState.flags = Object.keys(p || {}).filter(f => p[f]);
+      _syncOrig.feedSaveState();
+      document.querySelectorAll('#panel-feeds .feed-item').forEach(item => { const st = feedFindStory(item.dataset.fkey); if (st) feedApplyFlagUi(item, feedIsFlagged(st)); });
+    }
+  }
+};
+function syncSurfaceOf(key) { for (const n in SYNC_SURFACES) if (SYNC_SURFACES[n].match(key)) return SYNC_SURFACES[n]; return null; }
+function syncIsEmpty(p) { return p == null || (Array.isArray(p) && !p.length) || (typeof p === 'object' && !Array.isArray(p) && !Object.keys(p).length); }
+
+/* ---------- local writes: wrap the existing save functions, push what changed ---------- */
+const _syncOrig = { dayStoreSave, npSaveAll, corkSave, archiveSave, feedSaveState };
+dayStoreSave = function (days) { _syncOrig.dayStoreSave(days); syncLocalChanged('builder'); };
+npSaveAll = function (days) { _syncOrig.npSaveAll(days); syncLocalChanged('newspaper'); };
+corkSave = function () { _syncOrig.corkSave(); syncLocalChanged('corkboard'); };
+archiveSave = function (entries) { _syncOrig.archiveSave(entries); syncLocalChanged('archive'); };
+feedSaveState = function () { _syncOrig.feedSaveState(); syncLocalChanged('flags'); };
+/* boot-time re-renders also save; those are not edits. A write only counts as a local edit (and is
+   pushed) once this person has interacted with the page, so a stale device opening the hub can't
+   overwrite a teammate's newer doc before the first pull reconciles it. */
+let syncUserActed = false, syncLastUserAt = 0;
+const syncAppliedAt = {};
+['pointerdown', 'keydown', 'input', 'change', 'drop'].forEach(t => document.addEventListener(t, () => { syncUserActed = true; syncLastUserAt = Date.now(); }, true));
+function syncLocalChanged(surfaceName) {
+  if (syncApplying) return;
+  const s = SYNC_SURFACES[surfaceName];
+  s.localKeys().forEach(key => {
+    const raw = s.raw(key);
+    if (syncRawSeen[key] === raw) return; // cheap skip: nothing about this doc changed
+    syncRawSeen[key] = raw;
+    const p = s.read(key);
+    if (p == null) return;
+    const h = syncHash(p);
+    if (h === syncMeta.seen[key]) return;
+    syncMeta.seen[key] = h;
+    // right after applying a teammate's change, the re-render's own save is absorbed, not echoed back;
+    // anything the person did since that apply is a real edit and is uploaded
+    const settling = Date.now() < (syncSettleUntil[key] || 0) && syncLastUserAt <= (syncAppliedAt[key] || 0);
+    if (!syncUserActed || settling) { syncMetaSave(); return; }
+    syncMeta.dirty[key] = Date.now();
+    syncMetaSave();
+    syncSchedulePush(key);
+  });
+}
+function syncSchedulePush(key) {
+  clearTimeout(syncTimers[key]);
+  syncTimers[key] = setTimeout(() => { syncPush(key); }, SYNC_DEBOUNCE_MS);
+}
+function syncTimeout(promise) {
+  return Promise.race([promise, new Promise(res => setTimeout(() => res({ error: { message: 'timeout' } }), SYNC_NET_TIMEOUT_MS))]);
+}
+async function syncPush(key) {
+  if (!syncClient) return;
+  if (syncPending[key]) return; // a teammate's change is waiting for this doc: merge it first (stays dirty)
+  const s = syncSurfaceOf(key); if (!s) return;
+  const payload = s.read(key); if (payload == null) return;
+  const h = syncHash(payload);
+  const ts = new Date().toISOString(), pushStart = Date.now();
+  syncMeta.sent[key] = h; // set before the request so a fast realtime echo is recognised
+  syncInFlightAt[key] = syncMs(ts);
+  let res;
+  try { res = await syncTimeout(syncClient.from(SYNC_TABLE).upsert({ key: key, payload: payload, updated_at: ts })); }
+  catch (e) { res = { error: e }; }
+  delete syncInFlightAt[key];
+  if (res && res.error) { console.warn('Sync: upload failed for ' + key + ', keeping it local for now:', res.error.message || res.error); syncSetRest(false); return; }
+  for (let i = syncEdited.length - 1; i >= 0; i--) if (syncEdited[i].surface === s.name && syncEdited[i].ts <= pushStart) syncEdited.splice(i, 1);
+  syncMeta.at[key] = Math.max(syncMeta.at[key] || 0, syncMs(ts));
+  if (syncMeta.seen[key] === h) delete syncMeta.dirty[key];
+  syncMetaSave();
+  syncSetRest(true);
+}
+
+/* ---------- applying remote docs ---------- */
+function syncBackupLocal(key, local) {
+  // a remote doc is about to replace local work that was never synced: keep one copy, three docs max
+  try {
+    const bk = 'dg_sync_backup:' + key;
+    if (localStorage.getItem(bk)) return;
+    const all = Object.keys(localStorage).filter(k => k.indexOf('dg_sync_backup:') === 0).sort((a, b) => (JSON.parse(localStorage.getItem(a)).savedAt || 0) - (JSON.parse(localStorage.getItem(b)).savedAt || 0));
+    while (all.length >= 3) localStorage.removeItem(all.shift());
+    localStorage.setItem(bk, JSON.stringify({ savedAt: Date.now(), payload: local }));
+  } catch (e) {}
+}
+function syncApplyRemote(key, row) {
+  const s = syncSurfaceOf(key); if (!s) return;
+  if (s.editing()) { syncPending[key] = row; return; } // mid-edit: wait for blur
+  delete syncPending[key];
+  const local = s.read(key);
+  if (local != null && !syncIsEmpty(local) && !syncMeta.at[key]) syncBackupLocal(key, local);
+  const h = syncHash(row.payload);
+  syncApplying = true;
+  try { s.apply(key, row.payload); }
+  catch (e) { console.warn('Sync: could not apply ' + key, e); }
+  finally { syncApplying = false; }
+  syncMeta.seen[key] = h;
+  syncMeta.at[key] = Math.max(syncMeta.at[key] || 0, syncMs(row.updated_at));
+  delete syncMeta.dirty[key];
+  syncSettleUntil[key] = Date.now() + SYNC_SETTLE_MS;
+  syncAppliedAt[key] = Date.now();
+  s.localKeys().forEach(k => { syncRawSeen[k] = s.raw(k); });
+  syncMetaSave();
+}
+/* Field locator: find "the same field" again after a remote doc re-renders the surface. */
+function syncFieldRoot(c) {
+  if (c.kind === 'np') return document.querySelector('#npList .np-item[data-np-id="' + CSS.escape(c.np) + '"]');
+  if (c.kind === 'card') {
+    const scope = c.lane ? document.querySelector('.lane[data-lane="' + c.lane + '"]') : document.getElementById('lanes');
+    const cards = scope ? Array.from(scope.querySelectorAll('.card')) : [];
+    return cards.find(cd => { const h = cd.querySelector('.card-headline'); return h && h.textContent.trim() === c.head; }) || null;
+  }
+  if (c.kind === 'lane') return document.querySelector('.lane[data-lane="' + c.lane + '"]');
+  return document.getElementById(c.panel);
+}
+function syncLocate(el) {
+  const panel = el.closest && el.closest('.tab-panel');
+  if (!panel || !syncEditable(el)) return null;
+  if (el.id) return { id: el.id };
+  const np = el.closest('.np-item'), card = el.closest('#lanes .card'), lane = el.closest('.lane');
+  let c;
+  if (np) c = { kind: 'np', np: np.dataset.npId };
+  else if (card) { const h = card.querySelector('.card-headline'); c = { kind: 'card', lane: lane ? lane.dataset.lane : null, head: h ? h.textContent.trim() : '' }; }
+  else if (lane) c = { kind: 'lane', lane: lane.dataset.lane };
+  else c = { kind: 'panel', panel: panel.id };
+  let sel = el.tagName.toLowerCase();
+  if (el.classList[0]) sel += '.' + CSS.escape(el.classList[0]);
+  if (el.dataset.seg) sel += '[data-seg="' + CSS.escape(el.dataset.seg) + '"]';
+  if (el.dataset.chat != null) sel += '[data-chat="' + CSS.escape(el.dataset.chat) + '"]';
+  if (el.dataset.npHeadline) sel += '[data-np-headline]';
+  const root = syncFieldRoot(c);
+  const idx = root ? Array.from(root.querySelectorAll(sel)).indexOf(el) : -1;
+  return idx < 0 ? null : { c, sel, idx };
+}
+function syncResolve(loc) {
+  if (loc.id) return document.getElementById(loc.id);
+  const root = syncFieldRoot(loc.c);
+  return root ? root.querySelectorAll(loc.sel)[loc.idx] || null : null;
+}
+function syncFieldValue(el) { return el.isContentEditable ? el.textContent : el.value; }
+/* Apply waiting teammate changes once the person stops editing. The field they just left is
+   re-applied on top of the teammate's version, then the merged doc is uploaded: both edits survive. */
+const SYNC_PANEL_SURFACE = { 'panel-builder': 'builder', 'panel-newspaper': 'newspaper' };
+const syncEdited = []; // fields changed since the surface's last successful upload: {surface, loc, value, ts}
+function syncFlushPending() {
+  Object.keys(syncPending).forEach(key => {
+    const row = syncPending[key], s = syncSurfaceOf(key);
+    if (!s || s.editing()) return;
+    delete syncPending[key];
+    if (syncMs(row.updated_at) <= syncKnownAt(key)) { if (syncMeta.dirty[key]) syncSchedulePush(key); return; }
+    const mine = syncMeta.dirty[key] ? syncEdited.filter(r => r.surface === s.name) : [];
+    syncApplyRemote(key, row);
+    if (!mine.length) return;
+    syncSettleUntil[key] = 0; // what follows is a real local edit
+    mine.forEach(r => {
+      const el = syncResolve(r.loc);
+      if (!el || syncFieldValue(el) === r.value) return;
+      if (el.isContentEditable) el.textContent = r.value; else el.value = r.value;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    if (s.saveNow) s.saveNow();
+    syncRawSeen[key] = undefined;
+    syncLocalChanged(s.name);
+  });
+}
+let syncFocusField = null;
+document.addEventListener('focusin', e => {
+  const loc = syncLocate(e.target);
+  syncFocusField = loc ? { el: e.target, loc, v0: syncFieldValue(e.target) } : null;
+});
+document.addEventListener('focusout', e => {
+  // record the edit (located while the field still exists), then merge anything waiting
+  const f = syncFocusField;
+  if (f && f.el === e.target) {
+    const value = syncFieldValue(e.target), panel = e.target.closest('.tab-panel'), surface = panel && SYNC_PANEL_SURFACE[panel.id];
+    if (surface && value !== f.v0) {
+      const same = syncEdited.findIndex(r => r.surface === surface && JSON.stringify(r.loc) === JSON.stringify(f.loc));
+      if (same >= 0) syncEdited.splice(same, 1);
+      syncEdited.push({ surface, loc: f.loc, value, ts: Date.now() });
+    }
+  }
+  setTimeout(syncFlushPending, 0);
+});
+document.addEventListener('pointerup', () => setTimeout(syncFlushPending, 300));
+setInterval(syncFlushPending, 2000);
+
+/* reconcile one doc on load / reconnect */
+function syncReconcile(key, row) {
+  const s = syncSurfaceOf(key); if (!s) return;
+  const local = s.read(key);
+  if (!row) { if (local != null && !syncIsEmpty(local)) syncPush(key); return; } // first-run migration
+  const rh = syncHash(row.payload), lh = local == null ? null : syncHash(local), rt = syncMs(row.updated_at);
+  if (rh === lh) { syncMeta.at[key] = Math.max(syncMeta.at[key] || 0, rt); syncMeta.seen[key] = lh; delete syncMeta.dirty[key]; syncMetaSave(); return; }
+  if (syncMeta.dirty[key]) { if (rt > syncMeta.dirty[key]) syncApplyRemote(key, row); else syncPush(key); return; } // last write wins
+  if (rt > (syncMeta.at[key] || 0)) syncApplyRemote(key, row);
+  else if (local != null) syncPush(key);
+}
+async function syncPull(keys) {
+  if (!syncClient || !keys.length) return false;
+  let res;
+  try { res = await syncTimeout(syncClient.from(SYNC_TABLE).select('key,payload,updated_at').in('key', keys)); }
+  catch (e) { res = { error: e }; }
+  if (!res || res.error) { syncSetRest(false); return false; }
+  const byKey = {};
+  (res.data || []).forEach(r => { byKey[r.key] = r; });
+  keys.forEach(k => syncReconcile(k, byKey[k] || null));
+  syncSetRest(true);
+  return true;
+}
+function syncInterestKeys() {
+  const keys = new Set(['corkboard', 'archive', 'feed-flags']);
+  try { keys.add('builder:' + todayKey()); keys.add('builder:' + tomorrowKey()); if (viewedDate) keys.add('builder:' + viewedDate); } catch (e) {}
+  try { keys.add('newspaper:' + npDate); } catch (e) {}
+  Object.keys(SYNC_SURFACES).forEach(n => SYNC_SURFACES[n].localKeys().forEach(k => keys.add(k)));
+  return Array.from(keys);
+}
+
+/* realtime: apply other people's writes as they land */
+async function syncOnEvent(ev) {
+  const row = ev && ev.new;
+  if (!row || !row.key || !syncSurfaceOf(row.key)) return;
+  let full = row;
+  if (row.payload === undefined || row.payload === null) {
+    // large rows can arrive without their payload: fetch the doc itself
+    try {
+      const r = await syncTimeout(syncClient.from(SYNC_TABLE).select('key,payload,updated_at').eq('key', row.key).maybeSingle());
+      if (!r || r.error || !r.data) return;
+      full = r.data;
+    } catch (e) { return; }
+  }
+  const h = syncHash(full.payload), key = full.key;
+  if (h === syncMeta.sent[key] || h === syncMeta.seen[key]) { syncMeta.at[key] = Math.max(syncMeta.at[key] || 0, syncMs(full.updated_at)); syncMetaSave(); return; } // our own echo, or nothing new
+  if (syncMs(full.updated_at) <= syncKnownAt(key)) return; // stale, out of order, or older than our own upload in flight
+  syncApplyRemote(key, full);
+}
+
+/* ---------- connection, status dot, retry ---------- */
+function syncUpdateDot() {
+  const dot = document.getElementById('syncDot'); if (!dot) return;
+  const on = syncRestOk && syncRealtimeOk;
+  dot.classList.toggle('on', on);
+  const label = on ? 'Synced with the team' : 'Local only: changes save on this device and sync when the connection is back';
+  dot.title = label; dot.setAttribute('aria-label', on ? 'Synced' : 'Local only');
+}
+function syncSetRest(ok) { syncRestOk = ok; syncUpdateDot(); }
+function syncLoadLib() {
+  if (window.supabase && window.supabase.createClient) return Promise.resolve(true);
+  if (syncLibLoading) return syncLibLoading;
+  syncLibLoading = new Promise(resolve => {
+    const sc = document.createElement('script');
+    sc.src = SYNC_LIB_SRC; sc.async = true;
+    sc.onload = () => resolve(!!(window.supabase && window.supabase.createClient));
+    sc.onerror = () => { sc.remove(); syncLibLoading = null; resolve(false); };
+    document.head.appendChild(sc);
+  });
+  return syncLibLoading;
+}
+function syncSubscribe() {
+  if (syncChannel || !syncClient) return;
+  syncChannel = syncClient.channel('hub-docs-sync')
+    .on('postgres_changes', { event: '*', schema: 'public', table: SYNC_TABLE }, ev => { syncOnEvent(ev); })
+    .subscribe(status => {
+      const was = syncRealtimeOk;
+      syncRealtimeOk = status === 'SUBSCRIBED';
+      syncUpdateDot();
+      if (syncRealtimeOk && !was) syncPull(syncInterestKeys()); // catch up on anything missed while disconnected
+    });
+}
+async function syncConnect() {
+  if (syncConnecting) return;
+  syncConnecting = true;
+  try {
+    if (!syncClient) {
+      const ok = await syncLoadLib();
+      if (!ok) { syncSetRest(false); return; }
+      try { syncClient = window.supabase.createClient(SYNC_URL, SYNC_PUBLIC_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }); }
+      catch (e) { syncClient = null; syncSetRest(false); return; }
+    }
+    const pulled = await syncPull(syncInterestKeys());
+    if (pulled) syncSubscribe(); // realtime only once the REST side answers
+  } finally { syncConnecting = false; }
+}
+/* new surfaces opened: pull their docs */
+const _syncOrigSwitchDay = switchBuilderDay;
+switchBuilderDay = function (key) { _syncOrigSwitchDay(key); if (syncClient && syncRestOk) syncPull(['builder:' + key]); };
+if (typeof npDateInput !== 'undefined' && npDateInput) npDateInput.addEventListener('change', () => { if (syncClient && syncRestOk) syncPull(['newspaper:' + npDate]); });
+window.addEventListener('online', () => { syncConnect(); });
+setInterval(() => { if (!syncRestOk || !syncRealtimeOk) syncConnect(); }, SYNC_RETRY_MS);
+syncUpdateDot();
+setTimeout(syncConnect, 0); // never block first paint
 </script>
 </body>
 </html>
