@@ -795,6 +795,8 @@ html[data-theme="dark"] .rd-row{border-bottom-color:rgba(255,255,255,.08)}
 .rd-input{width:100%;font-family:'Geist',sans-serif;font-size:14px;color:var(--ink);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
 .rd-input:focus{outline:2px solid var(--marker);border-color:var(--accent)}
 textarea.rd-input{resize:vertical;min-height:54px;line-height:1.5}
+#rdDate{max-width:240px;font-family:'Space Mono',monospace;font-feature-settings:"tnum";cursor:pointer}
+html[data-theme="dark"] #rdDate{color-scheme:dark}
 .rd-tots div{padding:3px 0;font-size:14px}
 .rd-tots .t{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);margin-right:8px}
 #rdIntroGuests div{padding:3px 0;font-size:14px}
@@ -1933,7 +1935,7 @@ function bindSegType(btn){
   const headerHtml =
   '<div class="rd-furniture" id="rdHeader" aria-label="Show header">' +
     '<div class="rd-brand">THE DAILY GOODS</div>' +
-    '<div class="rd-row"><span class="rd-label">Show date</span><div class="rd-content"><input type="text" id="rdDate" class="rd-input" spellcheck="false"></div></div>' +
+    '<div class="rd-row"><span class="rd-label">Show date</span><div class="rd-content"><input type="date" id="rdDate" class="rd-input" aria-label="Show date"></div></div>' +
     '<div class="rd-row"><span class="rd-label">Zoom Link</span><div class="rd-content"><span class="rd-lock" title="Locked: edit in Settings"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span> <a id="rdZoomLink" class="rd-zoomlink" href="#" target="_blank" rel="noopener"></a></div></div>' +
     '<div class="rd-row"><span class="rd-label">Password</span><div class="rd-content"><span class="rd-lock" title="Locked: edit in Settings"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span> <span id="rdZoomPass" class="rd-zoompass"></span></div></div>' +
     '<div class="rd-row"><span class="rd-label">Studio #</span><div class="rd-content"><span class="rd-lock" title="Locked: edit in Settings"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span> <span id="rdStudioLine"></span></div></div>' +
@@ -2054,7 +2056,25 @@ function rdAutoTotsLines(rows) {
   }
   return rows.map(r => (r[0] + ' ' + r[1]).trim());
 }
-function rdDateKey(){ const el = document.getElementById('rdDate'); return el ? el.value.trim() : ''; }
+/* Show date: the picker stores ISO (YYYY-MM-DD); rdDateKey() returns that ISO key (falling back to the
+   viewed builder day), and rdDateDisplay() gives the sheet's "TUESDAY, OCTOBER 20, 2026" form. */
+function rdIsoDate(v){
+  const t = String(v == null ? '' : v).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+  if (!t) return '';
+  const n = archNormDate(t); // legacy long-form values from before the picker
+  return /^\d{4}-\d{2}-\d{2}$/.test(n) ? n : '';
+}
+function rdDateKey(){
+  const el = document.getElementById('rdDate');
+  const v = el ? rdIsoDate(el.value) : '';
+  if (v) return v;
+  try { return viewedDate || todayKey(); } catch (e) { return ''; }
+}
+function rdDateDisplay(v){
+  const iso = rdIsoDate(v == null ? rdDateKey() : v);
+  return iso ? torontoLong(parseKeyToDate(iso)) : String(v || '');
+}
 function rdInitTots() {
   const ta = document.getElementById('rdTots'); if (!ta) return;
   const key = rdDateKey();
@@ -2099,9 +2119,7 @@ function rdRefreshShow() {
 
 function rdBindFurniture() {
   const set = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
-  let todayStr = '';
-  try { todayStr = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(new Date()).toUpperCase(); } catch (e) { todayStr = new Date().toDateString().toUpperCase(); }
-  set('rdDate', rdFurn.date != null ? rdFurn.date : todayStr);
+  set('rdDate', rdIsoDate(rdFurn.date) || todayKey());
   set('rdOutro', rdFurn.outro || '');
   set('rdPush', rdFurn.push != null ? rdFurn.push : 'TheDailyGoods@siriusxm.ca');
   $$('.rd-chat').forEach(inp => { const v = rdFurn.chats[+inp.dataset.chat]; if (v) inp.value = v; });
@@ -2129,7 +2147,7 @@ function rdBindFurniture() {
 /* furniture field persistence (top-level so undo restore can rebind) */
 function rdSaveFurnitureFields(){
   const gv = id => { const el = document.getElementById(id); return el ? el.value : ''; };
-  rdFurn.date = gv('rdDate');
+  rdFurn.date = rdIsoDate(gv('rdDate'));
   rdFurn.outro = gv('rdOutro'); rdFurn.push = gv('rdPush');
   rdFurn.chats = $$('.rd-chat').map(inp => inp.value);
   rdFurn.teases = {};
@@ -2360,7 +2378,7 @@ function buildPreviewHtml(){
   const gv = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
   let s = '';
   s += '<div class="ppv-brand">THE DAILY GOODS</div>';
-  const date = gv('rdDate');
+  const date = rdDateDisplay(gv('rdDate'));
   const zs = zoomSettings();
   const studio = 'STUDIO #: ' + (zs.listenerLine || '') + ' (LISTENER LINE) / ' + (zs.guestLine || '') + ' (GUEST LINE)';
   if (date) s += ppvRow('', '<b>' + ppvEsc(date) + '</b>');
@@ -2619,7 +2637,7 @@ function tomorrowKey(){ const d = torontoWall(); d.setDate(d.getDate() + 1); ret
 function dayStoreLoad(){ try { const r = localStorage.getItem(DAY_STORE_KEY); const o = r ? JSON.parse(r) : {}; return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
 function dayStoreSave(days){ try { localStorage.setItem(DAY_STORE_KEY, JSON.stringify(days)); } catch (e) {} }
 function freshFurn(key){
-  return { date: torontoLong(parseKeyToDate(key)), teases: {}, segNames: {}, chats: ['', '', ''], guests: {},
+  return { date: key, teases: {}, segNames: {}, chats: ['', '', ''], guests: {},
            outro: '', push: 'TheDailyGoods@siriusxm.ca', totsByDate: {} };
 }
 function normalizeFurn(f, key){
@@ -2629,7 +2647,9 @@ function normalizeFurn(f, key){
   o.chats = Array.isArray(o.chats) ? o.chats : ['', '', ''];
   o.guests = (o.guests && typeof o.guests === 'object') ? o.guests : {};
   o.totsByDate = (o.totsByDate && typeof o.totsByDate === 'object') ? o.totsByDate : {};
-  if (o.date == null) o.date = torontoLong(parseKeyToDate(key));
+  o.date = rdIsoDate(o.date) || key;
+  // manual lineups used to be keyed by the long-form date; re-key them by ISO
+  Object.keys(o.totsByDate).forEach(k => { const iso = rdIsoDate(k); if (iso && iso !== k) { if (o.totsByDate[iso] == null) o.totsByDate[iso] = o.totsByDate[k]; delete o.totsByDate[k]; } });
   if (o.push == null) o.push = 'TheDailyGoods@siriusxm.ca';
   if (o.outro == null) o.outro = '';
   return o;
@@ -2654,7 +2674,7 @@ function captureEmptyLanes(){
 }
 function setFurnitureFieldValues(){
   const set = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
-  set('rdDate', rdFurn.date);
+  set('rdDate', rdIsoDate(rdFurn.date));
   set('rdOutro', rdFurn.outro || '');
   set('rdPush', rdFurn.push);
   $$('.rd-chat').forEach(inp => { inp.value = rdFurn.chats[+inp.dataset.chat] || ''; });
@@ -2908,6 +2928,7 @@ wrapInit();
     try {
       document.getElementById('lanes').innerHTML = rec.lanes;
       rdFurn = normalizeFurn(rec.furn, viewedDate);
+      rdFurn.date = viewedDate; // the Today view always opens on today's date
       rdSaveFurn();
       renderDayView();
     } catch (e) {
@@ -2916,6 +2937,11 @@ wrapInit();
       bootDayFailed = true;
     } finally { if (!bootDayFailed) daySavePaused = false; }
   } else {
+    // a new day must not inherit yesterday's show date from the shared furniture
+    rdFurn = normalizeFurn(rdFurn, viewedDate);
+    rdFurn.date = viewedDate;
+    const dEl = document.getElementById('rdDate'); if (dEl) dEl.value = viewedDate;
+    rdSaveFurn();
     syncFormState(document.getElementById('lanes'));
     days[viewedDate] = { lanes: document.getElementById('lanes').innerHTML, furn: JSON.parse(JSON.stringify(rdFurn)) };
     dayStoreSave(days);
@@ -3808,6 +3834,7 @@ const ARCHIVE_KEY = 'dg_archive_v1';
 /* Normalize "MONDAY, OCTOBER 19, 2026" -> "2026-10-19" */
 function archNormDate(s) {
   s = (s || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
   const m = s.match(/([A-Z]+)\s*,?\s*([A-Z]+)\s+(\d{1,2})\s*,?\s*(\d{4})/i);
   if (!m) { const d = new Date(s); if (!isNaN(d)) return d.toISOString().slice(0, 10); return s; }
   const months = { JANUARY: '01', FEBRUARY: '02', MARCH: '03', APRIL: '04', MAY: '05', JUNE: '06', JULY: '07', AUGUST: '08', SEPTEMBER: '09', OCTOBER: '10', NOVEMBER: '11', DECEMBER: '12' };
@@ -3906,7 +3933,7 @@ function archSnapshotDay() {
   const now = new Date().toISOString();
   const idx = entries.findIndex(e => e.date === dateKey);
   let displayDate = dateKey;
-  try { displayDate = (typeof rdDateKey === 'function') ? rdDateKey() : dateKey; } catch (e) {}
+  try { displayDate = rdDateDisplay(dateKey); } catch (e) {}
   const rec = { date: dateKey, displayDate, lockedAt: now, storyCount, guestCount: data.lanes.filter(l => l.type === 'interview').length, rundown: data };
   if (idx >= 0) entries[idx] = rec; else entries.push(rec);
   entries.sort((a, b) => (a.date < b.date ? 1 : -1));
@@ -3987,7 +4014,7 @@ function openArchiveDay(date) {
   let html = '';
   // header furniture
   const f = r.furniture || {};
-  if (f.title || f.date) html += `<h4>${escapeHtml(f.title || 'THE DAILY GOODS')} — ${escapeHtml(f.date || e.date)}</h4>`;
+  if (f.title || f.date) html += `<h4>${escapeHtml(f.title || 'THE DAILY GOODS')} - ${escapeHtml(rdDateDisplay(f.date || e.date))}</h4>`;
   (r.lanes || []).forEach(lane => {
     html += `<div class="ad-seg"><div class="ad-seg-time">${escapeHtml(lane.time || '')}</div><div class="ad-seg-name">${escapeHtml(lane.name || '')}</div>`;
     if (lane.type === 'interview' && lane.guest) {
