@@ -3084,11 +3084,14 @@ function flushTypeSnap(){
 /* ---------- copy card for Google Sheets ---------- */
 /* A drag-select ends in a click: don't let it collapse the card and wipe the selection. */
 let lastMouseDown = null;
-document.addEventListener('mousedown', e => { lastMouseDown = { x: e.clientX, y: e.clientY }; }, true);
+document.addEventListener('mousedown', e => { lastMouseDown = { x: e.clientX, y: e.clientY, t: Date.now() }; }, true);
 function clickIsSelecting(e) {
   const sel = window.getSelection && window.getSelection();
   if (sel && !sel.isCollapsed && sel.toString().trim()) return true;
-  return !!(lastMouseDown && Math.hypot(e.clientX - lastMouseDown.x, e.clientY - lastMouseDown.y) > 6);
+  /* only a fresh mousedown counts: stale ones belong to unrelated clicks (or none at all) */
+  if (lastMouseDown && (Date.now() - lastMouseDown.t) < 2000 &&
+      Math.hypot(e.clientX - lastMouseDown.x, e.clientY - lastMouseDown.y) > 6) return true;
+  return false;
 }
 function cardCopyText(card) {
   const lines = [];
