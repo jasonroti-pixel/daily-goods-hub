@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:,">
-<title>Daily Goods Hub - Design Prototype v21 (Royal Signal + Feed History)</title>
+<title>Daily Goods Hub - Design Prototype v22 (Royal Signal + Feed History)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Geist:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -995,7 +995,7 @@ html[data-theme="dark"] .arch-day-meta{color:rgba(255,255,255,.6)}
 </head>
 <body>
 <div class="proto-banner">
-  <span>Design Prototype v21 (Royal Signal + Feed History)</span>
+  <span>Design Prototype v22 (Royal Signal + Feed History)</span>
   <span class="accent-picker">
     <span class="lbl">Accent</span>
     <button class="swatch active" data-accent="profound" aria-label="Profound blue accent" title="Profound blue #376CFF"></button>
@@ -3093,8 +3093,8 @@ function clickIsSelecting(e) {
       Math.hypot(e.clientX - lastMouseDown.x, e.clientY - lastMouseDown.y) > 6) return true;
   return false;
 }
-function cardCopyText(card) {
-  const lines = [];
+/* What a card's Copy carries, read once so the plain and rich flavours stay in step. */
+function cardCopyParts(card) {
   const headEl = card.querySelector('.card-headline');
   let headline = 'Untitled story';
   if (headEl) {
@@ -3106,19 +3106,15 @@ function cardCopyText(card) {
   }
   const backupSw = card.querySelector('.switch[aria-label="Mark as backup"]');
   const isBackup = card.classList.contains('backup') || (backupSw && backupSw.getAttribute('aria-checked') === 'true');
-  lines.push((isBackup ? '[BACKUP] ' : '') + headline);
   const segSel = card.classList.contains('np-item') ? card.querySelector('.np-seg') : null;
-  if (segSel && segSel.value) lines.push('Segment: ' + segSel.options[segSel.selectedIndex].text.trim());
+  const segment = segSel && segSel.value ? segSel.options[segSel.selectedIndex].text.trim() : '';
   const ta0 = card.querySelector('.prod-notes');
-  const note0 = ta0 ? ta0.value.trim() : '';
-  if (note0) lines.push('PRODUCER NOTE: ' + note0);
-  bulletLines(card).forEach(t => lines.push('\u2022 ' + t));
+  const note = ta0 ? ta0.value.trim() : '';
   const srcEl = card.querySelector('.card-meta .src');
   const src = srcEl ? srcEl.textContent.trim() : '';
-  if (src) lines.push('Source: ' + src);
   const a = card.querySelector('.url-row a');
-  const href = a ? (a.getAttribute('href') || '').trim() : '';
-  if (href && href !== '#') lines.push(href);
+  let href = a ? (a.getAttribute('href') || '').trim() : '';
+  if (href === '#') href = '';
   let cue = '';
   const det = card.querySelector('.card-details');
   if (det) {
@@ -3129,8 +3125,30 @@ function cardCopyText(card) {
     const ca = card.querySelector('.card-audio');
     if (ca && ca.textContent.trim()) cue = ca.textContent.trim();
   }
-  if (cue) lines.push('AUDIO CUE: ' + cue);
+  return { headline: (isBackup ? '[BACKUP] ' : '') + headline, segment, note, bullets: bulletLines(card), src, href, cue };
+}
+function cardCopyText(card) {
+  const p = cardCopyParts(card);
+  const lines = [p.headline];
+  if (p.segment) lines.push('Segment: ' + p.segment);
+  if (p.note) lines.push('PRODUCER NOTE: ' + p.note);
+  p.bullets.forEach(t => lines.push('• ' + t));
+  if (p.src) lines.push('Source: ' + p.src);
+  if (p.href) lines.push(p.href);
+  if (p.cue) lines.push('AUDIO CUE: ' + p.cue);
   return lines.join('\n');
+}
+/* Same card as HTML, so Sheets (and Docs, Word) paste every part instead of only the text it can parse */
+function cardCopyHtml(card) {
+  const p = cardCopyParts(card);
+  const out = ['<p><strong>' + escapeHtml(p.headline) + '</strong></p>'];
+  if (p.segment) out.push('<p>Segment: ' + escapeHtml(p.segment) + '</p>');
+  if (p.note) out.push('<p>PRODUCER NOTE: ' + escapeHtml(p.note) + '</p>');
+  if (p.bullets.length) out.push('<ul>' + p.bullets.map(t => '<li>' + escapeHtml(t) + '</li>').join('') + '</ul>');
+  if (p.src) out.push('<p>Source: ' + escapeHtml(p.src) + '</p>');
+  if (p.href) out.push('<p><a href="' + escapeHtml(p.href) + '">' + escapeHtml(p.href) + '</a></p>');
+  if (p.cue) out.push('<p>AUDIO CUE: ' + escapeHtml(p.cue) + '</p>');
+  return out.join('');
 }
 
 function guestCopyText(g) {
@@ -3156,6 +3174,19 @@ function guestCopyText(g) {
   return parts.join('\n');
 }
 
+async function copyRichToClipboard(text, html) {
+  try {
+    if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+      const item = new ClipboardItem({
+        'text/plain': new Blob([text], { type: 'text/plain' }),
+        'text/html': new Blob([html], { type: 'text/html' })
+      });
+      await navigator.clipboard.write([item]);
+      return true;
+    }
+  } catch (err) { }
+  return copyTextToClipboard(text);
+}
 async function copyTextToClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);
@@ -3316,7 +3347,7 @@ document.addEventListener('click', e => {
     const gcard = cp0.closest('.card');
     const text = guest ? guestCopyText(guest) : (gcard ? cardCopyText(gcard) : '');
     if (!text) { toast('Nothing to copy'); return; }
-    copyTextToClipboard(text).then(ok => {
+    (guest ? copyTextToClipboard(text) : copyRichToClipboard(text, cardCopyHtml(gcard))).then(ok => {
       toast(ok ? 'Copied for Sheets' : 'Copy failed. Select the text and copy manually.');
     });
     return;
@@ -5834,6 +5865,16 @@ function feedCopyText(st) {
   if (url) lines.push(normUrl(url));
   return lines.join('\n');
 }
+function feedCopyHtml(st) {
+  const out = ['<p><strong>' + escapeHtml((st.headline || '').trim() || 'Untitled story') + '</strong></p>'];
+  const bs = (Array.isArray(st.bullets) ? st.bullets : []).map(b => String(b || '').trim()).filter(Boolean);
+  if (bs.length) out.push('<ul>' + bs.map(t => '<li>' + escapeHtml(t) + '</li>').join('') + '</ul>');
+  const src = (st.source || '').trim();
+  if (src) out.push('<p>Source: ' + escapeHtml(src) + '</p>');
+  const url = (st.url || '').trim();
+  if (url) { const u = normUrl(url); out.push('<p><a href="' + escapeHtml(u) + '">' + escapeHtml(u) + '</a></p>'); }
+  return out.join('');
+}
 function feedFindStory(key) {
   const dates = Object.keys(feedHist.days);
   for (let di = 0; di < dates.length; di++) {
@@ -6032,7 +6073,7 @@ document.getElementById('panel-feeds').addEventListener('click', e => {
     }
     const cp = e.target.closest('.feed-copy');
     if (cp && story) {
-      copyTextToClipboard(feedCopyText(story)).then(ok => toast(ok ? 'Copied' : 'Copy failed. Select the text and copy manually.'));
+      copyRichToClipboard(feedCopyText(story), feedCopyHtml(story)).then(ok => toast(ok ? 'Copied' : 'Copy failed. Select the text and copy manually.'));
       return;
     }
     const nw = e.target.closest('.feed-news');
