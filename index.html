@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:,">
-<title>Daily Goods Hub - Design Prototype v19 (Royal Signal + Feed History)</title>
+<title>Daily Goods Hub - Design Prototype v20 (Royal Signal + Feed History)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Geist:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -995,7 +995,7 @@ html[data-theme="dark"] .arch-day-meta{color:rgba(255,255,255,.6)}
 </head>
 <body>
 <div class="proto-banner">
-  <span>Design Prototype v19 (Royal Signal + Feed History)</span>
+  <span>Design Prototype v20 (Royal Signal + Feed History)</span>
   <span class="accent-picker">
     <span class="lbl">Accent</span>
     <button class="swatch active" data-accent="profound" aria-label="Profound blue accent" title="Profound blue #376CFF"></button>
@@ -3082,6 +3082,14 @@ function flushTypeSnap(){
 })();
 
 /* ---------- copy card for Google Sheets ---------- */
+/* A drag-select ends in a click: don't let it collapse the card and wipe the selection. */
+let lastMouseDown = null;
+document.addEventListener('mousedown', e => { lastMouseDown = { x: e.clientX, y: e.clientY }; }, true);
+function clickIsSelecting(e) {
+  const sel = window.getSelection && window.getSelection();
+  if (sel && !sel.isCollapsed && sel.toString().trim()) return true;
+  return !!(lastMouseDown && Math.hypot(e.clientX - lastMouseDown.x, e.clientY - lastMouseDown.y) > 6);
+}
 function cardCopyText(card) {
   const lines = [];
   const headEl = card.querySelector('.card-headline');
@@ -3096,6 +3104,8 @@ function cardCopyText(card) {
   const backupSw = card.querySelector('.switch[aria-label="Mark as backup"]');
   const isBackup = card.classList.contains('backup') || (backupSw && backupSw.getAttribute('aria-checked') === 'true');
   lines.push((isBackup ? '[BACKUP] ' : '') + headline);
+  const segSel = card.classList.contains('np-item') ? card.querySelector('.np-seg') : null;
+  if (segSel && segSel.value) lines.push('Segment: ' + segSel.options[segSel.selectedIndex].text.trim());
   const ta0 = card.querySelector('.prod-notes');
   const note0 = ta0 ? ta0.value.trim() : '';
   if (note0) lines.push('PRODUCER NOTE: ' + note0);
@@ -3379,6 +3389,7 @@ document.addEventListener('click', e => {
   if (card && !laneLocked(card)) {
     if (justDragged) return;
     if (e.target.closest('button, input, textarea, select, a, [contenteditable="true"]')) return;
+    if (clickIsSelecting(e)) return;
     card.classList.toggle('expanded');
   }
 });
@@ -4805,9 +4816,14 @@ $$('[data-guest]').forEach(g => {
 
 /* ---------- talking points: one textarea, one bullet per line ---------- */
 function bulletLines(card) {
-  const ta = card && card.querySelector('.bullets-edit');
-  if (!ta) return [];
-  return ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (!card) return [];
+  const ta = card.querySelector('.bullets-edit');
+  const lines = ta ? ta.value.split('\n').map(s => s.trim()).filter(Boolean) : [];
+  if (lines.length) return lines;
+  // editor empty (e.g. a newspaper card rendered from the store): what the card shows is the truth
+  return Array.from(card.querySelectorAll('.card-bullets > li'))
+    .filter(li => !li.classList.contains('empty-note'))
+    .map(li => li.textContent.trim()).filter(Boolean);
 }
 /* Migrate legacy cards: .bullet-edit lists become one textarea; producer notes move above talking points. */
 /* Clip link (topic cards): where an audio clip was pulled from. Lives in the editor next to the
@@ -5835,10 +5851,21 @@ function feedCardHtml(st, savedMode) {
     '<button class="btn btn-primary btn-sm feed-add">Add to Today\'s Show</button></div>' +
     '<div class="feed-btn-row">' + saveBtn +
     '<button class="btn btn-sm feed-news">Send to newspaper</button>' +
+    '<button class="btn btn-sm feed-copy">Copy</button>' +
     '<button class="btn btn-sm feed-del">Delete</button></div>' +
     '</div></div></article>';
 }
 
+/* plain text, same shape as cardCopyText: headline, • bullets, Source, link */
+function feedCopyText(st) {
+  const lines = [(st.headline || '').trim() || 'Untitled story'];
+  (Array.isArray(st.bullets) ? st.bullets : []).forEach(b => { const t = String(b || '').trim(); if (t) lines.push('\u2022 ' + t); });
+  const src = (st.source || '').trim();
+  if (src) lines.push('Source: ' + src);
+  const url = (st.url || '').trim();
+  if (url) lines.push(normUrl(url));
+  return lines.join('\n');
+}
 function feedFindStory(key) {
   const dates = Object.keys(feedHist.days);
   for (let di = 0; di < dates.length; di++) {
@@ -6035,6 +6062,11 @@ document.getElementById('panel-feeds').addEventListener('click', e => {
       toast('Removed from saved');
       return;
     }
+    const cp = e.target.closest('.feed-copy');
+    if (cp && story) {
+      copyTextToClipboard(feedCopyText(story)).then(ok => toast(ok ? 'Copied' : 'Copy failed. Select the text and copy manually.'));
+      return;
+    }
     const nw = e.target.closest('.feed-news');
     if (nw && story) {
       const it = npPromote({ headline: story.headline, url: story.url, source: story.source, feed: story.feed, category: story.category });
@@ -6056,6 +6088,7 @@ document.getElementById('panel-feeds').addEventListener('click', e => {
     }
     return;
   }
+  if (clickIsSelecting(e)) return;
   item.classList.toggle('expanded');
 });
 document.getElementById('panel-feeds').addEventListener('keydown', e => {
