@@ -5205,7 +5205,7 @@ function npAddItem(data) {
     sent: false,
     createdAt: Date.now()
   };
-  npState.push(it);
+  npState.unshift(it); // newest story first in its day; drag order and synced order are kept as stored
   npSave();
   
 renderNewspaper();
