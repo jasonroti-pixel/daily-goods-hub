@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:,">
-<title>Daily Goods Hub - Design Prototype v22 (Royal Signal + Feed History)</title>
+<title>Daily Goods Hub - Design Prototype v23 (Royal Signal + Feed History)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Geist:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -995,7 +995,7 @@ html[data-theme="dark"] .arch-day-meta{color:rgba(255,255,255,.6)}
 </head>
 <body>
 <div class="proto-banner">
-  <span>Design Prototype v22 (Royal Signal + Feed History)</span>
+  <span>Design Prototype v23 (Royal Signal + Feed History)</span>
   <span class="accent-picker">
     <span class="lbl">Accent</span>
     <button class="swatch active" data-accent="profound" aria-label="Profound blue accent" title="Profound blue #376CFF"></button>
@@ -3151,27 +3151,39 @@ function cardCopyHtml(card) {
   return out.join('');
 }
 
-function guestCopyText(g) {
+function guestCopyParts(g) {
   const val = sel => {
     const el = g.querySelector(sel);
     return el ? el.value.trim() : '';
   };
-  const parts = [];
   const name = val('.guest-name-input');
   const slot = val('.guest-slot');
-  if (name || slot) parts.push([name, slot].filter(Boolean).join(' - '));
   const intro = val('.guest-intro-input');
-  if (intro) {
-    const paras = intro.split(/\n+/).map(s => s.trim()).filter(Boolean);
-    if (paras.length) parts.push(paras.join('\n\n'));
-  }
-  const seg = val('.guest-seginfo');
-  if (seg) parts.push('SEGMENT INFO: ' + seg);
-  const tape = val('.guest-tapeout');
-  if (tape) parts.push('TAPE OUT: ' + tape);
-  const tease = val('.guest-tease');
-  if (tease) parts.push('TEASE: ' + tease);
+  return {
+    head: (name || slot) ? [name, slot].filter(Boolean).join(' - ') : '',
+    paras: intro ? intro.split(/\n+/).map(s => s.trim()).filter(Boolean) : [],
+    seg: val('.guest-seginfo'), tape: val('.guest-tapeout'), tease: val('.guest-tease')
+  };
+}
+function guestCopyText(g) {
+  const p = guestCopyParts(g);
+  const parts = [];
+  if (p.head) parts.push(p.head);
+  if (p.paras.length) parts.push(p.paras.join('\n\n'));
+  if (p.seg) parts.push('SEGMENT INFO: ' + p.seg);
+  if (p.tape) parts.push('TAPE OUT: ' + p.tape);
+  if (p.tease) parts.push('TEASE: ' + p.tease);
   return parts.join('\n');
+}
+function guestCopyHtml(g) {
+  const p = guestCopyParts(g);
+  const out = [];
+  if (p.head) out.push('<p><strong>' + escapeHtml(p.head) + '</strong></p>');
+  p.paras.forEach(t => out.push('<p>' + escapeHtml(t) + '</p>'));
+  if (p.seg) out.push('<p>SEGMENT INFO: ' + escapeHtml(p.seg) + '</p>');
+  if (p.tape) out.push('<p>TAPE OUT: ' + escapeHtml(p.tape) + '</p>');
+  if (p.tease) out.push('<p>TEASE: ' + escapeHtml(p.tease) + '</p>');
+  return out.join('');
 }
 
 async function copyRichToClipboard(text, html) {
@@ -3214,8 +3226,9 @@ async function copyTextToClipboard(text) {
 /* ---------- copy locked lanes for Sheets: TSV, one card per row, one field per cell ----------
    Columns: Segment | Time | Topic label | Headline or guest | Bullets or intro | Producer note | Source | Link | Audio cue.
    Separate from the per-card Copy button, which writes one multi-line cell. */
+function tsvClean(v) { return String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ').replace(/ {2,}/g, ' ').trim(); }
 function tsvCell(v) {
-  let t = String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ').replace(/ {2,}/g, ' ').trim();
+  let t = tsvClean(v);
   // Sheets reads a cell that starts with a quote as a quoted field and would swallow the tabs after it
   if (t.charAt(0) === '"') t = '"' + t.replace(/"/g, '""') + '"';
   return t;
@@ -3225,7 +3238,7 @@ function tsvRow(fields) {
   while (cells.length && cells[cells.length - 1] === '') cells.pop(); // no trailing tab
   return cells.join('\t');
 }
-function lockedLanesTsv() {
+function lockedLanesFields() {
   const rows = [];
   $$('#lanes .lane').forEach(lane => {
     if (!lane.classList.contains('locked')) return;
@@ -3238,7 +3251,7 @@ function lockedLanesTsv() {
       const val = sel => { const el = g.querySelector(sel); return el ? el.value.trim() : ''; };
       const name = val('.guest-name-input'), intro = val('.guest-intro-input');
       if (!name && !intro) return;
-      rows.push(tsvRow([seg, time, 'GUEST', name, intro]));
+      rows.push([seg, time, 'GUEST', name, intro]);
       return;
     }
     let n = 0;
@@ -3262,16 +3275,25 @@ function lockedLanesTsv() {
       const clip = normUrl(cardClipUrl(card));
       let cueCell = cueEl ? cueEl.value.trim() : '';
       if (clip) cueCell = cueCell ? cueCell + ' | Clip: ' + clip : 'Clip: ' + clip;
-      rows.push(tsvRow([seg, time, label, headline || 'Untitled story', bulletLines(card).join('; '),
-        noteEl ? noteEl.value : '', srcEl ? srcEl.textContent : '', link, cueCell]));
+      rows.push([seg, time, label, headline || 'Untitled story', bulletLines(card).join('; '),
+        noteEl ? noteEl.value : '', srcEl ? srcEl.textContent : '', link, cueCell]);
     });
   });
   return rows;
 }
+function lockedLanesTsv() { return lockedLanesFields().map(tsvRow); }
+/* the same rows as an HTML table: one <td> per field, the Link column (8th) as an anchor */
+function lockedLanesTableHtml(fieldRows) {
+  return '<table><tbody>' + fieldRows.map(f => '<tr>' + f.map((v, i) => {
+    const t = tsvClean(v);
+    return '<td>' + (i === 7 && t ? '<a href="' + escapeHtml(t) + '">' + escapeHtml(t) + '</a>' : escapeHtml(t)) + '</td>';
+  }).join('') + '</tr>').join('') + '</tbody></table>';
+}
 document.getElementById('copyLockedBtn').addEventListener('click', () => {
-  const rows = lockedLanesTsv();
+  const fieldRows = lockedLanesFields();
+  const rows = fieldRows.map(tsvRow);
   if (!rows.length) { toast('No cards in the locked segments'); return; }
-  copyTextToClipboard(rows.join('\n')).then(ok => {
+  copyRichToClipboard(rows.join('\n'), lockedLanesTableHtml(fieldRows)).then(ok => {
     toast(ok ? rows.length + (rows.length === 1 ? ' card' : ' cards') + ' copied. Paste into Sheets.' : 'Copy failed. Select the text and copy manually.');
   });
 });
@@ -3347,7 +3369,7 @@ document.addEventListener('click', e => {
     const gcard = cp0.closest('.card');
     const text = guest ? guestCopyText(guest) : (gcard ? cardCopyText(gcard) : '');
     if (!text) { toast('Nothing to copy'); return; }
-    (guest ? copyTextToClipboard(text) : copyRichToClipboard(text, cardCopyHtml(gcard))).then(ok => {
+    copyRichToClipboard(text, guest ? guestCopyHtml(guest) : cardCopyHtml(gcard)).then(ok => {
       toast(ok ? 'Copied for Sheets' : 'Copy failed. Select the text and copy manually.');
     });
     return;
@@ -4224,6 +4246,30 @@ function archToMarkdown(e) {
   });
   return md;
 }
+function archToHtml(e) {
+  const r = e.rundown || { lanes: [] };
+  const P = t => '<p>' + escapeHtml(t) + '</p>';
+  let h = '<h1>' + escapeHtml('THE DAILY GOODS — ' + e.date) + '</h1><p><em>' + escapeHtml('Locked in ' + (e.lockedAt || 'unknown')) + '</em></p>';
+  (r.lanes || []).forEach(lane => {
+    h += '<h2>' + escapeHtml((lane.time || '') + ' ' + (lane.name || '')) + '</h2>';
+    if (lane.type === 'interview' && lane.guest) {
+      const g = lane.guest;
+      h += '<p><strong>' + escapeHtml('GUEST: ' + (g.name || '')) + '</strong></p>';
+      if (g.intro) h += P('Intro: ' + g.intro);
+      if (g.segInfo) h += P('Segment info: ' + g.segInfo);
+      if (g.tapeOut) h += P('Tape out: ' + g.tapeOut);
+    } else {
+      (lane.stories || []).forEach((st, i) => {
+        h += '<h3>' + escapeHtml((i + 1) + '. ' + (st.isBackup ? '[BACKUP] ' : '') + (st.headline || 'Untitled')) + '</h3>';
+        if (st.bullets && st.bullets.length) h += '<ul>' + st.bullets.map(b => '<li>' + escapeHtml(b) + '</li>').join('') + '</ul>';
+        if (st.audioCue) h += P('Audio cue: ' + st.audioCue);
+        if (st.producerNotes) h += P('Producer notes: ' + st.producerNotes);
+        (st.urls || []).forEach(u => { h += '<p><a href="' + escapeHtml(u) + '">' + escapeHtml(u) + '</a></p>'; });
+      });
+    }
+  });
+  return h;
+}
 function archToText(e) {
   return archToMarkdown(e).replace(/^#{1,3} /gm, '').replace(/\*\*/g, '').replace(/^_/, '').replace(/_$/gm, '');
 }
@@ -4292,11 +4338,7 @@ function archDuplicateToToday() {
   });
   bind('archCopy', () => {
     if (!archCurrent) return;
-    const txt = archToText(archCurrent);
-    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(
-      () => toast('Copied as text'),
-      () => { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast('Copied as text'); } catch (e) { toast('Copy failed'); } ta.remove(); }
-    );
+    copyRichToClipboard(archToText(archCurrent), archToHtml(archCurrent)).then(ok => toast(ok ? 'Copied as text' : 'Copy failed'));
   });
   bind('archJson', () => { if (archCurrent) archDownload(`daily-goods-${archCurrent.date}.json`, JSON.stringify(archCurrent, null, 2), 'application/json'); });
   bind('archMd', () => { if (archCurrent) archDownload(`daily-goods-${archCurrent.date}.md`, archToMarkdown(archCurrent), 'text/markdown'); });
