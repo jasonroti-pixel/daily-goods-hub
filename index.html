@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:,">
-<title>Daily Goods Hub - Design Prototype v20 (Royal Signal + Feed History)</title>
+<title>Daily Goods Hub - Design Prototype v21 (Royal Signal + Feed History)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Geist:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -995,7 +995,7 @@ html[data-theme="dark"] .arch-day-meta{color:rgba(255,255,255,.6)}
 </head>
 <body>
 <div class="proto-banner">
-  <span>Design Prototype v20 (Royal Signal + Feed History)</span>
+  <span>Design Prototype v21 (Royal Signal + Feed History)</span>
   <span class="accent-picker">
     <span class="lbl">Accent</span>
     <button class="swatch active" data-accent="profound" aria-label="Profound blue accent" title="Profound blue #376CFF"></button>
@@ -5171,7 +5171,7 @@ function npBuildItemEl(it) {
   const x = el.querySelector('.card-del');
   if (x) x.replaceWith(fav); else el.insertBefore(fav, el.firstChild);
   el.classList.toggle('np-faved', !!it.fav);
-  el.querySelectorAll('.push-tomorrow-btn, .clip-label, .clip-url, .card-del, .card-del-big').forEach(b => b.remove());
+  el.querySelectorAll('.grip, .push-tomorrow-btn, .clip-label, .clip-url, .card-del, .card-del-big').forEach(b => b.remove());
   const badge = document.createElement('span');
   badge.className = 'feed-badge';
   badge.textContent = it.feed || 'MANUAL';
@@ -5228,7 +5228,6 @@ function renderNewspaper() {
     group.appendChild(head);
     group.appendChild(list);
     npList.appendChild(group);
-    npMakeSortable(list, d);
   });
   document.getElementById('npEmpty').hidden = dates.length > 0;
   const title = document.querySelector('#panel-newspaper .day-title em');
@@ -5486,44 +5485,10 @@ new MutationObserver(() => {
         if (JSON.stringify(bs) !== JSON.stringify(it.bullets || [])) { it.bullets = bs; changed = true; }
       });
       if (changed) npCommitDay(date, items);
+      if (changed && items.map(i => i.id).join() !== order.join()) npRenderSoon(); // an arrow move crossed the favourites: re-pin on screen
     });
   }, 600);
 }).observe(npList, { childList: true, subtree: true, characterData: true });
-
-/* drag to reorder within a day (same solitaire motion recipe); one list per day, no cross-day drags */
-function npMakeSortable(list, date) {
-  if (!window.Sortable) return;
-  new Sortable(list, {
-    group: 'newspaper-' + date,
-    draggable: '.card:not(.expanded)',
-    animation: REDUCED ? 0 : 220,
-    easing: 'cubic-bezier(0.16,1,0.3,1)',
-    ghostClass: 'drag-ghost',
-    chosenClass: 'is-dragging',
-    dragClass: 'is-dragging',
-    handle: '.card',
-    onStart(evt) {
-      justDragged = true;
-      evt.item.classList.add('is-dragging');
-    },
-    onEnd(evt) {
-      const item = evt.item;
-      item.classList.remove('is-dragging');
-      const order = Array.from(list.querySelectorAll('.np-item')).map(el => el.dataset.npId);
-      const items = npItemsFor(date);
-      items.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
-      npCommitDay(date, items);
-      if (items.map(i => i.id).join() !== order.join()) setTimeout(renderNewspaper, 0); // favourites stay on top
-      list.classList.add('np-flash');
-      setTimeout(() => list.classList.remove('np-flash'), 450);
-      if (!REDUCED) {
-        item.classList.add('confirm-pulse');
-        item.addEventListener('animationend', () => item.classList.remove('confirm-pulse'), { once: true });
-      }
-      setTimeout(() => { justDragged = false; }, 120);
-    }
-  });
-}
 
 /* ---------- v17: feeds, full feed, no source labels ---------- */
 /* Demo scout dataset. Production will fetch the published scout JSON instead;
