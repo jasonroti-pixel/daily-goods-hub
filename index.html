@@ -168,6 +168,9 @@ h1,h2,.lane-title,.brand,.guest-name{font-family:'Fraunces',Georgia,serif}
 }
 .btn:hover{background:var(--surface-2)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-danger{color:#B3261E;border-color:rgba(179,38,30,.35)}
+.btn-danger:hover:not(:disabled){color:#fff;background:#c0392b;border-color:#c0392b}
+html[data-theme="dark"] .btn-danger{color:#FF8A80;border-color:rgba(255,138,128,.4)}
 .btn-primary{background:var(--btn-grad);border-color:transparent;color:var(--accent-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 1px 2px rgba(31,27,22,.20)}
 .btn-primary:hover{filter:brightness(1.06)}
 .btn-sm{padding:5px 10px;font-size:12px}
@@ -359,6 +362,9 @@ html[data-theme="dark"] .tag.alt{background:rgba(232,184,75,.14);color:#F0C35A}
 .lane.locked .card-bullets li.has-x{list-style:disc}
 .lane.locked .bullet-x{display:none}
 @media print{.card-bullets li.has-x{list-style:disc}.bullet-x{display:none !important}}
+.card-clip{display:block;width:max-content;max-width:100%;margin-top:6px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.03em;color:var(--accent-strong);text-decoration:underline;text-underline-offset:2px;word-break:break-all}
+.card-clip:hover{color:var(--accent)}
+.card-details .clip-url{width:100%}
 .card-audio{
   margin-top:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.03em;
   color:var(--muted);background:var(--surface-2);
@@ -918,16 +924,34 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 
 /* ---------- archive (v39) ---------- */
 #archList .arch-month{margin:0 0 26px}
-#archList .arch-month h3{font-family:Fraunces,serif;font-size:20px;color:#fff;margin:0 0 12px}
-.arch-entry{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 18px;margin-bottom:10px;cursor:pointer;transition:background 160ms var(--ease),transform 160ms var(--ease)}
-.arch-entry:hover{background:rgba(255,255,255,.1);transform:translateY(-1px)}
-.arch-entry .arch-date{font-family:"Space Mono",monospace;font-size:15px;color:#fff;min-width:170px}
-.arch-entry .arch-summary{flex:1;color:rgba(255,255,255,.75);font-size:13.5px}
-.arch-entry .arch-count{font-size:12px;color:var(--marker);background:rgba(141,187,255,.14);border-radius:20px;padding:3px 12px;white-space:nowrap}
-.arch-empty{color:rgba(255,255,255,.55);font-style:italic;padding:24px;text-align:center}
+/* ---------- Bin ---------- */
+.bin-item{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--card-border);border-radius:12px;padding:12px 16px;margin-bottom:10px;box-shadow:0 1px 2px rgba(27,35,64,.05)}
+.bin-main{flex:1;min-width:220px}
+.bin-title{font-weight:600;font-size:14.5px;color:var(--ink);margin:0 0 3px;word-break:break-word}
+.bin-origin{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.03em;color:var(--accent-strong)}
+.bin-when{font-size:12px;color:var(--muted);margin-top:2px}
+.bin-actions{display:flex;gap:8px}
+.bin-empty{background:var(--surface);border:1px dashed var(--card-border);border-radius:12px;padding:28px;text-align:center;color:var(--muted);font-style:italic}
+/* light theme: standard card surface + ink tokens; dark theme keeps the glassy white look below */
+#archList .arch-month h3{font-family:Fraunces,serif;font-size:20px;color:var(--ink);margin:0 0 12px}
+.arch-entry{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--card-border);border-radius:12px;padding:14px 18px;margin-bottom:10px;cursor:pointer;transition:background 160ms var(--ease),transform 160ms var(--ease)}
+.arch-entry:hover{background:var(--surface-2);transform:translateY(-1px)}
+.arch-entry .arch-date{font-family:"Space Mono",monospace;font-size:15px;color:var(--ink);min-width:170px}
+.arch-entry .arch-summary{flex:1;color:var(--muted);font-size:13.5px}
+.arch-entry .arch-count{font-size:12px;color:var(--accent-strong);background:var(--accent-soft);border-radius:20px;padding:3px 12px;white-space:nowrap}
+.arch-empty{color:var(--muted);font-style:italic;padding:24px;text-align:center}
 #archViewer .arch-day-head{margin:18px 0 6px}
-#archViewer .arch-day-head h3{font-family:Fraunces,serif;font-size:26px;color:#fff;margin:0}
-.arch-day-meta{color:rgba(255,255,255,.6);font-size:13px;margin-top:4px}
+#archViewer .arch-day-head h3{font-family:Fraunces,serif;font-size:26px;color:var(--ink);margin:0}
+.arch-day-meta{color:var(--muted);font-size:13px;margin-top:4px}
+html[data-theme="dark"] #archList .arch-month h3{color:#fff}
+html[data-theme="dark"] .arch-entry{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+html[data-theme="dark"] .arch-entry:hover{background:rgba(255,255,255,.1)}
+html[data-theme="dark"] .arch-entry .arch-date{color:#fff}
+html[data-theme="dark"] .arch-entry .arch-summary{color:rgba(255,255,255,.75)}
+html[data-theme="dark"] .arch-entry .arch-count{color:var(--marker);background:rgba(141,187,255,.14)}
+html[data-theme="dark"] .arch-empty{color:rgba(255,255,255,.55)}
+html[data-theme="dark"] #archViewer .arch-day-head h3{color:#fff}
+html[data-theme="dark"] .arch-day-meta{color:rgba(255,255,255,.6)}
 .arch-day-actions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 20px}
 .arch-day-body{background:#fff;color:#1a1a2e;border-radius:14px;padding:34px 38px;max-width:860px}
 .arch-day-body h4{font-family:Fraunces,serif;font-size:19px;margin:22px 0 10px;color:#1a1a2e}
@@ -984,6 +1008,7 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
   <button class="tab" role="tab" data-tab="corkboard">Corkboard</button>
   <button class="tab" role="tab" data-tab="keep">The Keep</button>
   <button class="tab" role="tab" data-tab="archive">Archive</button>
+  <button class="tab" role="tab" data-tab="bin">Bin</button>
   <button class="tab" role="tab" data-tab="tools">Tools &amp; Resources</button>
 </nav>
 <main>
@@ -1147,6 +1172,18 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
     </div>
     <div id="archDayBody" class="arch-day-body"></div>
   </div>
+</section>
+<!-- BIN: everything deleted lands here for 7 days -->
+<section class="tab-panel" id="panel-bin" role="tabpanel">
+  <div class="builder-toolbar">
+    <h2 class="day-title">The <em>Bin</em></h2>
+    <div class="np-toolbar-right">
+      <button class="btn btn-sm btn-danger" id="binEmptyAll" type="button">Empty the Bin</button>
+    </div>
+  </div>
+  <p class="hint">Deleted cards, newspaper stories, interviews and corkboard notes. Restore puts them back where they were.</p>
+  <div id="binList"></div>
+  <div class="bin-empty" id="binEmpty" hidden>The Bin is empty. Deleted items land here and are kept for 7 days.</div>
 </section>
 <section class="tab-panel" id="panel-tools" role="tabpanel">
   <div class="panel-card">
@@ -2466,6 +2503,8 @@ function buildPreviewHtml(){
         if (bl.length) ch += '<ul>' + bl.map(b => '<li>' + ppvEsc(b) + '</li>').join('') + '</ul>';
         const cue = ppvCardCue(card);
         if (cue) ch += '<div class="ppv-cue">AUDIO CUE: ' + ppvEsc(cue) + '</div>';
+        const clip = normUrl(cardClipUrl(card));
+        if (clip) ch += '<div class="ppv-cue ppv-clip">CLIP: ' + ppvEsc(clip) + '</div>';
         ch += '</div>';
         topics += ch;
       });
@@ -2728,6 +2767,7 @@ function setFurnitureFieldValues(){
 }
 function renderDayView(){
   migrateCardDetails(document.getElementById('lanes'));
+  ensureClipFields(document.getElementById('lanes'));
   rdBuildTeaseRows();
   refreshLaneTitles();
   rebindLaneControls();
@@ -2943,7 +2983,7 @@ function wrapApply(){
   pushUndo();
   let n = 0, d = 0;
   moves.forEach(it => { if (moveCardToTomorrowSilent(it.card)) n++; });
-  dels.forEach(it => { it.card.remove(); d++; });
+  dels.forEach(it => { binAddBuilderCard(it.card); it.card.remove(); d++; });
   renumberTopics();
   lastSavedSnap = '';
   saveCurrentDay();
@@ -3164,8 +3204,11 @@ function lockedLanesTsv() {
       let link = a ? (a.getAttribute('href') || '').trim() : '';
       if (!link || link === '#') link = a ? normUrl(a.textContent.trim()) : '';
       const cueEl = card.querySelector('.card-details input[type="text"]');
+      const clip = normUrl(cardClipUrl(card));
+      let cueCell = cueEl ? cueEl.value.trim() : '';
+      if (clip) cueCell = cueCell ? cueCell + ' | Clip: ' + clip : 'Clip: ' + clip;
       rows.push(tsvRow([seg, time, label, headline || 'Untitled story', bulletLines(card).join('; '),
-        noteEl ? noteEl.value : '', srcEl ? srcEl.textContent : '', link, cueEl ? cueEl.value : '']));
+        noteEl ? noteEl.value : '', srcEl ? srcEl.textContent : '', link, cueCell]));
     });
   });
   return rows;
@@ -3308,12 +3351,15 @@ document.addEventListener('click', e => {
   const cdel = e.target.closest('.card-del, .card-del-big');
   if (cdel) {
     const card = cdel.closest('.card');
-    if (!card || laneLocked(card)) return;
+    if (!card) return;
+    if (card.classList.contains('np-item')) { npDeleteEl(card); return; } // newspaper entry: same as its Delete
+    if (laneLocked(card)) return;
     if (!confirm('Delete this card?')) return;
     pushUndo();
+    binAddBuilderCard(card);
     card.remove();
     renumberTopics();
-    toast('Card deleted');
+    toast('Card deleted. It is in the Bin for 7 days.');
     return;
   }
   const card = e.target.closest('.card');
@@ -3788,6 +3834,8 @@ function cardTemplate(headline, url) {
       <button type="button" class="btn btn-sm add-bullet">+ Add talking point</button>
       <div class="field-label">Audio cue</div>
       <input type="text" value="" placeholder="e.g. CLIP - &quot;quote&quot;">
+      <div class="field-label clip-label">Clip link</div>
+      <input type="url" class="clip-url" value="" placeholder="Where the clip came from (link)" spellcheck="false" aria-label="Clip link">
       <div class="field-label">Nico fetch</div>
       <button class="btn btn-primary btn-sm nico-btn"><span class="spinner"></span><span class="nico-label">Fetch with Nico</span></button>
       <div class="toggle-row"><button class="switch" role="switch" aria-checked="false" aria-label="Mark as backup"></button><span class="switch-label">Backup topic</span></div>
@@ -3904,7 +3952,7 @@ function archExtractCard(card) {
   const sw = card.querySelector('.switch');
   const isBackup = sw ? sw.getAttribute('aria-checked') === 'true' : card.classList.contains('backup');
   const src = t('.card-meta .src').trim();
-  return { headline, bullets: talkPts.length ? talkPts : bullets, urls, audioCue: (audioCue || '').trim(), producerNotes: (prodNotes || '').trim(), isBackup, source: src };
+  return { headline, bullets: talkPts.length ? talkPts : bullets, urls, audioCue: (audioCue || '').trim(), clipUrl: normUrl(cardClipUrl(card)), producerNotes: (prodNotes || '').trim(), isBackup, source: src };
 }
 /* Extract guest block data */
 function archExtractGuest(g) {
@@ -4748,6 +4796,47 @@ function bulletLines(card) {
   return ta.value.split('\n').map(s => s.trim()).filter(Boolean);
 }
 /* Migrate legacy cards: .bullet-edit lists become one textarea; producer notes move above talking points. */
+/* Clip link (topic cards): where an audio clip was pulled from. Lives in the editor next to the
+   audio cue; shown on the card as a "Clip source" link under the cue. */
+function cardClipUrl(card) { const i = card && card.querySelector('.card-details .clip-url'); return i ? i.value.trim() : ''; }
+function cardClipSync(card) {
+  if (!card) return;
+  const u = normUrl(cardClipUrl(card));
+  let a = card.querySelector(':scope > .card-clip');
+  if (!u) { if (a) a.remove(); return; }
+  if (!a) {
+    a = document.createElement('a');
+    a.className = 'card-clip';
+    a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = 'Clip source';
+    const after = card.querySelector(':scope > .card-audio') || card.querySelector(':scope > .card-bullets');
+    if (after) after.after(a); else card.appendChild(a);
+  }
+  if (a.getAttribute('href') !== u) { a.setAttribute('href', u); a.title = u; }
+}
+function ensureClipFields(root) {
+  (root || document).querySelectorAll('#lanes .card').forEach(card => {
+    const det = card.querySelector('.card-details');
+    if (!det || det.querySelector('.clip-url')) return;
+    const cue = det.querySelector('input[type="text"]');
+    if (!cue) return;
+    const lab = document.createElement('div');
+    lab.className = 'field-label clip-label'; lab.textContent = 'Clip link';
+    const inp = document.createElement('input');
+    inp.type = 'url'; inp.className = 'clip-url'; inp.placeholder = 'Where the clip came from (link)';
+    inp.spellcheck = false; inp.setAttribute('aria-label', 'Clip link');
+    cue.after(lab); lab.after(inp);
+  });
+}
+let clipSaveT = null;
+document.addEventListener('input', e => {
+  if (!e.target.classList || !e.target.classList.contains('clip-url')) return;
+  const card = e.target.closest('#lanes .card');
+  if (!card) return;
+  cardClipSync(card);
+  clearTimeout(clipSaveT);
+  clipSaveT = setTimeout(() => { if (typeof saveCurrentDay === 'function') { lastSavedSnap = ''; saveCurrentDay(); } }, 400);
+});
 function migrateCardDetails(root) {
   (root || document).querySelectorAll('.bullet-edit').forEach(ul => {
     const lines = [];
@@ -4804,6 +4893,7 @@ function syncBulletPreview(card) {
   }
 }
 migrateCardDetails(document);
+ensureClipFields(document);
 document.addEventListener('input', e => {
   if (e.target.classList && e.target.classList.contains('bullets-edit')) syncBulletPreview(e.target.closest('.card'));
 });
@@ -4880,7 +4970,14 @@ function addNote(text, x, y, opts) {
   actions.className = 'note-actions';
   const del = document.createElement('button');
   del.textContent = 'Delete';
-  del.addEventListener('click', e => { e.stopPropagation(); note.remove(); corkSave(); });
+  del.addEventListener('click', e => {
+    e.stopPropagation();
+    const body = (note.querySelector('p') || {}).textContent || '';
+    binAdd('corkboard', body.split('\n')[0].trim() || 'Untitled note', 'Corkboard', {
+      id: note.dataset.id, body: body, color: note.dataset.color, tilt: note.style.getPropertyValue('--tilt'),
+      x: parseFloat(note.dataset.x) || 0, y: parseFloat(note.dataset.y) || 0 });
+    note.remove(); corkSave();
+  });
   actions.appendChild(del);
   note.appendChild(pin); note.appendChild(p); note.appendChild(actions);
   board.appendChild(note);
@@ -5021,7 +5118,7 @@ function npBuildItemEl(it) {
   const meta = el.querySelector('.card-meta');
   const storyTag = meta.querySelector('.tag');
   if (storyTag) storyTag.remove();
-  el.querySelectorAll('.push-tomorrow-btn').forEach(b => b.remove());
+  el.querySelectorAll('.push-tomorrow-btn, .clip-label, .clip-url').forEach(b => b.remove());
   const badge = document.createElement('span');
   badge.className = 'feed-badge';
   badge.textContent = it.feed || 'MANUAL';
@@ -5194,16 +5291,7 @@ npList.addEventListener('change', e => {
 });
 npList.addEventListener('click', e => {
   const del = e.target.closest('.np-del');
-  if (del) {
-    const loc = npLocate(del);
-    if (!loc) return;
-    npCommitDay(loc.date, loc.items.filter(i => i.id !== loc.card.dataset.npId));
-    loc.card.remove();
-    npRefreshDayHead(loc.date);
-    document.getElementById('npEmpty').hidden = !!npList.querySelector('.np-item');
-    toast('Removed from newspaper');
-    return;
-  }
+  if (del) { npDeleteEl(del); return; }
   const snd = e.target.closest('.np-send');
   if (snd) {
     const loc = npLocate(snd);
@@ -5211,6 +5299,16 @@ npList.addEventListener('click', e => {
   }
 });
 
+function npDeleteEl(el) {
+  const loc = npLocate(el);
+  if (!loc) return;
+  if (loc.it) binAdd('newspaper', loc.it.headline, 'Newspaper · ' + npDayLabel(loc.date).replace(/^[^,]+, /, ''), { entry: JSON.parse(JSON.stringify(loc.it)), day: loc.date });
+  npCommitDay(loc.date, loc.items.filter(i => i.id !== loc.card.dataset.npId));
+  loc.card.remove();
+  npRefreshDayHead(loc.date);
+  document.getElementById('npEmpty').hidden = !!npList.querySelector('.np-item');
+  toast('Removed from newspaper. It is in the Bin for 7 days.');
+}
 function npSendToBuilder(it, date, items) {
   date = date || npDate;
   items = items || npItemsFor(date);
@@ -6300,6 +6398,7 @@ function ivCardHtml(iv){
     '<span class="badge iv-b-format">' + ivEsc(iv.format) + '</span>' +
     '<span class="iv-date iv-b-date">' + ivEsc(iv.date) + '</span>' +
     '<button type="button" class="btn btn-sm iv-push">Push to today\'s show</button>' +
+    '<button type="button" class="btn btn-sm iv-push-tmr">Push to tomorrow\'s show</button>' +
     '<button type="button" class="iv-del" aria-label="Delete interview" title="Delete interview">×</button>' +
     '</div>' +
     '<div class="card-details">' +
@@ -6315,6 +6414,7 @@ function ivCardHtml(iv){
     '<button type="button" class="btn btn-sm iv-addq" style="margin-top:6px">+ Add question</button>' +
     '<div class="iv-actions">' +
     '<button type="button" class="btn btn-sm btn-primary iv-push">Push to today\'s show</button>' +
+    '<button type="button" class="btn btn-sm btn-primary iv-push-tmr">Push to tomorrow\'s show</button>' +
     '<button type="button" class="btn btn-sm iv-archive">' + (iv.archived ? 'Unarchive' : 'Archive') + '</button>' +
     '<button type="button" class="btn btn-sm iv-del-big">Delete</button>' +
     '</div>' +
@@ -6384,11 +6484,12 @@ function ivDelete(id){
   const iv = ivById(id);
   if (!iv) return;
   if (!confirm('Delete the interview with ' + (iv.name || 'this guest') + '?')) return;
+  binAdd('interview', iv.name || 'Untitled guest', 'Interviews', JSON.parse(JSON.stringify(iv)));
   window.ivList = ivStore().filter(x => x.id !== id);
   window.ivList.forEach((x, k) => { x.order = k; });
   ivPersist();
   ivRender();
-  toast('Interview deleted');
+  toast('Interview deleted. It is in the Bin for 7 days.');
 }
 function ivToggleArchive(id){
   const iv = ivById(id);
@@ -6415,11 +6516,15 @@ function ivCalm(cardEl, msg){
 /* Push an interview card into TODAY's builder rundown: the lane matching the
    card's slot becomes Interview type (talk payload preserved) and its guest
    block is filled. One undo entry. Locked target lane refuses calmly. */
-function ivPushToToday(iv, cardEl){
+function ivPushToToday(iv, cardEl){ ivPushToDay(iv, cardEl, 'today'); }
+/* Same push, aimed at tomorrow's rundown (Toronto): the day is created if needed, saved and synced. */
+function ivPushToTomorrow(iv, cardEl){ ivPushToDay(iv, cardEl, 'tomorrow'); }
+function ivPushToDay(iv, cardEl, which){
   if (!iv) return;
   ivClearCalm(cardEl);
   const laneId = iv.slot === '4:20' ? 's5' : 's2';
-  try { if (viewedDate !== todayKey()) switchBuilderDay(todayKey()); } catch (e) {}
+  const key = which === 'tomorrow' ? tomorrowKey() : todayKey();
+  try { if (viewedDate !== key) switchBuilderDay(key); } catch (e) {}
   const lane = document.querySelector('#lanes .lane[data-lane="' + laneId + '"]');
   if (!lane) { ivCalm(cardEl, 'Could not find the ' + iv.slot + ' segment.'); return; }
   if (laneLocked(lane)) { ivCalm(cardEl, 'That segment is locked.'); return; }
@@ -6442,7 +6547,7 @@ function ivPushToToday(iv, cardEl){
   if (typeof rdSaveFurnitureFields === 'function') rdSaveFurnitureFields();
   if (typeof rdRefreshShow === 'function') rdRefreshShow();
   if (typeof saveCurrentDay === 'function') saveCurrentDay();
-  toast('Guest pushed to today\'s ' + iv.slot + ' segment');
+  toast(which === 'tomorrow' ? 'Pushed to tomorrow\'s show' : 'Guest pushed to today\'s ' + iv.slot + ' segment');
 }
 (function ivBind(){
   const panel = document.getElementById('panel-interviews');
@@ -6458,6 +6563,8 @@ function ivPushToToday(iv, cardEl){
     const card = e.target.closest('.iv-card');
     const push = e.target.closest('.iv-push');
     if (push && card) { e.stopPropagation(); ivPushToToday(ivById(card.dataset.ivid), card); return; }
+    const pushT = e.target.closest('.iv-push-tmr');
+    if (pushT && card) { e.stopPropagation(); ivPushToTomorrow(ivById(card.dataset.ivid), card); return; }
     const up = e.target.closest('.iv-up'), dn = e.target.closest('.iv-dn');
     if ((up || dn) && card) { e.stopPropagation(); ivMove(card.dataset.ivid, up ? -1 : 1); return; }
     const del = e.target.closest('.iv-del, .iv-del-big');
@@ -6508,6 +6615,168 @@ function ivInit(){
 ivInit();
 
 renderNewspaper();
+
+/* ================= Bin: a recycle bin for the whole hub =================
+   Deleting a builder card, newspaper entry, interview or corkboard note puts it here (same save as
+   the delete). Restore returns it to its day/lane/list/board. Items older than 7 days are purged on
+   load, whenever the Bin renders, and whenever a shared Bin doc is applied. Local key dg_bin_v1,
+   shared doc "bin". Moves (push to tomorrow, push/send to builder) never create Bin items. */
+const BIN_KEY = 'dg_bin_v1';
+const BIN_TTL_MS = 7 * 864e5;
+function binLoad() {
+  try { const a = JSON.parse(localStorage.getItem(BIN_KEY) || '[]'); return Array.isArray(a) ? a.filter(i => i && typeof i === 'object') : []; }
+  catch (e) { return []; }
+}
+function binSave(items) { try { localStorage.setItem(BIN_KEY, JSON.stringify(items)); } catch (e) {} }
+function binPurge() {
+  const items = binLoad();
+  const keep = items.filter(i => Date.now() - (+i.deletedAt || 0) <= BIN_TTL_MS);
+  if (keep.length !== items.length) binSave(keep);
+  return keep;
+}
+function binAdd(kind, title, origin, payload) {
+  const items = binLoad();
+  items.unshift({ id: 'bin' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), kind,
+    title: String(title || 'Untitled').trim() || 'Untitled', origin, deletedAt: Date.now(), payload });
+  binSave(items);
+  binRenderIfOpen();
+}
+function binCardHeadline(card) {
+  const h = card.querySelector('.card-headline');
+  if (!h) return 'Untitled story';
+  const c = h.cloneNode(true);
+  c.querySelectorAll('.backup-tag, .topic-label').forEach(x => x.remove());
+  return c.textContent.trim() || 'Untitled story';
+}
+function binAddBuilderCard(card) {
+  const lane = card.closest('.lane');
+  const laneId = lane ? lane.dataset.lane : 's1';
+  const day = viewedDate || todayKey();
+  syncFormState(card); // typed values travel with the card
+  const c = card.cloneNode(true);
+  ['expanded', 'is-dragging', 'just-added', 'confirm-pulse'].forEach(k => c.classList.remove(k));
+  binAdd('builder-card', binCardHeadline(card), 'Builder · ' + npDayLabel(day) + ' · ' + segNameTitle(laneId, day), { html: c.outerHTML, day, lane: laneId });
+}
+function binAgo(ms) {
+  const m = Math.max(0, Math.round((Date.now() - ms) / 60000));
+  if (m < 1) return 'just now';
+  if (m < 60) return m + (m === 1 ? ' minute' : ' minutes') + ' ago';
+  const h = Math.round(m / 60);
+  if (h < 24) return h + (h === 1 ? ' hour' : ' hours') + ' ago';
+  const d = Math.round(h / 24);
+  return d + (d === 1 ? ' day' : ' days') + ' ago';
+}
+const binListEl = document.getElementById('binList');
+function renderBin() {
+  const items = binPurge().slice().sort((a, b) => (+b.deletedAt || 0) - (+a.deletedAt || 0));
+  binListEl.innerHTML = items.map(it => {
+    const when = new Date(+it.deletedAt || 0);
+    const full = when.toLocaleString('en-CA', { timeZone: 'America/Toronto', dateStyle: 'medium', timeStyle: 'short' });
+    return '<div class="bin-item" data-bin-id="' + escapeHtml(it.id) + '">' +
+      '<div class="bin-main"><p class="bin-title">' + escapeHtml(it.title || 'Untitled') + '</p>' +
+      '<div class="bin-origin">' + escapeHtml(it.origin || '') + '</div>' +
+      '<div class="bin-when" title="' + escapeHtml(full) + '">Deleted ' + escapeHtml(binAgo(+it.deletedAt || 0)) + '</div></div>' +
+      '<div class="bin-actions"><button type="button" class="btn btn-primary btn-sm bin-restore">Restore</button>' +
+      '<button type="button" class="btn btn-sm btn-danger bin-forever">Delete forever</button></div></div>';
+  }).join('');
+  document.getElementById('binEmpty').hidden = items.length > 0;
+  document.getElementById('binEmptyAll').disabled = items.length === 0;
+}
+function binRenderIfOpen() { const p = document.getElementById('panel-bin'); if (p && p.classList.contains('active')) renderBin(); }
+function binNewIdIfTaken(id, taken) { return (!id || taken) ? id + '-r' + Date.now().toString(36) : id; }
+/* restore: put the item back where it came from */
+function binRestoreBuilderCard(p) {
+  const day = p.day, laneId = p.lane;
+  const t = document.createElement('template');
+  t.innerHTML = syncSanitizeHtml(p.html || '');
+  const card = t.content.querySelector('.card');
+  if (!card) return false;
+  card.classList.remove('expanded');
+  if (day === viewedDate) {
+    // on screen: append after the lane's existing topics (also into a locked lane: this is a restore, not an edit)
+    const box = document.querySelector('#lanes .lane[data-lane="' + laneId + '"] .cards');
+    if (!box) return false;
+    box.appendChild(card);
+    renumberTopics();
+    cardClipSync(card);
+    lastSavedSnap = '';
+    saveCurrentDay();
+    return true;
+  }
+  // another day: write into that day's stored rundown (recreated if it no longer exists)
+  const days = dayStoreLoad();
+  const rec = (days[day] && days[day].lanes) ? days[day] : { lanes: EMPTY_LANES_HTML, furn: freshFurn(day) };
+  const lt = document.createElement('template');
+  lt.innerHTML = rec.lanes;
+  const box = lt.content.querySelector('.lane[data-lane="' + laneId + '"] .cards');
+  if (!box) return false;
+  box.appendChild(card);
+  rec.lanes = lt.innerHTML;
+  days[day] = rec;
+  dayStoreSave(days);
+  return true;
+}
+function binRestore(item) {
+  const p = item.payload || {};
+  if (item.kind === 'builder-card') return binRestoreBuilderCard(p);
+  if (item.kind === 'newspaper') {
+    if (!p.entry || !p.day) return false;
+    const items = npItemsFor(p.day).slice();
+    const e = JSON.parse(JSON.stringify(p.entry));
+    e.id = binNewIdIfTaken(e.id, items.some(i => i.id === e.id));
+    items.push(e);
+    npCommitDay(p.day, items);
+    renderNewspaper();
+    return true;
+  }
+  if (item.kind === 'interview') {
+    const list = ivStore();
+    const iv = JSON.parse(JSON.stringify(p));
+    iv.id = binNewIdIfTaken(iv.id, list.some(x => x.id === iv.id));
+    iv.order = list.length;
+    window.ivList = list.concat([iv]);
+    ivPersist();
+    ivRender();
+    return true;
+  }
+  if (item.kind === 'corkboard') {
+    const taken = !!board.querySelector('.note[data-id="' + CSS.escape(String(p.id || '')) + '"]');
+    addNote(String(p.body || ''), +p.x || 0, +p.y || 0, { id: binNewIdIfTaken(String(p.id || 'cn'), taken),
+      color: /^#[0-9a-f]{3,8}$/i.test(p.color) ? p.color : undefined, tilt: /^-?\d+(\.\d+)?deg$/.test(p.tilt) ? p.tilt : undefined });
+    corkClampAll();
+    return true;
+  }
+  return false;
+}
+binListEl.addEventListener('click', e => {
+  const row = e.target.closest('.bin-item');
+  if (!row) return;
+  const items = binLoad();
+  const item = items.find(i => i.id === row.dataset.binId);
+  if (!item) { renderBin(); return; }
+  if (e.target.closest('.bin-restore')) {
+    if (!binRestore(item)) { toast('Could not restore that item'); return; }
+    binSave(binLoad().filter(i => i.id !== item.id));
+    renderBin();
+    toast('Restored to ' + (item.origin || 'its place'));
+  } else if (e.target.closest('.bin-forever')) {
+    if (!confirm('Delete "' + (item.title || 'this item') + '" forever? This cannot be undone.')) return;
+    binSave(binLoad().filter(i => i.id !== item.id));
+    renderBin();
+    toast('Deleted forever');
+  }
+});
+document.getElementById('binEmptyAll').addEventListener('click', () => {
+  const n = binLoad().length;
+  if (!n) return;
+  if (!confirm('Empty the Bin? ' + n + (n === 1 ? ' item' : ' items') + ' will be deleted forever.')) return;
+  binSave([]);
+  renderBin();
+  toast('The Bin is empty');
+});
+document.querySelector('.tab[data-tab="bin"]').addEventListener('click', renderBin);
+binPurge(); // on app load
+renderBin();
 
 /* ================= Shared real-time state (Supabase, "Route B") =================
    localStorage stays the instant local store and the UI never waits on the network. This layer
@@ -6674,6 +6943,20 @@ const SYNC_SURFACES = {
       if (list && !list.hidden && (!viewer || viewer.hidden)) renderArchive();
     }
   },
+  bin: {
+    name: 'bin', label: 'Bin',
+    kind: p => (Array.isArray(p) && p.length) ? 'content' : 'empty',
+    match: k => k === 'bin',
+    localKeys: () => ['bin'],
+    raw: () => { try { return localStorage.getItem(BIN_KEY) || ''; } catch (e) { return ''; } },
+    read: () => { const a = binLoad(); return a.length ? a : (localStorage.getItem(BIN_KEY) ? a : null); },
+    editing: () => false,
+    apply: (k, p) => {
+      _syncOrig.binSave((Array.isArray(p) ? p : []).filter(i => i && typeof i === 'object'));
+      binPurge(); // 7-day clock also runs on every applied Bin doc
+      binRenderIfOpen();
+    }
+  },
   flags: {
     name: 'flags', label: 'story flags',
     kind: p => (p && typeof p === 'object' && Object.keys(p).some(k => p[k])) ? 'content' : 'empty',
@@ -6715,7 +6998,11 @@ function syncBuilderContent(p) {
       : Array.from(c.querySelectorAll('.card-bullets li')).filter(li => !li.classList.contains('empty-note')).map(li => li.textContent.trim()).filter(Boolean);
     const note = c.querySelector('.prod-notes');
     const cue = c.querySelector('.card-details input[type="text"]');
-    cards.push([lane.dataset.lane || '', head, bullets.join('|'), note ? note.textContent.trim() : '', cue ? (cue.getAttribute('value') || '').trim() : '', c.classList.contains('backup') ? 1 : 0]);
+    const clip = c.querySelector('.card-details .clip-url');
+    const row = [lane.dataset.lane || '', head, bullets.join('|'), note ? note.textContent.trim() : '', cue ? (cue.getAttribute('value') || '').trim() : '', c.classList.contains('backup') ? 1 : 0];
+    const clipV = clip ? (clip.getAttribute('value') || '').trim() : '';
+    if (clipV) row.push(clipV); // only when set, so existing docs keep the same signature
+    cards.push(row);
   }));
   const guests = [];
   t.content.querySelectorAll('[data-guest]').forEach(g => {
@@ -6784,12 +7071,13 @@ function syncPruneStashes(squeeze) {
 syncPruneStashes(false);
 
 /* ---------- local writes: wrap the existing save functions, push what changed ---------- */
-const _syncOrig = { dayStoreSave, npSaveAll, corkSave, archiveSave, feedSaveState };
+const _syncOrig = { dayStoreSave, npSaveAll, corkSave, archiveSave, feedSaveState, binSave };
 dayStoreSave = function (days) { _syncOrig.dayStoreSave(days); syncLocalChanged('builder'); };
 npSaveAll = function (days) { _syncOrig.npSaveAll(days); syncLocalChanged('newspaper'); };
 corkSave = function () { _syncOrig.corkSave(); syncLocalChanged('corkboard'); };
 archiveSave = function (entries) { _syncOrig.archiveSave(entries); syncLocalChanged('archive'); };
 feedSaveState = function () { _syncOrig.feedSaveState(); syncLocalChanged('flags'); };
+binSave = function (items) { _syncOrig.binSave(items); syncLocalChanged('bin'); };
 /* boot-time re-renders also save; those are not edits. A write only counts as a local edit (and is
    pushed) once this person has interacted with the page, so a stale device opening the hub can't
    overwrite a teammate's newer doc before the first pull reconciles it. */
@@ -7023,7 +7311,7 @@ async function syncPullPrefix(prefix) {
   return true;
 }
 function syncInterestKeys() {
-  const keys = new Set(['corkboard', 'archive', 'feed-flags']);
+  const keys = new Set(['corkboard', 'archive', 'feed-flags', 'bin']);
   try { keys.add('builder:' + todayKey()); keys.add('builder:' + tomorrowKey()); if (viewedDate) keys.add('builder:' + viewedDate); } catch (e) {}
   try { keys.add('newspaper:' + npDate); } catch (e) {}
   Object.keys(SYNC_SURFACES).forEach(n => SYNC_SURFACES[n].localKeys().forEach(k => keys.add(k)));
