@@ -595,6 +595,17 @@ html[data-theme="dark"] .note-actions button{background:rgba(255,255,255,.14);co
 html[data-theme="dark"] .feed-item.flagged{background:linear-gradient(90deg,rgba(255,200,87,.16),rgba(255,200,87,.03) 65%),var(--surface)}
 html[data-theme="dark"] .feed-item.flagged .feed-flag{color:#FFC857}
 html[data-theme="dark"] .feed-interest-tag{background:rgba(255,200,87,.18);color:#FFD27A}
+/* newspaper favourite: star in the corner the X used to hold; favourited cards wear the feed's flagged look */
+.np-fav{position:absolute;top:6px;right:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid transparent;border-radius:8px;background:none;color:var(--muted);cursor:pointer;opacity:.55;z-index:3;transition:opacity 100ms var(--ease),background 100ms var(--ease),color 100ms var(--ease);touch-action:manipulation}
+.np-fav svg{width:18px;height:18px}
+.np-fav:hover,.np-fav:focus-visible{opacity:1;background:var(--surface-2)}
+.np-fav:focus-visible{outline:2px solid var(--marker);outline-offset:1px}
+.card.np-item.np-faved{border-color:#E0A526;box-shadow:inset 4px 0 0 #E0A526,0 2px 12px rgba(224,165,38,.22);background:linear-gradient(90deg,rgba(255,200,87,.20),rgba(255,200,87,.05) 65%),var(--surface)}
+.card.np-item.np-faved:hover{border-color:#C98A06}
+.card.np-item.np-faved .np-fav{opacity:1;color:#C98A06}
+.card.np-item.np-faved .np-fav svg{fill:currentColor}
+html[data-theme="dark"] .card.np-item.np-faved{background:linear-gradient(90deg,rgba(255,200,87,.16),rgba(255,200,87,.03) 65%),var(--surface)}
+html[data-theme="dark"] .card.np-item.np-faved .np-fav{color:#FFC857}
 .feed-saved-tag{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:rgba(30,122,76,.12);color:var(--ok)}
 #feedSavedCard{margin-top:18px}
 #feedDeleted{margin-top:12px;border-top:1px solid var(--border);padding-top:8px}
@@ -984,7 +995,7 @@ html[data-theme="dark"] .arch-day-meta{color:rgba(255,255,255,.6)}
 </head>
 <body>
 <div class="proto-banner">
-  <span>Design prototype v15: Royal Signal, header blues swapped. Look and feel only.</span>
+  <span>Design Prototype v19 (Royal Signal + Feed History)</span>
   <span class="accent-picker">
     <span class="lbl">Accent</span>
     <button class="swatch active" data-accent="profound" aria-label="Profound blue accent" title="Profound blue #376CFF"></button>
@@ -3348,6 +3359,8 @@ document.addEventListener('click', e => {
     pushCardToTomorrow(pcard);
     return;
   }
+  const fav = e.target.closest('.np-fav');
+  if (fav) { npToggleFav(fav); return; } // favourite only: no expand, no delete
   const cdel = e.target.closest('.card-del, .card-del-big');
   if (cdel) {
     const card = cdel.closest('.card');
@@ -4339,7 +4352,8 @@ function enhanceCard(card) {
     wrap.innerHTML = '<button type="button" class="mv-up" aria-label="Move card up" title="Move up">▲</button><button type="button" class="mv-dn" aria-label="Move card down" title="Move down">▼</button>';
     card.insertBefore(wrap, g);
   }
-  if (!card.querySelector('.card-del')) {
+  const isNp = card.classList.contains('np-item'); // newspaper cards delete via their Delete button only
+  if (!isNp && !card.querySelector('.card-del')) {
     const del = document.createElement('button');
     del.type = 'button'; del.className = 'card-del';
     del.setAttribute('aria-label', 'Delete card'); del.title = 'Delete card';
@@ -4363,7 +4377,7 @@ function enhanceCard(card) {
     row.innerHTML = '<span class="mv-label">Move</span><button type="button" class="mv-btn mv-up-big" aria-label="Move card up">▲ Up</button><button type="button" class="mv-btn mv-dn-big" aria-label="Move card down">▼ Down</button>';
     det.appendChild(row);
   }
-  if (det && !det.querySelector('.card-del-big')) {
+  if (det && !isNp && !det.querySelector('.card-del-big')) {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'btn btn-sm card-del-big'; b.textContent = 'Delete card';
     det.appendChild(b);
@@ -5080,7 +5094,17 @@ function npItemsFor(date) {
   const v = npLoadAll()[date];
   return Array.isArray(v) ? v : [];
 }
+/* favourites first (in favouriting order), then the rest; stable, in place so held references stay live */
+function npFavNormalize(items) {
+  if (!Array.isArray(items)) return items;
+  const f = items.filter(i => i && i.fav), r = items.filter(i => !(i && i.fav));
+  items.length = 0;
+  f.concat(r).forEach(i => items.push(i));
+  return items;
+}
+function npFavCount(items) { return items.filter(i => i && i.fav).length; }
 function npCommitDay(date, items) {
+  npFavNormalize(items);
   if (date === npDate) { npState = items; npSave(); return; }
   const days = npLoadAll();
   days[date] = items;
@@ -5118,7 +5142,17 @@ function npBuildItemEl(it) {
   const meta = el.querySelector('.card-meta');
   const storyTag = meta.querySelector('.tag');
   if (storyTag) storyTag.remove();
-  el.querySelectorAll('.push-tomorrow-btn, .clip-label, .clip-url').forEach(b => b.remove());
+  const fav = document.createElement('button');
+  fav.type = 'button';
+  fav.className = 'np-fav';
+  fav.setAttribute('aria-pressed', String(!!it.fav));
+  fav.setAttribute('aria-label', 'Favourite');
+  fav.title = it.fav ? 'Favourited (click to unfavourite)' : 'Favourite';
+  fav.innerHTML = FEED_FLAG_ICON;
+  const x = el.querySelector('.card-del');
+  if (x) x.replaceWith(fav); else el.insertBefore(fav, el.firstChild);
+  el.classList.toggle('np-faved', !!it.fav);
+  el.querySelectorAll('.push-tomorrow-btn, .clip-label, .clip-url, .card-del, .card-del-big').forEach(b => b.remove());
   const badge = document.createElement('span');
   badge.className = 'feed-badge';
   badge.textContent = it.feed || 'MANUAL';
@@ -5171,7 +5205,7 @@ function renderNewspaper() {
     head.appendChild(n);
     const list = document.createElement('div');
     list.className = 'np-day-list';
-    days[d].forEach(it => list.appendChild(npBuildItemEl(it)));
+    npFavNormalize(days[d]).forEach(it => list.appendChild(npBuildItemEl(it)));
     group.appendChild(head);
     group.appendChild(list);
     npList.appendChild(group);
@@ -5192,6 +5226,22 @@ function npRefreshDayHead(date) {
   if (c) c.textContent = n + (n === 1 ? ' story' : ' stories');
 }
 
+function npToggleFav(btn) {
+  const loc = npLocate(btn);
+  if (!loc || !loc.it) return;
+  const items = loc.items, it = loc.it;
+  items.splice(items.indexOf(it), 1);
+  const on = !it.fav;
+  if (on) it.fav = true; else delete it.fav;
+  // favouriting joins the end of the favourites block; unfavouriting heads the rest
+  items.splice(npFavCount(items), 0, it);
+  npCommitDay(loc.date, items);
+  renderNewspaper();
+  const el = npList.querySelector('.np-day[data-date="' + loc.date + '"] [data-np-id="' + it.id + '"] .np-fav');
+  if (el) el.focus({ preventScroll: true });
+  toast(on ? 'Favourited' : 'Favourite removed');
+}
+
 function npAddItem(data) {
   const it = {
     id: npNewId(),
@@ -5205,7 +5255,7 @@ function npAddItem(data) {
     sent: false,
     createdAt: Date.now()
   };
-  npState.unshift(it); // newest story first in its day; drag order and synced order are kept as stored
+  npState.splice(npFavCount(npState), 0, it); // newest story first, just under the favourites block
   npSave();
   
 renderNewspaper();
@@ -5444,6 +5494,7 @@ function npMakeSortable(list, date) {
       const items = npItemsFor(date);
       items.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
       npCommitDay(date, items);
+      if (items.map(i => i.id).join() !== order.join()) setTimeout(renderNewspaper, 0); // favourites stay on top
       list.classList.add('np-flash');
       setTimeout(() => list.classList.remove('np-flash'), 450);
       if (!REDUCED) {
@@ -5735,7 +5786,7 @@ function feedExcluded(st) {
   if (keys.some(k => feedState.tombstones.indexOf(k) !== -1)) return true;
   return feedState.saved.some(sv => feedKeys(sv).some(k => keys.indexOf(k) !== -1));
 }
-/* story of interest: flagged by any of the story's keys, so a refresh that changes one key keeps the flag */
+/* favourite: flagged by any of the story's keys, so a refresh that changes one key keeps the flag */
 function feedIsFlagged(st) { return feedKeys(st).some(k => feedState.flags.indexOf(k) !== -1); }
 function feedToggleFlag(st) {
   const keys = feedKeys(st);
@@ -5746,15 +5797,6 @@ function feedToggleFlag(st) {
   return on;
 }
 const FEED_FLAG_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>';
-function feedApplyFlagUi(item, on) {
-  item.classList.toggle('flagged', on);
-  const b = item.querySelector('.feed-flag');
-  if (b) { b.setAttribute('aria-pressed', String(on)); b.title = on ? 'Story of interest (click to unflag)' : 'Flag as a story of interest'; }
-  const meta = item.querySelector('.feed-meta');
-  const tag = meta && meta.querySelector('.feed-interest-tag');
-  if (on && meta && !tag) { const t = document.createElement('span'); t.className = 'feed-interest-tag'; t.textContent = 'Story of interest'; meta.insertBefore(t, meta.firstChild); }
-  if (!on && tag) tag.remove();
-}
 const feedList = document.getElementById('feedList');
 const feedSavedWrap = document.getElementById('feedSaved');
 const feedSavedCard = document.getElementById('feedSavedCard');
@@ -5783,9 +5825,9 @@ function feedCardHtml(st, savedMode) {
   const savedTag = savedMode ? '<span class="feed-saved-tag">Saved</span>' : '';
   const flagged = feedIsFlagged(st);
   return '<article class="feed-item' + (flagged ? ' flagged' : '') + '" data-fkey="' + escapeHtml(st._key || feedKey(st)) + '" data-saved="' + (savedMode ? '1' : '0') + '">' +
-    '<button type="button" class="feed-flag" aria-pressed="' + flagged + '" aria-label="Story of interest" title="' + (flagged ? 'Story of interest (click to unflag)' : 'Flag as a story of interest') + '">' + FEED_FLAG_ICON + '</button>' +
+    '<button type="button" class="feed-flag" aria-pressed="' + flagged + '" aria-label="Favourite" title="' + (flagged ? 'Favourited (click to unfavourite)' : 'Favourite') + '">' + FEED_FLAG_ICON + '</button>' +
     '<p class="feed-headline" tabindex="0">' + escapeHtml(st.headline || 'Untitled story') + '</p>' +
-    '<div class="feed-meta">' + (flagged ? '<span class="feed-interest-tag">Story of interest</span>' : '') + (st.category ? '<span class="tag">' + escapeHtml(st.category) + '</span>' : '') + savedTag +
+    '<div class="feed-meta">' + (flagged ? '<span class="feed-interest-tag">Favourite</span>' : '') + (st.category ? '<span class="tag">' + escapeHtml(st.category) + '</span>' : '') + savedTag +
     (feedIngestLabel(st) ? '<span class="feed-ingest" title="' + escapeHtml(st.ingestedAt) + '">' + escapeHtml(feedIngestLabel(st)) + '</span>' : '') + '</div>' +
     '<div class="feed-details">' + bullets + link +
     '<div class="feed-actions">' +
@@ -5811,6 +5853,21 @@ function feedFindStory(key) {
   return null;
 }
 
+/* favourites first, in favouriting order (position in feedState.flags), then the rest via sortRest */
+function feedFavPos(st) {
+  let best = -1;
+  feedKeys(st).forEach(k => { const i = feedState.flags.indexOf(k); if (i !== -1 && (best === -1 || i < best)) best = i; });
+  return best;
+}
+function feedFavFirst(list, sortRest) {
+  const fav = list.filter(feedIsFlagged).sort((a, b) => feedFavPos(a) - feedFavPos(b));
+  return fav.concat(sortRest(list.filter(s => !feedIsFlagged(s))));
+}
+function feedRerenderKeepOpen() {
+  const open = Array.from(document.querySelectorAll('#panel-feeds .feed-item.expanded')).map(i => i.dataset.fkey + '|' + i.dataset.saved);
+  renderFeeds();
+  document.querySelectorAll('#panel-feeds .feed-item').forEach(i => { if (open.indexOf(i.dataset.fkey + '|' + i.dataset.saved) !== -1) i.classList.add('expanded'); });
+}
 function renderFeeds() {
   /* post-wipe Sunday quiet state: friendly empty state, no fetching, no demo fallback */
   if (feedIsPostWipeQuiet() && Object.keys(feedHist.days).length === 0) {
@@ -5840,16 +5897,20 @@ function renderFeeds() {
   let groups = [];
   if (feedDemoMode) {
     const demo = feedDedupeStories(feedDemoPool());
-    groups = [{ day: demo.length ? demo[0].date : '', stories: feedSortByIngest(demo), capNote: '' }];
+    groups = [{ day: demo.length ? demo[0].date : '', stories: feedFavFirst(demo, feedSortByIngest), capNote: '' }];
   } else {
     groups = feedHistoryDates().map(function (d) {
-      let list = (feedHist.days[d] || []).filter(function (s) { return !feedExcluded(s); });
+      const all = (feedHist.days[d] || []).filter(function (s) { return !feedExcluded(s); });
       let capNote = '';
-      if (list.length > 300) {
-        capNote = ' Showing the top 150 by score.';
-        list = list.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); }).slice(0, 150);
-      }
-      return { day: d, stories: feedSortByIngest(list), capNote: capNote };
+      // favourites always render; the top-150 cap applies to the rest only
+      const sortRest = function (rest) {
+        if (rest.length > 300) {
+          capNote = ' Showing the top 150 by score.';
+          rest = rest.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); }).slice(0, 150);
+        }
+        return feedSortByIngest(rest);
+      };
+      return { day: d, stories: feedFavFirst(all, sortRest), capNote: capNote };
     });
   }
   const total = groups.reduce(function (n, g) { return n + g.stories.length; }, 0);
@@ -5939,8 +6000,8 @@ document.getElementById('panel-feeds').addEventListener('click', e => {
     const fl = e.target.closest('.feed-flag');
     if (fl && story) {
       const on = feedToggleFlag(story);
-      feedApplyFlagUi(item, on); // in place: no re-render, no reorder, open cards stay open
-      toast(on ? 'Flagged as a story of interest' : 'Flag removed');
+      feedRerenderKeepOpen(); // favourites float to the top of their day; open cards stay open
+      toast(on ? 'Favourited' : 'Favourite removed');
       return;
     }
     const add = e.target.closest('.feed-add');
@@ -6724,7 +6785,7 @@ function binRestore(item) {
     const items = npItemsFor(p.day).slice();
     const e = JSON.parse(JSON.stringify(p.entry));
     e.id = binNewIdIfTaken(e.id, items.some(i => i.id === e.id));
-    items.push(e);
+    if (e.fav) items.splice(npFavCount(items), 0, e); else items.push(e);
     npCommitDay(p.day, items);
     renderNewspaper();
     return true;
@@ -6969,7 +7030,7 @@ const SYNC_SURFACES = {
     apply: (k, p) => {
       feedState.flags = Object.keys(p || {}).filter(f => p[f]);
       _syncOrig.feedSaveState();
-      document.querySelectorAll('#panel-feeds .feed-item').forEach(item => { const st = feedFindStory(item.dataset.fkey); if (st) feedApplyFlagUi(item, feedIsFlagged(st)); });
+      if (document.querySelector('#panel-feeds .feed-item')) feedRerenderKeepOpen(); // favourites re-float to the top
     }
   }
 };
