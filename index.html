@@ -898,6 +898,10 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 /* Live tab: the finished drive sheet as a full page (not a modal), with clickable links */
 #panel-live .ppv-sheet{max-height:none;overflow:visible;max-width:900px;margin:8px auto 40px;padding:40px 48px;border-radius:6px;box-shadow:0 2px 18px rgba(0,0,0,.18)}
 #liveSheet a,#liveSheet a:visited{color:#376CFF !important;text-decoration:underline}
+#liveSheet .ppv-segwrap{position:relative;padding-bottom:40px}
+#liveSheet .live-copy{position:absolute;right:0;bottom:6px;background:#fff;color:#1b1b1b !important;border:1px solid #cfcfcf;border-radius:6px;padding:4px 12px;font-size:12px;line-height:1.4;cursor:pointer}
+#liveSheet .live-copy:hover{border-color:#999}
+#liveSheet .live-copy:focus-visible{outline:2px solid #376CFF;outline-offset:2px}
 @media(max-width:700px){#panel-live .ppv-sheet{max-width:none;margin:0 0 24px;padding:18px 16px;border-radius:0}}
 /* Drive sheet type matches the studio's Google Sheet: Arial Bold (the Sheets default) everywhere.
    Font only; sizes, spacing and layout above stay as they are. */
@@ -2421,8 +2425,40 @@ window.addEventListener('afterprint', ppvPrintDone);
 /* Live tab: rebuilt from Builder state; it only ever writes inside #panel-live */
 function renderLive(){
   const el = document.getElementById('liveSheet');
-  if (el) el.innerHTML = buildPreviewHtml({ links: true });
+  if (!el) return;
+  el.innerHTML = buildPreviewHtml({ links: true });
+  el.querySelectorAll('.ppv-segwrap').forEach(w => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'live-copy'; b.textContent = 'Copy';
+    b.setAttribute('aria-label', 'Copy this segment');
+    w.appendChild(b);
+  });
 }
+/* a segment as plain text, line by line as it reads on the page (labels upper-cased, bullets marked) */
+function liveSegText(node){
+  const lines = []; let cur = '';
+  const flush = () => { const t = cur.replace(/\s+/g, ' ').trim(); if (t) lines.push(t); cur = ''; };
+  const walk = n => {
+    if (n.nodeType === 3) { cur += n.nodeValue; return; }
+    if (n.nodeType !== 1) return;
+    if (n.tagName === 'BR') { flush(); return; }
+    if (n.classList.contains('ppv-lab')) { flush(); cur = n.textContent.toUpperCase(); flush(); return; }
+    const block = /^(DIV|P|UL|OL|LI)$/.test(n.tagName);
+    if (block) flush();
+    if (n.tagName === 'LI') cur = '\u2022 ';
+    n.childNodes.forEach(walk);
+    if (block) flush();
+  };
+  walk(node); flush();
+  return lines.join('\n');
+}
+document.getElementById('liveSheet').addEventListener('click', e => {
+  const b = e.target.closest('.live-copy');
+  if (!b) return;
+  const clone = b.closest('.ppv-segwrap').cloneNode(true);
+  clone.querySelectorAll('.live-copy').forEach(x => x.remove());
+  copyRichToClipboard(liveSegText(clone), clone.outerHTML).then(ok => toast(ok ? 'Segment copied' : 'Copy failed. Select the text and copy manually.'));
+});
 function liveRefresh(){ try { renderLive(); } catch (e) {} } // a Live error must never break saving or day loads
 document.querySelector('.tab[data-tab="live"]').addEventListener('click', renderLive);
 function closePrintPreview(){
@@ -2519,6 +2555,7 @@ function buildPreviewHtml(opts){
     const id = lane.dataset.lane;
     const n = id.replace('s', '');
     const isIv = laneTypeOf(lane) === 'interview';
+    if (links) s += '<div class="ppv-segwrap">'; // Live: one block per segment, for its Copy button
     s += '<div class="ppv-seg">' + (times[id] || '') + ' - ' + segNameUC(id, pvKey) + '</div>';
     const guest = isIv ? lane.querySelector('.guest-block') : null;
     if (guest) {
@@ -2560,6 +2597,7 @@ function buildPreviewHtml(opts){
     const ti = lane.querySelector('.rd-tease-input');
     const tv = ti ? ti.value.trim() : '';
     s += ppvRow('Tease', ppvTeaseBlock(id, tv));
+    if (links) s += '</div>';
     if (id === 's3') s += '<div class="ppv-hour2">HOUR 2</div>';
   });
 
