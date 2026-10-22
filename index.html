@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:,">
-<title>Daily Goods Hub - Design Prototype v23 (Royal Signal + Feed History)</title>
+<title>Daily Goods Hub - Design Prototype v24 (Royal Signal + Feed History)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Geist:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -895,6 +895,14 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 .ppv-tease-line{margin:3px 0;line-height:1.5}
 .ppv-tease-prefix{font-family:'Space Mono',monospace;font-size:12px;font-weight:700}
 @media(max-width:700px){.ppv-row{flex-direction:column;gap:4px}.ppv-lab{flex:none}}
+/* Live tab: the finished drive sheet as a full page (not a modal), with clickable links */
+#panel-live .ppv-sheet{max-height:none;overflow:visible;max-width:900px;margin:8px auto 40px;padding:40px 48px;border-radius:6px;box-shadow:0 2px 18px rgba(0,0,0,.18)}
+#liveSheet a,#liveSheet a:visited{color:#376CFF !important;text-decoration:underline}
+#liveSheet .ppv-segwrap{position:relative;padding-bottom:40px}
+#liveSheet .live-copy{position:absolute;right:0;bottom:6px;background:#fff;color:#1b1b1b !important;border:1px solid #cfcfcf;border-radius:6px;padding:4px 12px;font-size:12px;line-height:1.4;cursor:pointer}
+#liveSheet .live-copy:hover{border-color:#999}
+#liveSheet .live-copy:focus-visible{outline:2px solid #376CFF;outline-offset:2px}
+@media(max-width:700px){#panel-live .ppv-sheet{max-width:none;margin:0 0 24px;padding:18px 16px;border-radius:0}}
 /* Drive sheet type matches the studio's Google Sheet: Arial Bold (the Sheets default) everywhere.
    Font only; sizes, spacing and layout above stay as they are. */
 .ppv-sheet,.ppv-sheet *{font-family:Arial,Helvetica,sans-serif !important;font-weight:700 !important}
@@ -995,7 +1003,7 @@ html[data-theme="dark"] .arch-day-meta{color:rgba(255,255,255,.6)}
 </head>
 <body>
 <div class="proto-banner">
-  <span>Design Prototype v23 (Royal Signal + Feed History)</span>
+  <span>Design Prototype v24 (Royal Signal + Feed History)</span>
   <span class="accent-picker">
     <span class="lbl">Accent</span>
     <button class="swatch active" data-accent="profound" aria-label="Profound blue accent" title="Profound blue #376CFF"></button>
@@ -1015,6 +1023,7 @@ html[data-theme="dark"] .arch-day-meta{color:rgba(255,255,255,.6)}
   <button class="tab" role="tab" data-tab="feeds">Feeds</button>
   <button class="tab" role="tab" data-tab="newspaper">Newspaper</button>
   <button class="tab active" role="tab" data-tab="builder">Builder</button>
+  <button class="tab" role="tab" data-tab="live">Live</button>
   <button class="tab" role="tab" data-tab="interviews">Interviews</button>
   <button class="tab" role="tab" data-tab="corkboard">Corkboard</button>
   <button class="tab" role="tab" data-tab="keep">The Keep</button>
@@ -1220,6 +1229,10 @@ html[data-theme="dark"] .arch-day-meta{color:rgba(255,255,255,.6)}
 </section>
 
 <!-- BUILDER -->
+<!-- LIVE: read-only on-air rundown, a pure view over the Builder (rebuilt by renderLive) -->
+<section class="tab-panel" id="panel-live" role="tabpanel">
+  <div class="ppv-sheet" id="liveSheet"></div>
+</section>
 <section class="tab-panel active" id="panel-builder" role="tabpanel">
   <p class="hint">Drag cards between segments or reorder inside them. <span class="kbd">Up</span><span class="kbd">Down</span> move the focused card, <span class="kbd">Enter</span> opens or closes it, <span class="kbd">Esc</span> closes.</p>
   <div class="builder-toolbar">
@@ -2409,6 +2422,52 @@ window.addEventListener('beforeprint', () => {
   if ((pb && pb.classList.contains('active')) || (ov && !ov.hidden)) ppvPrintPrepare();
 });
 window.addEventListener('afterprint', ppvPrintDone);
+/* Live tab: rebuilt from Builder state; it only ever writes inside #panel-live */
+let lastLiveHtml = '';
+function renderLive(){
+  const el = document.getElementById('liveSheet');
+  if (!el) return;
+  const html = buildPreviewHtml({ links: true });
+  // unchanged: leave the page alone, so a host's selection, focus and hover survive the Builder's idle re-syncs
+  if (html === lastLiveHtml && el.querySelector('.ppv-segwrap')) return;
+  lastLiveHtml = html;
+  el.innerHTML = html;
+  el.querySelectorAll('.ppv-segwrap').forEach(w => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'live-copy'; b.textContent = 'Copy';
+    b.setAttribute('aria-label', 'Copy this segment');
+    w.appendChild(b);
+  });
+}
+/* a segment as plain text, line by line as it reads on the page (labels upper-cased, bullets marked) */
+function liveSegText(node){
+  const lines = []; let cur = '';
+  const flush = () => { const t = cur.replace(/\s+/g, ' ').trim(); if (t) lines.push(t); cur = ''; };
+  const walk = n => {
+    if (n.nodeType === 3) { cur += n.nodeValue; return; }
+    if (n.nodeType !== 1) return;
+    if (n.tagName === 'BR') { flush(); return; }
+    if (n.classList.contains('ppv-lab')) { flush(); cur = n.textContent.toUpperCase(); flush(); return; }
+    const block = /^(DIV|P|UL|OL|LI)$/.test(n.tagName);
+    if (block) flush();
+    if (n.tagName === 'LI') cur = '\u2022 ';
+    n.childNodes.forEach(walk);
+    if (block) flush();
+  };
+  walk(node); flush();
+  return lines.join('\n');
+}
+document.getElementById('liveSheet').addEventListener('click', e => {
+  const b = e.target.closest('.live-copy');
+  if (!b) return;
+  const clone = b.closest('.ppv-segwrap').cloneNode(true);
+  clone.querySelectorAll('.live-copy').forEach(x => x.remove());
+  copyRichToClipboard(liveSegText(clone), clone.outerHTML).then(ok => toast(ok ? 'Segment copied' : 'Copy failed. Select the text and copy manually.'));
+});
+function liveRefresh(){ try { renderLive(); } catch (e) {} } // a Live error must never break saving or day loads
+let liveT = null;
+function liveSoon(){ clearTimeout(liveT); liveT = setTimeout(liveRefresh, 100); }
+document.querySelector('.tab[data-tab="live"]').addEventListener('click', renderLive);
 function closePrintPreview(){
   const ov = document.getElementById('ppvOverlay');
   if (ov) ov.hidden = true;
@@ -2456,7 +2515,21 @@ function ppvCardHeadline(card){
   const tl = c.querySelector('.topic-label'); if (tl) tl.remove();
   return c.textContent.trim() || 'Untitled story';
 }
-function buildPreviewHtml(){
+/* Live link mode: an anchor only for http(s) URLs; anything else stays plain text */
+function ppvLink(url, text){
+  const u = normUrl(url);
+  if (!/^https?:\/\//i.test(u)) return ppvEsc(text);
+  return '<a href="' + ppvEsc(u) + '" target="_blank" rel="noopener noreferrer">' + ppvEsc(text) + '</a>';
+}
+/* a card's source URL: the copy href, or (cards stored with href="#") the link text, as the Sheets export reads it */
+function liveCardUrl(card){
+  const href = normUrl(cardCopyParts(card).href);
+  if (href) return href;
+  const a = card.querySelector('.url-row a');
+  return a ? normUrl(a.textContent.trim()) : '';
+}
+function buildPreviewHtml(opts){
+  const links = !!(opts && opts.links);
   const gv = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
   let s = '';
   s += '<div class="ppv-brand">THE DAILY GOODS</div>';
@@ -2464,7 +2537,7 @@ function buildPreviewHtml(){
   const zs = zoomSettings();
   const studio = 'STUDIO #: ' + (zs.listenerLine || '') + ' (LISTENER LINE) / ' + (zs.guestLine || '') + ' (GUEST LINE)';
   if (date) s += ppvRow('', '<b>' + ppvEsc(date) + '</b>');
-  if (zs.zoomLink) s += ppvRow('Zoom Link', ppvEsc(zs.zoomLink));
+  if (zs.zoomLink) s += ppvRow('Zoom Link', links ? ppvLink(zs.zoomLink, zs.zoomLink) : ppvEsc(zs.zoomLink));
   if (zs.zoomPass) s += ppvRow('Password', ppvEsc(zs.zoomPass));
   if (studio) s += ppvRow('Studio #', ppvEsc(studio));
   // today on the show (reuse the live-built list)
@@ -2489,6 +2562,7 @@ function buildPreviewHtml(){
     const id = lane.dataset.lane;
     const n = id.replace('s', '');
     const isIv = laneTypeOf(lane) === 'interview';
+    if (links) s += '<div class="ppv-segwrap">'; // Live: one block per segment, for its Copy button
     s += '<div class="ppv-seg">' + (times[id] || '') + ' - ' + segNameUC(id, pvKey) + '</div>';
     const guest = isIv ? lane.querySelector('.guest-block') : null;
     if (guest) {
@@ -2515,7 +2589,11 @@ function buildPreviewHtml(){
         const cue = ppvCardCue(card);
         if (cue) ch += '<div class="ppv-cue">AUDIO CUE: ' + ppvEsc(cue) + '</div>';
         const clip = normUrl(cardClipUrl(card));
-        if (clip) ch += '<div class="ppv-cue ppv-clip">CLIP: ' + ppvEsc(clip) + '</div>';
+        if (clip) ch += '<div class="ppv-cue ppv-clip">CLIP: ' + (links ? ppvLink(clip, clip) : ppvEsc(clip)) + '</div>';
+        if (links) {
+          const src = liveCardUrl(card);
+          if (src) ch += '<div class="ppv-cue ppv-src">SOURCE: ' + ppvLink(src, src) + '</div>';
+        }
         ch += '</div>';
         topics += ch;
       });
@@ -2526,6 +2604,7 @@ function buildPreviewHtml(){
     const ti = lane.querySelector('.rd-tease-input');
     const tv = ti ? ti.value.trim() : '';
     s += ppvRow('Tease', ppvTeaseBlock(id, tv));
+    if (links) s += '</div>';
     if (id === 's3') s += '<div class="ppv-hour2">HOUR 2</div>';
   });
 
@@ -2804,6 +2883,7 @@ function saveCurrentDay(){
   const days = dayStoreLoad();
   days[viewedDate] = { lanes: lanesEl.innerHTML, furn: JSON.parse(JSON.stringify(rdFurn)) };
   dayStoreSave(days);
+  liveRefresh();
 }
 let daySaveT = null;
 function armDayAutosave(){
@@ -2811,6 +2891,7 @@ function armDayAutosave(){
   if (!pb || pb.dataset.daySaveArmed) return;
   pb.dataset.daySaveArmed = '1';
   new MutationObserver(() => {
+    liveSoon(); // Live follows every Builder change at ~100ms, well ahead of the 400ms save
     if (daySavePaused || !viewedDate) return;
     clearTimeout(daySaveT);
     daySaveT = setTimeout(saveCurrentDay, 400);
@@ -2845,6 +2926,7 @@ function switchBuilderDay(key){
     }
     rdSaveFurn();
     renderDayView();
+    liveRefresh();
   } finally { daySavePaused = false; }
   lastSavedSnap = '';
   saveCurrentDay();
@@ -3040,6 +3122,7 @@ wrapInit();
   syncDaySwitcherUI();
   lastSavedSnap = '';
   saveCurrentDay();
+  liveRefresh(); // populate Live before its first visit
 })();
 /* debounced undo for text edits: one entry per typing burst / field session */
 let typeSnap = null, typeTimer = null, typeDirty = false;
