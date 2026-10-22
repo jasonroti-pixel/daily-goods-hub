@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:,">
-<title>Daily Goods Hub - Design Prototype v24 (Royal Signal + Feed History)</title>
+<title>Daily Goods Hub - Design Prototype v25 (Royal Signal + Feed History)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Geist:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -896,13 +896,32 @@ html[data-theme="dark"] .card.backup .topic-label{color:#E0A83E}
 .ppv-tease-prefix{font-family:'Space Mono',monospace;font-size:12px;font-weight:700}
 @media(max-width:700px){.ppv-row{flex-direction:column;gap:4px}.ppv-lab{flex:none}}
 /* Live tab: the finished drive sheet as a full page (not a modal), with clickable links */
-#panel-live .ppv-sheet{max-height:none;overflow:visible;max-width:900px;margin:8px auto 40px;padding:40px 48px;border-radius:6px;box-shadow:0 2px 18px rgba(0,0,0,.18)}
+#panel-live .ppv-sheet{max-height:none;overflow:visible;max-width:1280px;margin:8px auto 40px;padding:44px 56px;border-radius:6px;box-shadow:0 2px 18px rgba(0,0,0,.18)}
 #liveSheet a,#liveSheet a:visited{color:#376CFF !important;text-decoration:underline}
 #liveSheet .ppv-segwrap{position:relative;padding-bottom:40px}
-#liveSheet .live-copy{position:absolute;right:0;bottom:6px;background:#fff;color:#1b1b1b !important;border:1px solid #cfcfcf;border-radius:6px;padding:4px 12px;font-size:12px;line-height:1.4;cursor:pointer}
+#liveSheet .live-copy{position:absolute;right:0;bottom:6px;background:#fff;color:#1b1b1b !important;border:1px solid #cfcfcf;border-radius:6px;padding:6px 16px;font-size:14px;line-height:1.4;cursor:pointer}
+/* Live type: about a third over the print sizes, for reading at arm's length (print and preview keep theirs) */
+#liveSheet .ppv-brand{font-size:34px;margin-bottom:6px}
+#liveSheet .ppv-row{padding:11px 0;gap:20px}
+#liveSheet .ppv-lab{flex-basis:250px;font-size:16px;padding-top:4px}
+#liveSheet .ppv-con{font-size:19px;line-height:1.55}
+#liveSheet .ppv-con .t{font-size:16px}
+#liveSheet .ppv-seg{font-size:26px;margin:30px 0 8px}
+#liveSheet .ppv-topic{margin:14px 0}
+#liveSheet .ppv-topic .tt{font-size:15px;margin-bottom:4px}
+#liveSheet .ppv-topic .th{font-size:22px;line-height:1.35;margin-bottom:6px}
+#liveSheet .ppv-topic ul{font-size:18px;line-height:1.55;margin:6px 0 6px 26px}
+#liveSheet .ppv-topic li{margin-bottom:5px}
+#liveSheet .ppv-note{font-size:18px;line-height:1.55;padding:8px 0 8px 14px}
+#liveSheet .ppv-cue{font-size:16px;line-height:1.5;margin-top:7px}
+#liveSheet .ppv-tease-lock{font-size:17px;margin:5px 0}
+#liveSheet .ppv-tease-line{line-height:1.55;margin:5px 0}
+#liveSheet .ppv-tease-prefix{font-size:16px}
+#liveSheet .ppv-hour2{font-size:16px;margin:26px 0 10px}
+#liveSheet .ppv-segwrap{padding-bottom:50px}
 #liveSheet .live-copy:hover{border-color:#999}
 #liveSheet .live-copy:focus-visible{outline:2px solid #376CFF;outline-offset:2px}
-@media(max-width:700px){#panel-live .ppv-sheet{max-width:none;margin:0 0 24px;padding:18px 16px;border-radius:0}}
+@media(max-width:700px){#panel-live .ppv-sheet{max-width:none;margin:0 0 24px;padding:18px 16px;border-radius:0}#liveSheet .ppv-row{gap:4px}#liveSheet .ppv-lab{flex:none}}
 /* Drive sheet type matches the studio's Google Sheet: Arial Bold (the Sheets default) everywhere.
    Font only; sizes, spacing and layout above stay as they are. */
 .ppv-sheet,.ppv-sheet *{font-family:Arial,Helvetica,sans-serif !important;font-weight:700 !important}
@@ -1003,7 +1022,7 @@ html[data-theme="dark"] .arch-day-meta{color:rgba(255,255,255,.6)}
 </head>
 <body>
 <div class="proto-banner">
-  <span>Design Prototype v24 (Royal Signal + Feed History)</span>
+  <span>Design Prototype v25 (Royal Signal + Feed History)</span>
   <span class="accent-picker">
     <span class="lbl">Accent</span>
     <button class="swatch active" data-accent="profound" aria-label="Profound blue accent" title="Profound blue #376CFF"></button>
