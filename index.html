@@ -2423,10 +2423,15 @@ window.addEventListener('beforeprint', () => {
 });
 window.addEventListener('afterprint', ppvPrintDone);
 /* Live tab: rebuilt from Builder state; it only ever writes inside #panel-live */
+let lastLiveHtml = '';
 function renderLive(){
   const el = document.getElementById('liveSheet');
   if (!el) return;
-  el.innerHTML = buildPreviewHtml({ links: true });
+  const html = buildPreviewHtml({ links: true });
+  // unchanged: leave the page alone, so a host's selection, focus and hover survive the Builder's idle re-syncs
+  if (html === lastLiveHtml && el.querySelector('.ppv-segwrap')) return;
+  lastLiveHtml = html;
+  el.innerHTML = html;
   el.querySelectorAll('.ppv-segwrap').forEach(w => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'live-copy'; b.textContent = 'Copy';
@@ -2460,6 +2465,8 @@ document.getElementById('liveSheet').addEventListener('click', e => {
   copyRichToClipboard(liveSegText(clone), clone.outerHTML).then(ok => toast(ok ? 'Segment copied' : 'Copy failed. Select the text and copy manually.'));
 });
 function liveRefresh(){ try { renderLive(); } catch (e) {} } // a Live error must never break saving or day loads
+let liveT = null;
+function liveSoon(){ clearTimeout(liveT); liveT = setTimeout(liveRefresh, 100); }
 document.querySelector('.tab[data-tab="live"]').addEventListener('click', renderLive);
 function closePrintPreview(){
   const ov = document.getElementById('ppvOverlay');
@@ -2884,6 +2891,7 @@ function armDayAutosave(){
   if (!pb || pb.dataset.daySaveArmed) return;
   pb.dataset.daySaveArmed = '1';
   new MutationObserver(() => {
+    liveSoon(); // Live follows every Builder change at ~100ms, well ahead of the 400ms save
     if (daySavePaused || !viewedDate) return;
     clearTimeout(daySaveT);
     daySaveT = setTimeout(saveCurrentDay, 400);
